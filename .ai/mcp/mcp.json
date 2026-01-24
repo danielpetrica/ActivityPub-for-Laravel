@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "laravel-boost": {
+      "command": "/usr/bin/php",
+      "args": [
+        "/home/pad/repos/danielpetrica.com/artisan",
+        "boost:mcp"
+      ]
+    }
+  }
+}
