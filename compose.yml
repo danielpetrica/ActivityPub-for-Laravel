@@ -20,7 +20,7 @@ services:
     pull_policy: never
     build:
       context: ${CONTEXT_LOCATION:-.}
-      dockerfile: docker/Dockerfile
+      dockerfile: ${GIT_FOLDER}/Dockerfile
       target: frankenphp
       args:
         APP_ENV: ${APP_ENV:-production}
