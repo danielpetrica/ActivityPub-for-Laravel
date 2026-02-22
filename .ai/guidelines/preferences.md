@@ -348,6 +348,19 @@ Use normal Blade echo:
 <div>{{ $title }}</div>
 ```
 
+### Components use
+Use blade components to avoid duplicating code where it make sense. 
+Organize components in `resources/views/components/{category}/` diving them by component category.
+We should aim at having a component for every small piece of UI like a ui system. 
+Example of component categories are:
+ - Forms (inputs, buttons, selects, etc.)
+ - Alerts (success, error, warning, etc.)
+ - Modals (confirmations, etc.) use native html modal html tag. 
+ - Ui elements (cards, tables, etc.) 
+ - Layouts (header, footer, Hero, etc.)
+ - Keep things modular with the use of slots and parameters. 
+ - Use type hinting if we need to pass data to the component. 
+
 
 ---
 

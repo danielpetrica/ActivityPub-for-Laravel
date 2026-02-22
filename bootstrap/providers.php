@@ -3,4 +3,5 @@
 return [
     App\Providers\AppServiceProvider::class,
     App\Providers\Filament\OfficePanelProvider::class,
+    App\Providers\HorizonServiceProvider::class,
 ];

@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Tech blog by Daniel Petrica covering Laravel, Traefik, Docker, and freelance development tips.">
+    <title>Daniel Petrica | Tech Blogger & Developer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        /* Custom Scrollbar for the Carousel */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            200: '#fed7aa',
+                            300: '#fdba74',
+                            400: '#fb923c', // Orange-400
+                            500: '#f97316', // Orange-500 (Brand)
+                            600: '#ea580c', // Orange-600
+                            700: '#c2410c',
+                            800: '#9a3412',
+                            900: '#7c2d12',
+                        },
+                        neutral: {
+                            50: '#fafaf9',  // Stone-50
+                            100: '#f5f5f4', // Stone-100
+                            800: '#292524', // Stone-800
+                            900: '#1c1917', // Stone-900
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-neutral-50 text-neutral-800 antialiased selection:bg-primary-200 selection:text-primary-900" itemscope itemtype="http://schema.org/Blog">
+
+<!-- Navigation -->
+<nav class="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-neutral-200" aria-label="Main Navigation">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-20">
+
+            <!-- Logo Area -->
+            <a href="/" class="flex-shrink-0 flex items-center gap-3 group focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg p-1" aria-label="Daniel Petrica Home">
+                <div class="h-10 w-10 rounded-full bg-primary-100 border-2 border-primary-500 flex items-center justify-center overflow-hidden group-hover:scale-105 transition-transform">
+                    <i data-lucide="user" class="h-6 w-6 text-primary-600"></i>
+                </div>
+                <span class="font-bold text-xl tracking-tight text-neutral-900 group-hover:text-primary-600 transition-colors" itemprop="name">danielpetrica.com</span>
+            </a>
+
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex space-x-8 items-center" role="menubar">
+                <a href="#" class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors focus:outline-none focus:text-primary-600" role="menuitem">Home</a>
+                <a href="#" class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors focus:outline-none focus:text-primary-600" role="menuitem">Freelance Services</a>
+                <a href="#" class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors focus:outline-none focus:text-primary-600" role="menuitem">Laraplugins.io</a>
+                <a href="#" class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors focus:outline-none focus:text-primary-600" role="menuitem">Traefik Posts</a>
+                <a href="#" class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors focus:outline-none focus:text-primary-600" role="menuitem">Laravel Posts</a>
+            </div>
+
+            <!-- Right Actions -->
+            <div class="hidden md:flex items-center gap-4">
+                <div class="relative group" role="search">
+                    <label for="desktop-search" class="sr-only">Search</label>
+                    <input id="desktop-search" type="text" placeholder="Search..." aria-label="Search articles" class="pl-9 pr-4 py-2 text-sm bg-neutral-100 rounded-full border border-transparent focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-200 outline-none w-32 focus:w-48 transition-all duration-300">
+                    <i data-lucide="search" class="absolute left-3 top-2.5 h-4 w-4 text-neutral-400 group-focus-within:text-primary-500" aria-hidden="true"></i>
+                </div>
+                <a href="#subscribe" class="inline-flex items-center justify-center px-5 py-2 border border-transparent text-sm font-medium rounded-full text-white bg-primary-600 hover:bg-primary-700 shadow-lg shadow-primary-500/20 transition-all hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                    Subscribe
+                </a>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <div class="md:hidden flex items-center">
+                <button id="mobile-menu-btn" class="text-neutral-500 hover:text-primary-600 p-2 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-md" aria-label="Open menu" aria-expanded="false">
+                    <i data-lucide="menu" class="h-6 w-6"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Menu Panel -->
+    <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-neutral-100 absolute w-full left-0 top-20 shadow-lg z-50">
+        <div class="px-4 pt-2 pb-6 space-y-2">
+            <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-neutral-900 hover:bg-primary-50 hover:text-primary-600">Home</a>
+            <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-neutral-600 hover:bg-primary-50 hover:text-primary-600">Freelance Services</a>
+            <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-neutral-600 hover:bg-primary-50 hover:text-primary-600">Laraplugins.io</a>
+            <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-neutral-600 hover:bg-primary-50 hover:text-primary-600">Traefik Posts</a>
+            <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-neutral-600 hover:bg-primary-50 hover:text-primary-600">Laravel Posts</a>
+            <div class="pt-4 border-t border-neutral-100 mt-2">
+                <label for="mobile-search" class="sr-only">Search</label>
+                <input id="mobile-search" type="text" placeholder="Search articles..." class="w-full px-4 py-2 mb-3 bg-neutral-100 rounded-lg text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none">
+                <button class="w-full py-2 bg-primary-600 text-white rounded-lg font-medium">Subscribe / Sign In</button>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Header Hero: Latest Featured Article -->
+<header class="relative bg-white pt-12 pb-16 lg:pt-20 lg:pb-24 overflow-hidden" itemscope itemtype="http://schema.org/BlogPosting">
+    <meta itemprop="mainEntityOfPage" content="https://danielpetrica.com/article-url">
+    <meta itemprop="author" content="Daniel Petrica">
+
+    <div class="absolute inset-0 opacity-30 pointer-events-none">
+        <div class="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-primary-100 blur-3xl"></div>
+        <div class="absolute top-1/2 left-0 w-72 h-72 rounded-full bg-orange-100 blur-3xl"></div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="grid lg:grid-cols-12 gap-12 items-center">
+
+            <!-- Meta Side (Title, Excerpt) -->
+            <div class="lg:col-span-7 order-2 lg:order-1">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-50 text-primary-700 text-xs font-bold uppercase tracking-wide mb-6">
+                    <span class="w-2 h-2 rounded-full bg-primary-500 animate-pulse"></span>
+                    Latest Feature
+                </div>
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-neutral-900 tracking-tight leading-tight mb-6" itemprop="headline">
+                    Building Scalable APIs with <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-orange-400">Laravel Octane</span> in 2026
+                </h1>
+                <p class="text-lg sm:text-xl text-neutral-600 mb-8 leading-relaxed max-w-2xl" itemprop="description">
+                    Explore how the latest updates in the PHP ecosystem allow us to handle millions of requests with minimal overhead. We dive deep into Swoole integration.
+                </p>
+
+                <div class="flex flex-wrap items-center gap-6 text-sm text-neutral-500 font-medium mb-8">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="calendar" class="w-4 h-4 text-primary-500" aria-hidden="true"></i>
+                        <time itemprop="datePublished" datetime="2026-01-23">Jan 23, 2026</time>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="clock" class="w-4 h-4 text-primary-500" aria-hidden="true"></i>
+                        <span>12 min read</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="tag" class="w-4 h-4 text-primary-500" aria-hidden="true"></i>
+                        <span class="text-neutral-900" itemprop="articleSection">Backend Engineering</span>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <a href="#" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-semibold rounded-lg text-white bg-neutral-900 hover:bg-neutral-800 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-900">
+                        Read Article
+                        <i data-lucide="arrow-right" class="ml-2 w-4 h-4" aria-hidden="true"></i>
+                    </a>
+                    <!-- Button commented out for future use
+                    <button onclick="bookmarkPage()" aria-label="Bookmark this article" class="inline-flex items-center px-4 py-3 border border-neutral-200 rounded-lg text-neutral-600 hover:bg-neutral-50 hover:border-neutral-300 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-500">
+                        <i data-lucide="bookmark" class="w-5 h-5"></i>
+                    </button>
+                    -->
+                </div>
+            </div>
+
+            <!-- Feature Image Side -->
+            <div class="lg:col-span-5 order-1 lg:order-2">
+                <div class="relative group">
+                    <div class="absolute inset-0 bg-primary-600 rounded-2xl rotate-3 group-hover:rotate-2 transition-transform opacity-20"></div>
+                    <img itemprop="image" src="https://images.unsplash.com/photo-1555099962-4199c345e5dd?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80" alt="Featured Tech" class="relative rounded-2xl shadow-2xl w-full h-auto object-cover aspect-[4/3] border border-neutral-100">
+                </div>
+            </div>
+
+        </div>
+    </div>
+</header>
+
+<!-- Top 10 Featured Carousel -->
+<section class="py-16 bg-neutral-50 border-y border-neutral-200" aria-label="Trending Articles">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between mb-8">
+            <h2 class="text-2xl font-bold text-neutral-900">Trending Now</h2>
+            <div class="flex gap-2">
+                <button onclick="scrollCarousel(-1)" aria-label="Previous trending article" class="p-2 rounded-full border border-neutral-300 hover:bg-white hover:border-primary-500 text-neutral-600 hover:text-primary-600 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <i data-lucide="chevron-left" class="w-5 h-5" aria-hidden="true"></i>
+                </button>
+                <button onclick="scrollCarousel(1)" aria-label="Next trending article" class="p-2 rounded-full border border-neutral-300 hover:bg-white hover:border-primary-500 text-neutral-600 hover:text-primary-600 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <i data-lucide="chevron-right" class="w-5 h-5" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="carousel" class="flex gap-6 overflow-x-auto hide-scrollbar scroll-smooth pb-4 px-1" role="feed">
+            <!-- Card 1 -->
+            <a href="#" class="min-w-[280px] sm:min-w-[320px] group rounded-xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500 hover:ring-2 hover:ring-primary-500 hover:ring-offset-2 hover:ring-offset-neutral-50 transition-all duration-200" itemscope itemtype="http://schema.org/BlogPosting">
+                <div class="h-48 overflow-hidden rounded-xl mb-4 relative shadow-sm group-hover:shadow-md transition-shadow">
+                    <img itemprop="image" src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Traefik Dashboard" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <span class="absolute top-3 left-3 bg-white/90 backdrop-blur px-2 py-1 text-xs font-bold text-neutral-900 rounded-md shadow-sm hover:ring-2 hover:ring-primary-500 hover:text-primary-600 transition-all cursor-pointer" itemprop="articleSection">Traefik</span>
+                </div>
+                <h3 class="font-bold text-lg text-neutral-900 group-hover:text-primary-600 line-clamp-2 mb-1 transition-colors" itemprop="headline">Mastering Traefik v3 Configuration</h3>
+                <p class="text-sm text-neutral-500"><time itemprop="datePublished" datetime="2025-11-12">Nov 12, 2025</time></p>
+            </a>
+
+            <!-- Card 2 -->
+            <a href="#" class="min-w-[280px] sm:min-w-[320px] group rounded-xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500 hover:ring-2 hover:ring-primary-500 hover:ring-offset-2 hover:ring-offset-neutral-50 transition-all duration-200" itemscope itemtype="http://schema.org/BlogPosting">
+                <div class="h-48 overflow-hidden rounded-xl mb-4 relative shadow-sm group-hover:shadow-md transition-shadow">
+                    <img itemprop="image" src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Cybersecurity Lock" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <span class="absolute top-3 left-3 bg-white/90 backdrop-blur px-2 py-1 text-xs font-bold text-neutral-900 rounded-md shadow-sm hover:ring-2 hover:ring-primary-500 hover:text-primary-600 transition-all cursor-pointer" itemprop="articleSection">Cybersecurity</span>
+                </div>
+                <h3 class="font-bold text-lg text-neutral-900 group-hover:text-primary-600 line-clamp-2 mb-1 transition-colors" itemprop="headline">Securing Docker Containers in Prod</h3>
+                <p class="text-sm text-neutral-500"><time itemprop="datePublished" datetime="2025-12-04">Dec 04, 2025</time></p>
+            </a>
+
+            <!-- Card 3 -->
+            <a href="#" class="min-w-[280px] sm:min-w-[320px] group rounded-xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500 hover:ring-2 hover:ring-primary-500 hover:ring-offset-2 hover:ring-offset-neutral-50 transition-all duration-200" itemscope itemtype="http://schema.org/BlogPosting">
+                <div class="h-48 overflow-hidden rounded-xl mb-4 relative shadow-sm group-hover:shadow-md transition-shadow">
+                    <div class="absolute inset-0 bg-neutral-800 flex items-center justify-center text-neutral-500">
+                        <i data-lucide="code-2" class="w-12 h-12" aria-hidden="true"></i>
+                    </div>
+                    <span class="absolute top-3 left-3 bg-white/90 backdrop-blur px-2 py-1 text-xs font-bold text-neutral-900 rounded-md shadow-sm hover:ring-2 hover:ring-primary-500 hover:text-primary-600 transition-all cursor-pointer" itemprop="articleSection">Laravel</span>
+                </div>
+                <h3 class="font-bold text-lg text-neutral-900 group-hover:text-primary-600 line-clamp-2 mb-1 transition-colors" itemprop="headline">Laravel Service Providers Explained</h3>
+                <p class="text-sm text-neutral-500"><time itemprop="datePublished" datetime="2026-01-10">Jan 10, 2026</time></p>
+            </a>
+
+            <!-- Card 4 -->
+            <a href="#" class="min-w-[280px] sm:min-w-[320px] group rounded-xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500 hover:ring-2 hover:ring-primary-500 hover:ring-offset-2 hover:ring-offset-neutral-50 transition-all duration-200" itemscope itemtype="http://schema.org/BlogPosting">
+                <div class="h-48 overflow-hidden rounded-xl mb-4 relative shadow-sm group-hover:shadow-md transition-shadow">
+                    <img itemprop="image" src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Freelance Workspace" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <span class="absolute top-3 left-3 bg-white/90 backdrop-blur px-2 py-1 text-xs font-bold text-neutral-900 rounded-md shadow-sm hover:ring-2 hover:ring-primary-500 hover:text-primary-600 transition-all cursor-pointer" itemprop="articleSection">Freelancing</span>
+                </div>
+                <h3 class="font-bold text-lg text-neutral-900 group-hover:text-primary-600 line-clamp-2 mb-1 transition-colors" itemprop="headline">Pricing Your Services as a Dev</h3>
+                <p class="text-sm text-neutral-500"><time itemprop="datePublished" datetime="2025-10-22">Oct 22, 2025</time></p>
+            </a>
+
+            <!-- Placeholder Cards to simulate 10 -->
+            <script>
+                document.write(Array(6).fill('').map((_, i) => `
+                    <a href="#" class="min-w-[280px] sm:min-w-[320px] group rounded-xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500 hover:ring-2 hover:ring-primary-500 hover:ring-offset-2 hover:ring-offset-neutral-50 transition-all duration-200" itemscope itemtype="http://schema.org/BlogPosting">
+                        <div class="h-48 overflow-hidden rounded-xl mb-4 relative bg-neutral-200 flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
+                            <span class="text-neutral-400 font-bold text-xl">Post ${i+5}</span>
+                            <span class="absolute top-3 left-3 bg-white/90 backdrop-blur px-2 py-1 text-xs font-bold text-neutral-900 rounded-md shadow-sm hover:ring-2 hover:ring-primary-500 hover:text-primary-600 transition-all cursor-pointer" itemprop="articleSection">Tech</span>
+                        </div>
+                        <h3 class="font-bold text-lg text-neutral-900 group-hover:text-primary-600 line-clamp-2 mb-1 transition-colors" itemprop="headline">Understanding Asynchronous Jobs in 2026</h3>
+                        <p class="text-sm text-neutral-500"><time itemprop="datePublished" datetime="2026-01-0${i+1}">Jan ${i+1}, 2026</time></p>
+                    </a>
+                    `).join(''));
+            </script>
+        </div>
+    </div>
+</section>
+
+<!-- Mid-Page Newsletter -->
+<section id="subscribe" class="py-20 bg-white" aria-labelledby="newsletter-heading">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+        <div class="inline-block p-3 rounded-full bg-primary-100 mb-6">
+            <i data-lucide="mail" class="w-6 h-6 text-primary-600" aria-hidden="true"></i>
+        </div>
+        <h2 id="newsletter-heading" class="text-3xl font-bold text-neutral-900 mb-4">Join the Inner Circle</h2>
+        <p class="text-neutral-600 mb-8 max-w-xl mx-auto">Get weekly tips on Laravel architecture, server management with Traefik, and insights on the freelance market directly to your inbox.</p>
+
+        <form class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto" onsubmit="event.preventDefault(); alert('Subscribed!');">
+            <label for="mid-page-email" class="sr-only">Email Address</label>
+            <input id="mid-page-email" type="email" placeholder="daniel@example.com" class="flex-1 px-5 py-3 rounded-lg border border-neutral-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all" required>
+            <button type="submit" class="px-8 py-3 bg-neutral-900 text-white font-semibold rounded-lg hover:bg-primary-600 transition-colors shadow-lg hover:shadow-primary-500/25 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-900">
+                Subscribe
+            </button>
+        </form>
+        <p class="text-xs text-neutral-400 mt-4">No spam. Unsubscribe anytime.</p>
+    </div>
+</section>
+
+<!-- Main Article List -->
+<section class="py-16 bg-neutral-50" aria-labelledby="recent-articles-heading">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between mb-10">
+            <h2 id="recent-articles-heading" class="text-3xl font-bold text-neutral-900 tracking-tight">Recent Articles</h2>
+            <div class="hidden sm:flex gap-2 text-sm font-medium text-neutral-500 bg-white p-1 rounded-lg border border-neutral-200 shadow-sm" role="tablist">
+                <button class="px-3 py-1.5 rounded-md bg-neutral-100 text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500" role="tab" aria-selected="true">All</button>
+                <button class="px-3 py-1.5 rounded-md hover:bg-neutral-50 hover:text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500" role="tab" aria-selected="false">Laravel</button>
+                <button class="px-3 py-1.5 rounded-md hover:bg-neutral-50 hover:text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500" role="tab" aria-selected="false">Traefik</button>
+                <button class="px-3 py-1.5 rounded-md hover:bg-neutral-50 hover:text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500" role="tab" aria-selected="false">Freelance</button>
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8" role="feed">
+
+            <!-- Article Card 1 -->
+            <a href="#" class="block group rounded-2xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500 hover:ring-2 hover:ring-primary-500 hover:ring-offset-2 hover:ring-offset-neutral-50 transition-all duration-200 h-full" itemscope itemtype="http://schema.org/BlogPosting">
+                <article class="bg-white rounded-xl overflow-hidden border border-neutral-100 shadow-sm group-hover:shadow-xl group-hover:shadow-primary-500/10 transition-all duration-300 flex flex-col h-full">
+                    <div class="relative h-56 overflow-hidden">
+                        <img itemprop="image" src="https://images.unsplash.com/photo-1607799275518-d6e60142dcce?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Code snippet" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute top-4 left-4 z-10">
+                            <span class="bg-white/90 backdrop-blur font-bold text-xs px-2.5 py-1 rounded text-primary-600 shadow-sm hover:ring-2 hover:ring-primary-500 hover:text-white hover:bg-primary-600 transition-all cursor-pointer block" itemprop="articleSection">Laravel</span>
+                        </div>
+                    </div>
+                    <div class="p-6 flex-1 flex flex-col">
+                        <div class="flex items-center gap-2 text-xs text-neutral-400 mb-3">
+                            <time itemprop="datePublished" datetime="2026-01-21">Jan 21, 2026</time>
+                            <span>•</span>
+                            <span>5 min read</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-neutral-900 mb-3 group-hover:text-primary-600 transition-colors" itemprop="headline">Optimizing Eloquent Queries for Speed</h3>
+                        <p class="text-neutral-600 text-sm leading-relaxed mb-4 flex-1" itemprop="description">
+                            N+1 problems are the silent killer of application performance. Learn how to detect and fix them using built-in Laravel tools.
+                        </p>
+                        <span class="inline-flex items-center text-sm font-semibold text-primary-600 group-hover:text-primary-700">
+                                Read more <i data-lucide="arrow-right" class="w-4 h-4 ml-1" aria-hidden="true"></i>
+                            </span>
+                    </div>
+                </article>
+            </a>
+
+            <!-- Article Card 2 -->
+            <a href="#" class="block group rounded-2xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500 hover:ring-2 hover:ring-primary-500 hover:ring-offset-2 hover:ring-offset-neutral-50 transition-all duration-200 h-full" itemscope itemtype="http://schema.org/BlogPosting">
+                <article class="bg-white rounded-xl overflow-hidden border border-neutral-100 shadow-sm group-hover:shadow-xl group-hover:shadow-primary-500/10 transition-all duration-300 flex flex-col h-full">
+                    <div class="relative h-56 overflow-hidden">
+                        <div class="w-full h-full bg-neutral-800 flex items-center justify-center">
+                            <i data-lucide="server" class="w-16 h-16 text-neutral-600" aria-hidden="true"></i>
+                        </div>
+                        <div class="absolute top-4 left-4 z-10">
+                            <span class="bg-white/90 backdrop-blur font-bold text-xs px-2.5 py-1 rounded text-primary-600 shadow-sm hover:ring-2 hover:ring-primary-500 hover:text-white hover:bg-primary-600 transition-all cursor-pointer block" itemprop="articleSection">Traefik</span>
+                        </div>
+                    </div>
+                    <div class="p-6 flex-1 flex flex-col">
+                        <div class="flex items-center gap-2 text-xs text-neutral-400 mb-3">
+                            <time itemprop="datePublished" datetime="2026-01-18">Jan 18, 2026</time>
+                            <span>•</span>
+                            <span>8 min read</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-neutral-900 mb-3 group-hover:text-primary-600 transition-colors" itemprop="headline">Traefik Middlewares You Should Use</h3>
+                        <p class="text-neutral-600 text-sm leading-relaxed mb-4 flex-1" itemprop="description">
+                            From RateLimiting to BasicAuth, middlewares are the heart of Traefik. Here is a configuration guide for a secure stack.
+                        </p>
+                        <span class="inline-flex items-center text-sm font-semibold text-primary-600 group-hover:text-primary-700">
+                                Read more <i data-lucide="arrow-right" class="w-4 h-4 ml-1" aria-hidden="true"></i>
+                            </span>
+                    </div>
+                </article>
+            </a>
+
+            <!-- Article Card 3 -->
+            <a href="#" class="block group rounded-2xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500 hover:ring-2 hover:ring-primary-500 hover:ring-offset-2 hover:ring-offset-neutral-50 transition-all duration-200 h-full" itemscope itemtype="http://schema.org/BlogPosting">
+                <article class="bg-white rounded-xl overflow-hidden border border-neutral-100 shadow-sm group-hover:shadow-xl group-hover:shadow-primary-500/10 transition-all duration-300 flex flex-col h-full">
+                    <div class="relative h-56 overflow-hidden">
+                        <img itemprop="image" src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Meeting" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute top-4 left-4 z-10">
+                            <span class="bg-white/90 backdrop-blur font-bold text-xs px-2.5 py-1 rounded text-primary-600 shadow-sm hover:ring-2 hover:ring-primary-500 hover:text-white hover:bg-primary-600 transition-all cursor-pointer block" itemprop="articleSection">Freelance</span>
+                        </div>
+                    </div>
+                    <div class="p-6 flex-1 flex flex-col">
+                        <div class="flex items-center gap-2 text-xs text-neutral-400 mb-3">
+                            <time itemprop="datePublished" datetime="2026-01-15">Jan 15, 2026</time>
+                            <span>•</span>
+                            <span>6 min read</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-neutral-900 mb-3 group-hover:text-primary-600 transition-colors" itemprop="headline">Client Communication for Devs</h3>
+                        <p class="text-neutral-600 text-sm leading-relaxed mb-4 flex-1" itemprop="description">
+                            Stop using jargon. Here is how to explain technical debt to non-technical stakeholders effectively.
+                        </p>
+                        <span class="inline-flex items-center text-sm font-semibold text-primary-600 group-hover:text-primary-700">
+                                Read more <i data-lucide="arrow-right" class="w-4 h-4 ml-1" aria-hidden="true"></i>
+                            </span>
+                    </div>
+                </article>
+            </a>
+
+            <!-- Article Card 4 -->
+            <a href="#" class="block group rounded-2xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500 hover:ring-2 hover:ring-primary-500 hover:ring-offset-2 hover:ring-offset-neutral-50 transition-all duration-200 h-full" itemscope itemtype="http://schema.org/BlogPosting">
+                <article class="bg-white rounded-xl overflow-hidden border border-neutral-100 shadow-sm group-hover:shadow-xl group-hover:shadow-primary-500/10 transition-all duration-300 flex flex-col h-full">
+                    <div class="relative h-56 overflow-hidden">
+                        <img itemprop="image" src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Code on screen" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute top-4 left-4 z-10">
+                            <span class="bg-white/90 backdrop-blur font-bold text-xs px-2.5 py-1 rounded text-primary-600 shadow-sm hover:ring-2 hover:ring-primary-500 hover:text-white hover:bg-primary-600 transition-all cursor-pointer block" itemprop="articleSection">Laraplugins.io</span>
+                        </div>
+                    </div>
+                    <div class="p-6 flex-1 flex flex-col">
+                        <div class="flex items-center gap-2 text-xs text-neutral-400 mb-3">
+                            <time itemprop="datePublished" datetime="2026-01-10">Jan 10, 2026</time>
+                            <span>•</span>
+                            <span>4 min read</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-neutral-900 mb-3 group-hover:text-primary-600 transition-colors" itemprop="headline">New Payment Gateway Integration</h3>
+                        <p class="text-neutral-600 text-sm leading-relaxed mb-4 flex-1" itemprop="description">
+                            We just released a new plugin for handling multi-currency payments. Check out the documentation.
+                        </p>
+                        <span class="inline-flex items-center text-sm font-semibold text-primary-600 group-hover:text-primary-700">
+                                Read more <i data-lucide="arrow-right" class="w-4 h-4 ml-1" aria-hidden="true"></i>
+                            </span>
+                    </div>
+                </article>
+            </a>
+
+            <!-- Article Card 5 -->
+            <a href="#" class="block group rounded-2xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500 hover:ring-2 hover:ring-primary-500 hover:ring-offset-2 hover:ring-offset-neutral-50 transition-all duration-200 h-full" itemscope itemtype="http://schema.org/BlogPosting">
+                <article class="bg-white rounded-xl overflow-hidden border border-neutral-100 shadow-sm group-hover:shadow-xl group-hover:shadow-primary-500/10 transition-all duration-300 flex flex-col h-full">
+                    <div class="relative h-56 overflow-hidden">
+                        <div class="w-full h-full bg-gradient-to-br from-primary-400 to-orange-600 flex items-center justify-center">
+                            <i data-lucide="zap" class="w-16 h-16 text-white/50" aria-hidden="true"></i>
+                        </div>
+                        <div class="absolute top-4 left-4 z-10">
+                            <span class="bg-white/90 backdrop-blur font-bold text-xs px-2.5 py-1 rounded text-primary-600 shadow-sm hover:ring-2 hover:ring-primary-500 hover:text-white hover:bg-primary-600 transition-all cursor-pointer block" itemprop="articleSection">Productivity</span>
+                        </div>
+                    </div>
+                    <div class="p-6 flex-1 flex flex-col">
+                        <div class="flex items-center gap-2 text-xs text-neutral-400 mb-3">
+                            <time itemprop="datePublished" datetime="2026-01-05">Jan 05, 2026</time>
+                            <span>•</span>
+                            <span>3 min read</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-neutral-900 mb-3 group-hover:text-primary-600 transition-colors" itemprop="headline">My VS Code Setup for 2026</h3>
+                        <p class="text-neutral-600 text-sm leading-relaxed mb-4 flex-1" itemprop="description">
+                            Extensions, themes, and settings I use to write PHP and JavaScript faster than ever.
+                        </p>
+                        <span class="inline-flex items-center text-sm font-semibold text-primary-600 group-hover:text-primary-700">
+                                Read more <i data-lucide="arrow-right" class="w-4 h-4 ml-1" aria-hidden="true"></i>
+                            </span>
+                    </div>
+                </article>
+            </a>
+
+            <!-- Article Card 6 -->
+            <a href="#" class="block group rounded-2xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500 hover:ring-2 hover:ring-primary-500 hover:ring-offset-2 hover:ring-offset-neutral-50 transition-all duration-200 h-full" itemscope itemtype="http://schema.org/BlogPosting">
+                <article class="bg-white rounded-xl overflow-hidden border border-neutral-100 shadow-sm group-hover:shadow-xl group-hover:shadow-primary-500/10 transition-all duration-300 flex flex-col h-full">
+                    <div class="relative h-56 overflow-hidden">
+                        <img itemprop="image" src="https://images.unsplash.com/photo-1504639725590-34d0984388bd?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Server room" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute top-4 left-4 z-10">
+                            <span class="bg-white/90 backdrop-blur font-bold text-xs px-2.5 py-1 rounded text-primary-600 shadow-sm hover:ring-2 hover:ring-primary-500 hover:text-white hover:bg-primary-600 transition-all cursor-pointer block" itemprop="articleSection">DevOps</span>
+                        </div>
+                    </div>
+                    <div class="p-6 flex-1 flex flex-col">
+                        <div class="flex items-center gap-2 text-xs text-neutral-400 mb-3">
+                            <time itemprop="datePublished" datetime="2025-12-28">Dec 28, 2025</time>
+                            <span>•</span>
+                            <span>10 min read</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-neutral-900 mb-3 group-hover:text-primary-600 transition-colors" itemprop="headline">CI/CD Pipelines with GitHub Actions</h3>
+                        <p class="text-neutral-600 text-sm leading-relaxed mb-4 flex-1" itemprop="description">
+                            Automate your testing and deployment process. A zero-downtime deployment strategy guide.
+                        </p>
+                        <span class="inline-flex items-center text-sm font-semibold text-primary-600 group-hover:text-primary-700">
+                                Read more <i data-lucide="arrow-right" class="w-4 h-4 ml-1" aria-hidden="true"></i>
+                            </span>
+                    </div>
+                </article>
+            </a>
+
+        </div>
+
+        <div class="mt-16 text-center">
+            <button class="px-8 py-3 border border-neutral-300 rounded-lg text-neutral-600 font-medium hover:bg-neutral-100 hover:text-neutral-900 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500">
+                Load More Articles
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="bg-white border-t border-neutral-200 pt-16 pb-8" itemscope itemtype="http://schema.org/WPFooter">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+
+            <!-- Brand & Bio -->
+            <div class="lg:col-span-1">
+                <div class="flex items-center gap-2 mb-6">
+                    <div class="h-8 w-8 rounded-full bg-primary-500 flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">DP</span>
+                    </div>
+                    <span class="font-bold text-lg text-neutral-900">danielpetrica.com</span>
+                </div>
+                <p class="text-neutral-500 text-sm leading-relaxed mb-6" itemprop="description">
+                    Documenting my journey through Laravel, Docker, and the freelance world. Helping you build better software in 2026.
+                </p>
+                <div class="flex space-x-4">
+                    <a href="#" aria-label="Twitter" class="text-neutral-400 hover:text-primary-600 transition-colors focus:outline-none focus:text-primary-600"><i data-lucide="twitter" class="w-5 h-5" aria-hidden="true"></i></a>
+                    <a href="#" aria-label="GitHub" class="text-neutral-400 hover:text-primary-600 transition-colors focus:outline-none focus:text-primary-600"><i data-lucide="github" class="w-5 h-5" aria-hidden="true"></i></a>
+                    <a href="#" aria-label="LinkedIn" class="text-neutral-400 hover:text-primary-600 transition-colors focus:outline-none focus:text-primary-600"><i data-lucide="linkedin" class="w-5 h-5" aria-hidden="true"></i></a>
+                </div>
+            </div>
+
+            <!-- Footer Menu 1 -->
+            <div>
+                <h4 class="font-bold text-neutral-900 mb-6">Explore</h4>
+                <ul class="space-y-3 text-sm text-neutral-500">
+                    <li><a href="#" class="hover:text-primary-600 transition-colors focus:outline-none focus:text-primary-600">Freelance Services</a></li>
+                    <li><a href="#" class="hover:text-primary-600 transition-colors focus:outline-none focus:text-primary-600">Laraplugins.io</a></li>
+                    <li><a href="#" class="hover:text-primary-600 transition-colors focus:outline-none focus:text-primary-600">About Me</a></li>
+                    <li><a href="#" class="hover:text-primary-600 transition-colors focus:outline-none focus:text-primary-600">Contact</a></li>
+                    <li><a href="#" class="hover:text-primary-600 transition-colors focus:outline-none focus:text-primary-600">Uses / Gear</a></li>
+                </ul>
+            </div>
+
+            <!-- Footer Menu 2 -->
+            <div>
+                <h4 class="font-bold text-neutral-900 mb-6">Topics</h4>
+                <ul class="space-y-3 text-sm text-neutral-500">
+                    <li><a href="#" class="hover:text-primary-600 transition-colors focus:outline-none focus:text-primary-600">Laravel</a></li>
+                    <li><a href="#" class="hover:text-primary-600 transition-colors focus:outline-none focus:text-primary-600">Traefik</a></li>
+                    <li><a href="#" class="hover:text-primary-600 transition-colors focus:outline-none focus:text-primary-600">Docker</a></li>
+                    <li><a href="#" class="hover:text-primary-600 transition-colors focus:outline-none focus:text-primary-600">Vue.js</a></li>
+                    <li><a href="#" class="hover:text-primary-600 transition-colors focus:outline-none focus:text-primary-600">Server Management</a></li>
+                </ul>
+            </div>
+
+            <!-- Footer Newsletter -->
+            <div>
+                <h4 class="font-bold text-neutral-900 mb-6">Weekly Digest</h4>
+                <p class="text-xs text-neutral-500 mb-4">Subscribe for the latest tech updates.</p>
+                <form class="space-y-2" onsubmit="event.preventDefault(); alert('Subscribed!');">
+                    <label for="footer-email" class="sr-only">Email address</label>
+                    <input id="footer-email" type="email" placeholder="Email address" class="w-full px-4 py-2 bg-neutral-50 border border-neutral-200 rounded-lg text-sm focus:border-primary-500 outline-none transition-colors" required>
+                    <button class="w-full py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                        Subscribe
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Bottom Bar -->
+        <div class="border-t border-neutral-100 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-neutral-400">
+            <p itemscope itemtype="http://schema.org/Person" itemprop="author">&copy; 2026 <span itemprop="name">Daniel Petrica</span>. All rights reserved.</p>
+            <div class="flex items-center gap-6">
+                <a href="#" class="hover:text-neutral-600 focus:outline-none focus:underline">Privacy Policy</a>
+                <a href="#" class="hover:text-neutral-600 focus:outline-none focus:underline">Terms of Service</a>
+                <a href="#" class="hover:text-neutral-600 focus:outline-none focus:underline">RSS</a>
+            </div>
+            <p class="flex items-center gap-1">
+                Site built by me <i data-lucide="coffee" class="w-3 h-3" aria-hidden="true"></i> Daniel Petrica
+            </p>
+        </div>
+    </div>
+</footer>
+
+<script>
+    // Initialize Icons
+    lucide.createIcons();
+
+    // Mobile Menu Logic
+    const btn = document.getElementById('mobile-menu-btn');
+    const menu = document.getElementById('mobile-menu');
+
+    btn.addEventListener('click', () => {
+        const isExpanded = btn.getAttribute('aria-expanded') === 'true';
+        btn.setAttribute('aria-expanded', !isExpanded);
+        menu.classList.toggle('hidden');
+    });
+
+    // Carousel Scroll Logic
+    const carousel = document.getElementById('carousel');
+
+    function scrollCarousel(direction) {
+        const scrollAmount = 320; // Width of a card
+        if (direction === 1) {
+            carousel.scrollLeft += scrollAmount;
+        } else {
+            carousel.scrollLeft -= scrollAmount;
+        }
+    }
+
+    /* Bookmark Logic - Commented out
+    function bookmarkPage() {
+        const isMac = navigator.userAgent.toLowerCase().includes('mac');
+        const key = isMac ? '⌘+D' : 'Ctrl+D';
+        alert(`Press ${key} to bookmark this page!`);
+    }
+    */
+</script>
+</body>
+</html>

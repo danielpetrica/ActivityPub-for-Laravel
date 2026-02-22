@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Browse all articles tagged with Laravel. Tutorials, tips, and deep dives into the ecosystem.">
+    <title>Laravel Articles | Daniel Petrica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            200: '#fed7aa',
+                            300: '#fdba74',
+                            400: '#fb923c',
+                            500: '#f97316',
+                            600: '#ea580c',
+                            700: '#c2410c',
+                            800: '#9a3412',
+                            900: '#7c2d12',
+                        },
+                        neutral: {
+                            50: '#fafaf9',
+                            100: '#f5f5f4',
+                            800: '#292524',
+                            900: '#1c1917',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-neutral-50 text-neutral-800 antialiased selection:bg-primary-200 selection:text-primary-900">
+
+<!-- Navigation -->
+<nav class="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-neutral-200" aria-label="Main Navigation">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-20">
+            <a href="danielpetrica_blog.html" class="flex-shrink-0 flex items-center gap-3 group focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg p-1">
+                <div class="h-10 w-10 rounded-full bg-primary-100 border-2 border-primary-500 flex items-center justify-center overflow-hidden group-hover:scale-105 transition-transform">
+                    <i data-lucide="user" class="h-6 w-6 text-primary-600"></i>
+                </div>
+                <span class="font-bold text-xl tracking-tight text-neutral-900 group-hover:text-primary-600 transition-colors">danielpetrica.com</span>
+            </a>
+
+            <div class="hidden md:flex space-x-8 items-center">
+                <a href="danielpetrica_blog.html" class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors">Home</a>
+                <a href="#" class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors">Freelance Services</a>
+                <a href="#" class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors">Laraplugins.io</a>
+                <a href="#" class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors">Traefik Posts</a>
+                <a href="#" class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors">Laravel Posts</a>
+            </div>
+
+            <div class="hidden md:flex items-center gap-4">
+                <div class="relative group">
+                    <input type="text" placeholder="Search..." class="pl-9 pr-4 py-2 text-sm bg-neutral-100 rounded-full border border-transparent focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-200 outline-none w-32 focus:w-48 transition-all duration-300">
+                    <i data-lucide="search" class="absolute left-3 top-2.5 h-4 w-4 text-neutral-400 group-focus-within:text-primary-500"></i>
+                </div>
+                <a href="#subscribe" class="inline-flex items-center justify-center px-5 py-2 border border-transparent text-sm font-medium rounded-full text-white bg-primary-600 hover:bg-primary-700 shadow-lg shadow-primary-500/20 transition-all hover:-translate-y-0.5">
+                    Subscribe
+                </a>
+            </div>
+            <!-- Mobile Menu Button -->
+            <div class="md:hidden flex items-center">
+                <button id="mobile-menu-btn" class="text-neutral-500 hover:text-primary-600 p-2 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-md">
+                    <i data-lucide="menu" class="h-6 w-6"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- Mobile Menu Panel -->
+    <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-neutral-100 absolute w-full left-0 top-20 shadow-lg z-50">
+        <div class="px-4 pt-2 pb-6 space-y-2">
+            <a href="danielpetrica_blog.html" class="block px-3 py-2 rounded-md text-base font-medium text-neutral-900 hover:bg-primary-50 hover:text-primary-600">Home</a>
+            <!-- Other links... -->
+        </div>
+    </div>
+</nav>
+
+<!-- Tag Header -->
+<header class="bg-white border-b border-neutral-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
+        <div class="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+
+            <!-- Text Content -->
+            <div class="lg:col-span-8">
+                <!-- Breadcrumbs -->
+                <nav class="flex mb-6 text-sm font-medium text-neutral-500">
+                    <ol class="flex items-center space-x-2">
+                        <li><a href="danielpetrica_blog.html" class="hover:text-primary-600 transition-colors">Home</a></li>
+                        <li><span class="text-neutral-300">/</span></li>
+                        <li><a href="#" class="hover:text-primary-600 transition-colors">Tags</a></li>
+                        <li><span class="text-neutral-300">/</span></li>
+                        <li class="text-neutral-900">Laravel</li>
+                    </ol>
+                </nav>
+
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-neutral-900 tracking-tight mb-6">
+                    <span class="text-primary-600">Laravel</span> Articles
+                </h1>
+
+                <p class="text-lg text-neutral-600 leading-relaxed max-w-2xl">
+                    Deep dives into the Laravel ecosystem. From Octane performance tuning and eloquent optimizations to package development and architectural patterns for modern PHP applications.
+                </p>
+
+                <div class="mt-8 flex items-center gap-6 text-sm">
+                    <div class="flex items-center gap-2 text-neutral-500">
+                        <i data-lucide="file-text" class="w-4 h-4"></i>
+                        <span class="font-bold text-neutral-900">142</span> Articles
+                    </div>
+                    <div class="flex items-center gap-2 text-neutral-500">
+                        <i data-lucide="users" class="w-4 h-4"></i>
+                        <span class="font-bold text-neutral-900">12k</span> Followers
+                    </div>
+                    <button class="text-primary-600 font-semibold hover:text-primary-700 transition-colors flex items-center gap-1">
+                        Follow Tag <i data-lucide="plus" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tag Image / Icon -->
+            <div class="hidden lg:flex lg:col-span-4 justify-end">
+                <div class="relative w-48 h-48 bg-gradient-to-br from-neutral-50 to-white rounded-3xl border border-neutral-100 shadow-xl shadow-primary-500/5 flex items-center justify-center rotate-3 hover:rotate-0 transition-transform duration-500">
+                    <div class="absolute inset-0 bg-grid-pattern opacity-5"></div>
+                    <i data-lucide="code-2" class="w-24 h-24 text-primary-500"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Article List -->
+<section class="py-16 bg-neutral-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+            <!-- Card 1 -->
+            <a href="danielpetrica_post.html" class="block group rounded-2xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500 hover:ring-2 hover:ring-primary-500 hover:ring-offset-2 hover:ring-offset-neutral-50 transition-all duration-200 h-full">
+                <article class="bg-white rounded-xl overflow-hidden border border-neutral-100 shadow-sm group-hover:shadow-xl group-hover:shadow-primary-500/10 transition-all duration-300 flex flex-col h-full">
+                    <div class="relative h-56 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1555099962-4199c345e5dd?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Laravel Octane" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute top-4 left-4 z-10">
+                            <span class="bg-white/90 backdrop-blur font-bold text-xs px-2.5 py-1 rounded text-primary-600 shadow-sm">Laravel</span>
+                        </div>
+                    </div>
+                    <div class="p-6 flex-1 flex flex-col">
+                        <div class="flex items-center gap-2 text-xs text-neutral-400 mb-3">
+                            <span>Jan 23, 2026</span>
+                            <span>•</span>
+                            <span>8 min read</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-neutral-900 mb-3 group-hover:text-primary-600 transition-colors">The State of Laravel Packages 2026</h3>
+                        <p class="text-neutral-600 text-sm leading-relaxed mb-4 flex-1">
+                            An overview of the Laravel package ecosystem in 2026, focusing on native extensions and AI integrations.
+                        </p>
+                        <span class="inline-flex items-center text-sm font-semibold text-primary-600 group-hover:text-primary-700">
+                                Read more <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>
+                            </span>
+                    </div>
+                </article>
+            </a>
+
+            <!-- Card 2 -->
+            <a href="#" class="block group rounded-2xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500 hover:ring-2 hover:ring-primary-500 hover:ring-offset-2 hover:ring-offset-neutral-50 transition-all duration-200 h-full">
+                <article class="bg-white rounded-xl overflow-hidden border border-neutral-100 shadow-sm group-hover:shadow-xl group-hover:shadow-primary-500/10 transition-all duration-300 flex flex-col h-full">
+                    <div class="relative h-56 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1607799275518-d6e60142dcce?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Query Optimization" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute top-4 left-4 z-10">
+                            <span class="bg-white/90 backdrop-blur font-bold text-xs px-2.5 py-1 rounded text-primary-600 shadow-sm">Laravel</span>
+                        </div>
+                    </div>
+                    <div class="p-6 flex-1 flex flex-col">
+                        <div class="flex items-center gap-2 text-xs text-neutral-400 mb-3">
+                            <span>Jan 21, 2026</span>
+                            <span>•</span>
+                            <span>5 min read</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-neutral-900 mb-3 group-hover:text-primary-600 transition-colors">Optimizing Eloquent Queries for Speed</h3>
+                        <p class="text-neutral-600 text-sm leading-relaxed mb-4 flex-1">
+                            N+1 problems are the silent killer of application performance. Learn how to detect and fix them using built-in Laravel tools.
+                        </p>
+                        <span class="inline-flex items-center text-sm font-semibold text-primary-600 group-hover:text-primary-700">
+                                Read more <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>
+                            </span>
+                    </div>
+                </article>
+            </a>
+
+            <!-- Card 3 -->
+            <a href="#" class="block group rounded-2xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500 hover:ring-2 hover:ring-primary-500 hover:ring-offset-2 hover:ring-offset-neutral-50 transition-all duration-200 h-full">
+                <article class="bg-white rounded-xl overflow-hidden border border-neutral-100 shadow-sm group-hover:shadow-xl group-hover:shadow-primary-500/10 transition-all duration-300 flex flex-col h-full">
+                    <div class="relative h-56 overflow-hidden">
+                        <div class="w-full h-full bg-neutral-800 flex items-center justify-center">
+                            <i data-lucide="terminal" class="w-16 h-16 text-neutral-600"></i>
+                        </div>
+                        <div class="absolute top-4 left-4 z-10">
+                            <span class="bg-white/90 backdrop-blur font-bold text-xs px-2.5 py-1 rounded text-primary-600 shadow-sm">Laravel</span>
+                        </div>
+                    </div>
+                    <div class="p-6 flex-1 flex flex-col">
+                        <div class="flex items-center gap-2 text-xs text-neutral-400 mb-3">
+                            <span>Jan 10, 2026</span>
+                            <span>•</span>
+                            <span>6 min read</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-neutral-900 mb-3 group-hover:text-primary-600 transition-colors">Service Providers Explained</h3>
+                        <p class="text-neutral-600 text-sm leading-relaxed mb-4 flex-1">
+                            Understanding the boot lifecycle is key to mastering the framework. A comprehensive guide to the service container.
+                        </p>
+                        <span class="inline-flex items-center text-sm font-semibold text-primary-600 group-hover:text-primary-700">
+                                Read more <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>
+                            </span>
+                    </div>
+                </article>
+            </a>
+
+            <!-- Card 4 -->
+            <a href="#" class="block group rounded-2xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500 hover:ring-2 hover:ring-primary-500 hover:ring-offset-2 hover:ring-offset-neutral-50 transition-all duration-200 h-full">
+                <article class="bg-white rounded-xl overflow-hidden border border-neutral-100 shadow-sm group-hover:shadow-xl group-hover:shadow-primary-500/10 transition-all duration-300 flex flex-col h-full">
+                    <div class="relative h-56 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Testing" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute top-4 left-4 z-10">
+                            <span class="bg-white/90 backdrop-blur font-bold text-xs px-2.5 py-1 rounded text-primary-600 shadow-sm">Laravel</span>
+                        </div>
+                    </div>
+                    <div class="p-6 flex-1 flex flex-col">
+                        <div class="flex items-center gap-2 text-xs text-neutral-400 mb-3">
+                            <span>Dec 12, 2025</span>
+                            <span>•</span>
+                            <span>10 min read</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-neutral-900 mb-3 group-hover:text-primary-600 transition-colors">Testing with Pest vs PHPUnit</h3>
+                        <p class="text-neutral-600 text-sm leading-relaxed mb-4 flex-1">
+                            Why we switched to Pest for all our new microservices, and how it improved our TDD workflow.
+                        </p>
+                        <span class="inline-flex items-center text-sm font-semibold text-primary-600 group-hover:text-primary-700">
+                                Read more <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>
+                            </span>
+                    </div>
+                </article>
+            </a>
+        </div>
+
+        <div class="mt-16 text-center">
+            <button class="px-8 py-3 border border-neutral-300 rounded-lg text-neutral-600 font-medium hover:bg-neutral-100 hover:text-neutral-900 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500">
+                Load More
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="bg-white border-t border-neutral-200 pt-16 pb-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+            <!-- Brand & Bio -->
+            <div class="lg:col-span-1">
+                <div class="flex items-center gap-2 mb-6">
+                    <div class="h-8 w-8 rounded-full bg-primary-500 flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">DP</span>
+                    </div>
+                    <span class="font-bold text-lg text-neutral-900">danielpetrica.com</span>
+                </div>
+                <p class="text-neutral-500 text-sm leading-relaxed mb-6">
+                    Documenting my journey through Laravel, Docker, and the freelance world.
+                </p>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-neutral-400 hover:text-primary-600 transition-colors"><i data-lucide="twitter" class="w-5 h-5"></i></a>
+                    <a href="#" class="text-neutral-400 hover:text-primary-600 transition-colors"><i data-lucide="github" class="w-5 h-5"></i></a>
+                </div>
+            </div>
+            <!-- Menus... -->
+            <div>
+                <h4 class="font-bold text-neutral-900 mb-6">Explore</h4>
+                <ul class="space-y-3 text-sm text-neutral-500">
+                    <li><a href="#" class="hover:text-primary-600">Home</a></li>
+                    <li><a href="#" class="hover:text-primary-600">About</a></li>
+                    <li><a href="#" class="hover:text-primary-600">Contact</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold text-neutral-900 mb-6">Topics</h4>
+                <ul class="space-y-3 text-sm text-neutral-500">
+                    <li><a href="#" class="hover:text-primary-600">Laravel</a></li>
+                    <li><a href="#" class="hover:text-primary-600">Traefik</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold text-neutral-900 mb-6">Weekly Digest</h4>
+                <form class="space-y-2" onsubmit="event.preventDefault(); alert('Subscribed!');">
+                    <input type="email" placeholder="Email address" class="w-full px-4 py-2 bg-neutral-50 border border-neutral-200 rounded-lg text-sm focus:border-primary-500 outline-none" required>
+                    <button class="w-full py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg">Subscribe</button>
+                </form>
+            </div>
+        </div>
+        <div class="border-t border-neutral-100 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-neutral-400">
+            <p>&copy; 2026 Daniel Petrica. All rights reserved.</p>
+            <p class="flex items-center gap-1">Site built by me <i data-lucide="coffee" class="w-3 h-3"></i> Daniel Petrica</p>
+        </div>
+    </div>
+</footer>
+
+<script>
+    lucide.createIcons();
+
+    // Mobile menu toggle
+    const btn = document.getElementById('mobile-menu-btn');
+    const menu = document.getElementById('mobile-menu');
+    if(btn && menu) {
+        btn.addEventListener('click', () => {
+            menu.classList.toggle('hidden');
+        });
+    }
+</script>
+</body>
+</html>

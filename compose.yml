@@ -1,0 +1,152 @@
+x-env: &default-env
+  env_file:
+    - .env
+
+x-volumes: &laravel-volumes
+  volumes:
+    - ./.storage/logs/:/app/storage/logs
+    - ./.storage/app/:/app/storage/app
+    - ./.storage/framework/:/app/storage/framework
+
+x-common: &common
+  <<: [*default-env, *laravel-volumes]
+
+name: danielpetrica_com_${APP_ENV}
+
+services:
+  app:
+    container_name: danielpetrica_com_web_${APP_ENV}
+    image: danielpetrica_com:frankenphp
+    pull_policy: never
+    build:
+      context: ${CONTEXT_LOCATION:-.}
+      dockerfile: docker/Dockerfile
+      target: frankenphp
+      args:
+        APP_ENV: ${APP_ENV:-production}
+    <<: *laravel-volumes
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.danielpetrica_com_${APP_ENV}-https.rule=Host(`${APP_DOMAIN}`)
+      - traefik.http.routers.danielpetrica_com_${APP_ENV}-https.tls=true
+      - traefik.http.services.danielpetrica_com_${APP_ENV}-https.loadbalancer.server.port=80
+      - traefik.http.routers.danielpetrica_com_${APP_ENV}-https.tls.certresolver=cloudflare
+      - traefik.http.routers.danielpetrica_com_${APP_ENV}-https.entrypoints=websecure
+    environment:
+      SERVER_NAME: ${APP_DOMAIN:-:80}
+      SERVER_ROOT: /app/public
+    depends_on:
+      - db
+      - redis
+    networks:
+      - internal
+      - traefik
+    restart: unless-stopped
+    command: ["php", "artisan", "octane:frankenphp", "--host=0.0.0.0", "--port=80", "--workers=4"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:80/up || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 40s
+
+  worker:
+    container_name: danielpetrica_com_worker_${APP_ENV}
+    image: danielpetrica_com:worker
+    pull_policy: never
+    build:
+      context: ${CONTEXT_LOCATION:-.}
+      dockerfile: docker/Dockerfile
+      target: worker
+      args:
+        APP_ENV: ${APP_ENV:-production}
+    <<: *common
+    command: ["php", "artisan", "horizon"]
+    depends_on:
+      - db
+      - redis
+    networks:
+      - internal
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "php artisan inspire >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 2s
+      retries: 10
+
+  scheduler:
+    container_name: danielpetrica_com_scheduler_${APP_ENV}
+    image: danielpetrica_com:worker
+    <<: *laravel-volumes
+    command: ["php", "artisan", "schedule:work"]
+    depends_on:
+      - db
+      - redis
+    networks:
+      - internal
+    restart: unless-stopped
+
+  db:
+    image: postgres:18
+    container_name: danielpetrica_com_db_${APP_ENV}
+    env_file: .env
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-app}
+      POSTGRES_USER: ${DB_USERNAME:-app}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+    ports:
+      - "${DB_EXPOSE_PORT:-15432}:5432"
+    volumes:
+      - ./.postgres-db/:/var/lib/postgresql/data
+    networks:
+      - internal
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-app}"]
+      timeout: 20s
+      retries: 10
+      start_period: 30s
+
+  redis:
+    image: redis:alpine
+    container_name: danielpetrica_com_redis_${APP_ENV}
+    volumes:
+      - ./.redis/redis:/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      start_period: 30s
+      retries: 10
+    restart: unless-stopped
+
+  db_backup:
+    image: tiredofit/db-backup
+    container_name: db_backup_danielpetrica_com_${APP_ENV}
+    depends_on:
+      - db
+    volumes:
+      - ../../backups/${APP_DOMAIN}/${APP_ENV}:/backup
+    environment:
+      - MODE=AUTO
+      - DB01_TYPE=postgres
+      - DB01_HOST=${DB_HOST:-db}
+      - DB01_NAME=${DB_DATABASE}
+      - DB01_USER=root
+      - DB01_PASS=${DB_PASSWORD}
+      - DB01_BACKUP_BEGIN=+0
+      - DB01_BACKUP_INTERVAL=1440
+      - DB01_CLEANUP_TIME=10080
+      - DB01_COMPRESSION=ZSTD
+      - DB01_COMPRESSION_LEVEL=3
+      - DB01_ENABLE_PARALLEL_COMPRESSION=TRUE
+      - DB01_CHECKSUM=MD5
+    networks:
+      - internal
+    restart: always
+
+networks:
+  internal:
+  traefik:
+    external: true
+    name: traefik

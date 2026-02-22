@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="I surveyed 200 Laravel developers on package discovery. 96% prefer existing packages, but 70% struggle with poor docs. Here is the 2026 report.">
+    <title>The State of Laravel Packages 2026 | Daniel Petrica</title>
+    <!-- Added Typography Plugin -->
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        /* Code block styling override */
+        pre {
+            font-family: 'JetBrains Mono', monospace;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            200: '#fed7aa',
+                            300: '#fdba74',
+                            400: '#fb923c',
+                            500: '#f97316',
+                            600: '#ea580c',
+                            700: '#c2410c',
+                            800: '#9a3412',
+                            900: '#7c2d12',
+                        },
+                        neutral: {
+                            50: '#fafaf9',
+                            100: '#f5f5f4',
+                            800: '#292524',
+                            900: '#1c1917',
+                        }
+                    },
+                    typography: (theme) => ({
+                        DEFAULT: {
+                            css: {
+                                '--tw-prose-links': theme('colors.primary.600'),
+                                '--tw-prose-code': theme('colors.primary.600'),
+                                '--tw-prose-quote-borders': theme('colors.primary.500'),
+                            },
+                        },
+                    }),
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-neutral-50 text-neutral-800 antialiased selection:bg-primary-200 selection:text-primary-900" itemscope itemtype="http://schema.org/BlogPosting">
+
+<!-- Navigation (Same as Home) -->
+<nav class="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-neutral-200" aria-label="Main Navigation">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-20">
+            <a href="danielpetrica_blog.html" class="flex-shrink-0 flex items-center gap-3 group focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg p-1">
+                <div class="h-10 w-10 rounded-full bg-primary-100 border-2 border-primary-500 flex items-center justify-center overflow-hidden group-hover:scale-105 transition-transform">
+                    <i data-lucide="user" class="h-6 w-6 text-primary-600"></i>
+                </div>
+                <span class="font-bold text-xl tracking-tight text-neutral-900 group-hover:text-primary-600 transition-colors">danielpetrica.com</span>
+            </a>
+
+            <div class="hidden md:flex space-x-8 items-center">
+                <a href="danielpetrica_blog.html" class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors">Home</a>
+                <a href="#" class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors">Freelance Services</a>
+                <a href="#" class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors">Laraplugins.io</a>
+                <a href="#" class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors">Traefik Posts</a>
+                <a href="#" class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors">Laravel Posts</a>
+            </div>
+
+            <div class="hidden md:flex items-center gap-4">
+                <div class="relative group">
+                    <input type="text" placeholder="Search..." class="pl-9 pr-4 py-2 text-sm bg-neutral-100 rounded-full border border-transparent focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-200 outline-none w-32 focus:w-48 transition-all duration-300">
+                    <i data-lucide="search" class="absolute left-3 top-2.5 h-4 w-4 text-neutral-400 group-focus-within:text-primary-500"></i>
+                </div>
+                <a href="#subscribe" class="inline-flex items-center justify-center px-5 py-2 border border-transparent text-sm font-medium rounded-full text-white bg-primary-600 hover:bg-primary-700 shadow-lg shadow-primary-500/20 transition-all hover:-translate-y-0.5">
+                    Subscribe
+                </a>
+            </div>
+            <!-- Mobile Menu Button -->
+            <div class="md:hidden flex items-center">
+                <button id="mobile-menu-btn" class="text-neutral-500 hover:text-primary-600 p-2 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-md">
+                    <i data-lucide="menu" class="h-6 w-6"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- Mobile Menu Panel -->
+    <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-neutral-100 absolute w-full left-0 top-20 shadow-lg z-50">
+        <div class="px-4 pt-2 pb-6 space-y-2">
+            <a href="danielpetrica_blog.html" class="block px-3 py-2 rounded-md text-base font-medium text-neutral-900 hover:bg-primary-50 hover:text-primary-600">Home</a>
+            <!-- Other links... -->
+        </div>
+    </div>
+</nav>
+
+<!-- Post Header & Hero -->
+<header class="bg-white pt-10 pb-12 lg:pt-16 lg:pb-16 border-b border-neutral-100">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+
+        <!-- Breadcrumb -->
+        <nav class="flex justify-center mb-6 text-sm font-medium text-neutral-500">
+            <ol class="flex items-center space-x-2">
+                <li><a href="danielpetrica_blog.html" class="hover:text-primary-600 transition-colors">Home</a></li>
+                <li><span class="text-neutral-300">/</span></li>
+                <li><a href="#" class="hover:text-primary-600 transition-colors">Laravel Posts</a></li>
+                <li><span class="text-neutral-300">/</span></li>
+                <li class="text-neutral-900">Ecosystem</li>
+            </ol>
+        </nav>
+
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-neutral-900 tracking-tight leading-tight mb-6" itemprop="headline">
+            The State of <span class="text-primary-600">Laravel Packages</span> 2026
+        </h1>
+
+        <p class="text-lg text-neutral-600 max-w-2xl mx-auto mb-8 leading-relaxed">
+            Presented by <strong class="text-primary-600">LaraPlugins</strong>. I surveyed 200 Laravel developers on package discovery. 96% prefer existing packages, but 70% struggle with poor docs. Here's what the community wants.
+        </p>
+
+        <div class="flex flex-wrap items-center justify-center gap-6 text-sm text-neutral-500 font-medium mb-10">
+            <div class="flex items-center gap-2">
+                <i data-lucide="calendar" class="w-4 h-4 text-primary-500"></i>
+                <time itemprop="datePublished" datetime="2026-01-22">Jan 22, 2026</time>
+            </div>
+            <div class="flex items-center gap-2">
+                <i data-lucide="clock" class="w-4 h-4 text-primary-500"></i>
+                <span>7 min read</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="h-6 w-6 rounded-full bg-primary-500 flex items-center justify-center text-xs text-white font-bold">DP</div>
+                <span itemprop="author">Daniel Petrica</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="relative rounded-2xl overflow-hidden shadow-2xl shadow-primary-500/10 aspect-video md:aspect-[21/9]">
+            <img itemprop="image" src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80" alt="Laravel Ecosystem Analytics" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-neutral-900/40 to-transparent"></div>
+        </div>
+    </div>
+</header>
+
+<!-- Main Content Layout -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
+    <div class="grid lg:grid-cols-12 gap-12">
+
+        <!-- Left Sidebar (Socials - Desktop) -->
+        <div class="hidden lg:block lg:col-span-1">
+            <div class="sticky top-28 flex flex-col gap-4 items-center">
+                <button class="p-3 rounded-full bg-white text-neutral-500 border border-neutral-200 shadow-sm hover:text-primary-600 hover:border-primary-500 hover:shadow-md transition-all" aria-label="Share on Twitter">
+                    <i data-lucide="twitter" class="w-5 h-5"></i>
+                </button>
+                <button class="p-3 rounded-full bg-white text-neutral-500 border border-neutral-200 shadow-sm hover:text-primary-600 hover:border-primary-500 hover:shadow-md transition-all" aria-label="Share on LinkedIn">
+                    <i data-lucide="linkedin" class="w-5 h-5"></i>
+                </button>
+                <button class="p-3 rounded-full bg-white text-neutral-500 border border-neutral-200 shadow-sm hover:text-primary-600 hover:border-primary-500 hover:shadow-md transition-all" aria-label="Copy Link" onclick="alert('Link copied!')">
+                    <i data-lucide="link" class="w-5 h-5"></i>
+                </button>
+                <div class="h-8 w-px bg-neutral-200 my-2"></div>
+                <span class="text-xs font-bold text-neutral-400">200+<br>Surveyed</span>
+            </div>
+        </div>
+
+        <!-- Article Content -->
+        <main class="lg:col-span-8">
+            <article class="prose prose-neutral prose-lg prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary-600 prose-img:rounded-xl max-w-none" itemprop="articleBody">
+                <p class="lead">
+                    The results for the Packages 2026 report are out. At the end of November, I shared a questionnaire to discover what the community thinks about the state of Laravel packages today.
+                </p>
+                <p>
+                    I wanted to focus on the real-world pain points developers face. To ensure I got busy developers to respond, I kept it short, under 3 minutes on average. Without an established audience, I managed to reach around 200 responses. Thank you to everyone who participated or shared it; the insights gathered were eye-opening.
+                </p>
+
+                <h2>Who responded?</h2>
+                <p>
+                    To ensure the data reflected active ecosystem users, I first asked how often respondents develop new features or applications using Laravel.
+                </p>
+
+                <div class="my-8 p-6 bg-primary-50 rounded-xl border border-primary-100">
+                    <div class="flex items-center gap-4">
+                        <div class="text-4xl font-extrabold text-primary-600">82%</div>
+                        <p class="text-sm font-medium text-neutral-700 m-0">develop new Laravel features <strong>Daily or Weekly</strong>.</p>
+                    </div>
+                </div>
+
+                <p>
+                    That number grows to 94% if we include monthly respondents. This tells me the majority of you aren't just maintaining legacy code; you're actively choosing Laravel for new work. That's awesome to see. (Going forward, the data below focuses on this active daily/weekly/monthly cohort to ensure relevance.)
+                </p>
+
+                <h2>The "Build vs. Buy" Mentality</h2>
+                <p>
+                    When needing standard functionality (e.g., SEO, Media handling, Payments), what is the default reaction? Do developers reinvent the wheel or look for existing solutions?
+                </p>
+                <p>
+                    The results show a strong preference for existing solutions. <strong>96% of respondents</strong> indicated they either immediately look for existing packages/SDKs (65%) or search for packages first before potentially deciding to build it themselves (31%).
+                </p>
+                <p>
+                    This confirms that Laravel developers prefer not to rebuild standard functionality unless forced to. Remember that detail for later.
+                </p>
+
+                <h2>Where do developers find packages?</h2>
+                <p>
+                    I was curious if my personal habit of just Googling everything was normal. It turns out, it is. (Note: Respondents could select multiple options).
+                </p>
+                <ul>
+                    <li><strong>Web Search:</strong> 74% (Dominates)</li>
+                    <li><strong>Packagist:</strong> 51%</li>
+                    <li><strong>Community News (Laravel News, etc.):</strong> 49%</li>
+                    <li><strong>GitHub Search:</strong> 42%</li>
+                    <li><strong>Social Media:</strong> 19%</li>
+                </ul>
+                <p>
+                    Interestingly, developers seem to trust curated news sources and general web results significantly more than GitHub search or social media feeds when looking for tools. So, a bit surprisingly, this means we choose to trust other developers' recommendations via news sites more than random posts on social media.
+                </p>
+
+                <h2>How heavy are our composer.json files?</h2>
+                <p>
+                    I asked how many third-party packages (excluding default Laravel dependencies) are in an average project to gauge the "baggage" we're willing to carry.
+                </p>
+                <ul>
+                    <li><strong>6–15 packages:</strong> 54% (The majority)</li>
+                    <li><strong>0-5 packages:</strong> 38% (Impressive discipline!)</li>
+                    <li><strong>16+ packages:</strong> 7%</li>
+                </ul>
+                <p>
+                    Over half of the respondents fall into the 6–15 package range. Given standard best practices today (involving tools like PHPStan, Pint, Debugbar, or Telescope), this feels normal. I was surprised that 38% managed to keep projects between 0 and 5 packages. Honestly, how do you manage to keep it so low? Please send me a DM, I'm very curious.
+                </p>
+
+                <h2>The Vetting Process</h2>
+                <p>
+                    How much time do you spend researching before typing <code>composer require</code>?
+                </p>
+                <ul>
+                    <li><strong>61%</strong> spend between 5 and 30 minutes.</li>
+                    <li><strong>19%</strong> spend <5 minutes.</li>
+                    <li><strong>30%</strong> spend more than 30 minutes doing a deeper dive.</li>
+                </ul>
+                <p>
+                    This suggests that for the majority, the criteria chosen for selection needs to be scannable quickly—things like update recency, documentation quality, and popularity—rather than deep code audits. We have what Italians call <em>"grilletto facile"</em> (a quick trigger) for packages that look good on the surface.
+                </p>
+                <p>
+                    When asked to rank the most important factors when choosing between similar packages, the results confirmed this order:
+                </p>
+                <ol>
+                    <li>Recency of updates / Maintenance status</li>
+                    <li>Documentation quality</li>
+                    <li>GitHub Stars / Popularity</li>
+                    <li>Author reputation</li>
+                </ol>
+
+                <h2>The Biggest Frustrations</h2>
+                <p>
+                    This was the most critical part of the survey: what makes developers unsatisfied with the current ecosystem?
+                </p>
+                <div class="grid md:grid-cols-2 gap-4 my-8 not-prose">
+                    <div class="p-6 bg-orange-50 rounded-xl border border-orange-100">
+                        <h4 class="font-bold text-orange-800 mb-2">70%</h4>
+                        <p class="text-sm text-neutral-700">Cited lack of documentation or usage examples.</p>
+                    </div>
+                    <div class="p-6 bg-orange-50 rounded-xl border border-orange-100">
+                        <h4 class="font-bold text-orange-800 mb-2">70%</h4>
+                        <p class="text-sm text-neutral-700">Cited abandoned or outdated packages cluttering search results.</p>
+                    </div>
+                </div>
+                <p>
+                    It is a statistical tie for the top frustration. We have all experienced searching for functionality and finding five packages that haven't been updated since Laravel 8. In third place (28%) was the difficulty of comparing features between similar packages.
+                </p>
+
+                <h2>The Community Wish-list</h2>
+                <p>
+                    I finally asked an open-ended question: "If you could wave a magic wand and improve one thing about the Laravel ecosystem today, what would it be?" Here are some representative voices from the community on packages:
+                </p>
+                <blockquote>
+                    "Making keeping packages up to date for each Laravel version the norm. Many packages are abandoned after a few versions."
+                </blockquote>
+                <blockquote>
+                    "Standardize package info presentation to include age of project, last update, version compatibility, preq, open issues."
+                </blockquote>
+                <blockquote>
+                    "A Laravel centric site with packages including their usages... a dedicated site would be better."
+                </blockquote>
+
+                <h2>Conclusion</h2>
+                <p>
+                    The data paints a clear picture: Laravel developers want to use packages, but the friction involved in finding reliable, well-documented, and up-to-date tools is a major pain point. The ecosystem is vibrant, but that vibrancy creates noise that is hard to filter.
+                </p>
+                <p>
+                    Inspired by this data and your specific feedback, I started working on <strong>LaraPlugins.io</strong> as an attempt to address these frustrations. It’s a new directory focused on helping developers find, compare, and check maintenance status for Laravel-specific packages.
+                </p>
+                <p>
+                    Only a collective effort can produce something really useful to all of us. In the incoming AI development, having a trustworthy directory would make AI agents able to pick healthy packages for the development project.
+                </p>
+                <hr>
+                <p class="text-xs text-neutral-400 italic">
+                    P.S. Laravel is a trademark of Taylor Otwell. LaraPlugins.io is an independent, community-driven directory and is not officially affiliated with, endorsed by, or sponsored by Laravel or Taylor Otwell. Trademark usage is intended solely to identify the Laravel framework and its ecosystem packages.
+                </p>
+            </article>
+
+            <!-- Tags -->
+            <div class="mt-12 flex flex-wrap gap-2 pb-8 border-b border-neutral-200">
+                <span class="px-3 py-1 bg-neutral-100 text-neutral-600 rounded-full text-sm font-medium hover:bg-primary-50 hover:text-primary-600 transition-colors cursor-pointer">#Laravel</span>
+                <span class="px-3 py-1 bg-neutral-100 text-neutral-600 rounded-full text-sm font-medium hover:bg-primary-50 hover:text-primary-600 transition-colors cursor-pointer">#Ecosystem</span>
+                <span class="px-3 py-1 bg-neutral-100 text-neutral-600 rounded-full text-sm font-medium hover:bg-primary-50 hover:text-primary-600 transition-colors cursor-pointer">#Packages</span>
+            </div>
+
+            <!-- Newsletter Inline -->
+            <div class="my-12 p-8 bg-neutral-50 rounded-2xl border border-neutral-100">
+                <div class="flex flex-col md:flex-row gap-6 items-center">
+                    <div class="flex-1">
+                        <h3 class="font-bold text-xl text-neutral-900 mb-2">Get my updates in your inbox</h3>
+                        <p class="text-neutral-600 text-sm">Register to be the first to receive my new articles on Laravel, DevOps, my projects, and the future of the Laravel package ecosystem.</p>
+                    </div>
+                    <form class="flex gap-2 w-full md:w-auto">
+                        <input type="email" placeholder="Email address" class="px-4 py-2 border border-neutral-200 rounded-lg text-sm focus:border-primary-500 outline-none">
+                        <button class="px-6 py-2 bg-neutral-900 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors">Join</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Comments Area (Placeholder) -->
+            <div id="comments" class="mt-16">
+                <h3 class="text-2xl font-bold text-neutral-900 mb-8">Discussion</h3>
+                <div class="bg-white p-6 rounded-xl border border-neutral-200 text-center">
+                    <p class="text-neutral-500 mb-4">Comments are powered by GitHub Discussions.</p>
+                    <button class="px-6 py-2 border border-neutral-300 rounded-lg font-medium hover:bg-neutral-50 transition-colors">
+                        Load Comments
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Sidebar -->
+        <aside class="hidden lg:block lg:col-span-3">
+            <div class="sticky top-28 space-y-8">
+
+                <!-- Table of Contents -->
+                <div class="bg-white p-6 rounded-2xl border border-neutral-100 shadow-sm">
+                    <h4 class="font-bold text-neutral-900 mb-4 text-sm uppercase tracking-wide">On this page</h4>
+                    <ul class="space-y-3 text-sm border-l-2 border-neutral-100">
+                        <li><a href="#" class="block pl-4 text-primary-600 border-l-2 -ml-[2px] border-primary-500 font-medium">Who responded?</a></li>
+                        <li><a href="#" class="block pl-4 text-neutral-500 hover:text-neutral-900">Build vs. Buy</a></li>
+                        <li><a href="#" class="block pl-4 text-neutral-500 hover:text-neutral-900">Discovery Sources</a></li>
+                        <li><a href="#" class="block pl-4 text-neutral-500 hover:text-neutral-900">Package Weight</a></li>
+                        <li><a href="#" class="block pl-4 text-neutral-500 hover:text-neutral-900">Vetting Process</a></li>
+                        <li><a href="#" class="block pl-4 text-neutral-500 hover:text-neutral-900">Frustrations</a></li>
+                    </ul>
+                </div>
+
+                <!-- Author Widget -->
+                <div class="bg-white p-6 rounded-2xl border border-neutral-100 shadow-sm text-center">
+                    <div class="w-20 h-20 bg-neutral-100 rounded-full mx-auto mb-4 overflow-hidden border-2 border-primary-100">
+                        <div class="w-full h-full flex items-center justify-center bg-primary-100 text-primary-600 font-bold text-xl">DP</div>
+                    </div>
+                    <h4 class="font-bold text-neutral-900 text-lg">Daniel Petrica</h4>
+                    <p class="text-xs text-primary-600 font-bold uppercase tracking-wide mb-4">Laravel Developer</p>
+                    <p class="text-sm text-neutral-500 mb-6">Building products and sharing DevOps tips.</p>
+                    <button class="w-full py-2 bg-white border border-neutral-200 text-neutral-700 font-medium rounded-lg hover:border-primary-500 hover:text-primary-600 transition-colors text-sm">
+                        Follow on Twitter
+                    </button>
+                </div>
+
+                <!-- Related Post Mini -->
+                <div>
+                    <h4 class="font-bold text-neutral-900 mb-4 text-sm">Related</h4>
+                    <a href="#" class="group block mb-4">
+                        <h5 class="font-semibold text-neutral-800 group-hover:text-primary-600 transition-colors text-sm leading-snug mb-1">LaraPlugins Devlog: Building an AI Brain</h5>
+                        <span class="text-xs text-neutral-400">19 Jan 2026</span>
+                    </a>
+                    <a href="#" class="group block">
+                        <h5 class="font-semibold text-neutral-800 group-hover:text-primary-600 transition-colors text-sm leading-snug mb-1">How I built a high-performance directory</h5>
+                        <span class="text-xs text-neutral-400">11 Jan 2026</span>
+                    </a>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<!-- Read Next Section -->
+<section class="bg-neutral-100 py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-2xl font-bold text-neutral-900 mb-8">Read Next</h2>
+        <div class="grid md:grid-cols-3 gap-8">
+            <!-- Article Card 1 -->
+            <a href="#" class="block group rounded-2xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500 h-full">
+                <article class="bg-white rounded-xl overflow-hidden border border-neutral-200 shadow-sm group-hover:shadow-lg transition-all h-full flex flex-col">
+                    <div class="h-48 bg-neutral-800 relative">
+                        <div class="w-full h-full flex items-center justify-center">
+                            <i data-lucide="brain" class="w-12 h-12 text-neutral-600"></i>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="font-bold text-neutral-900 mb-2 group-hover:text-primary-600">LaraPlugins Devlog</h3>
+                        <p class="text-sm text-neutral-500">Sub-Second Search, Vendor Profiles, and Building an AI Brain (MCP).</p>
+                    </div>
+                </article>
+            </a>
+
+            <!-- Article Card 2 -->
+            <a href="#" class="block group rounded-2xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500 h-full">
+                <article class="bg-white rounded-xl overflow-hidden border border-neutral-200 shadow-sm group-hover:shadow-lg transition-all h-full flex flex-col">
+                    <div class="h-48 bg-neutral-200 relative">
+                        <img src="https://images.unsplash.com/photo-1610985223847-a725048d42d9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-6">
+                        <h3 class="font-bold text-neutral-900 mb-2 group-hover:text-primary-600">Running PHP 8.5 with Octane</h3>
+                        <p class="text-sm text-neutral-500">How to fix version mismatch and enable debug logging in minutes.</p>
+                    </div>
+                </article>
+            </a>
+
+            <!-- Article Card 3 -->
+            <a href="#" class="block group rounded-2xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500 h-full">
+                <article class="bg-white rounded-xl overflow-hidden border border-neutral-200 shadow-sm group-hover:shadow-lg transition-all h-full flex flex-col">
+                    <div class="h-48 bg-neutral-800 relative">
+                        <div class="w-full h-full flex items-center justify-center">
+                            <i data-lucide="link" class="w-12 h-12 text-neutral-600"></i>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="font-bold text-neutral-900 mb-2 group-hover:text-primary-600">Integrating Coz.jp with n8n</h3>
+                        <p class="text-sm text-neutral-500">A guide to the n8n node and API token configuration.</p>
+                    </div>
+                </article>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Footer (Same as Home) -->
+<footer class="bg-white border-t border-neutral-200 pt-16 pb-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+            <!-- Brand & Bio -->
+            <div class="lg:col-span-1">
+                <div class="flex items-center gap-2 mb-6">
+                    <div class="h-8 w-8 rounded-full bg-primary-500 flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">DP</span>
+                    </div>
+                    <span class="font-bold text-lg text-neutral-900">danielpetrica.com</span>
+                </div>
+                <p class="text-neutral-500 text-sm leading-relaxed mb-6">
+                    Documenting my journey through Laravel, Docker, and the freelance world.
+                </p>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-neutral-400 hover:text-primary-600 transition-colors"><i data-lucide="twitter" class="w-5 h-5"></i></a>
+                    <a href="#" class="text-neutral-400 hover:text-primary-600 transition-colors"><i data-lucide="github" class="w-5 h-5"></i></a>
+                </div>
+            </div>
+            <!-- Menus... -->
+            <div>
+                <h4 class="font-bold text-neutral-900 mb-6">Explore</h4>
+                <ul class="space-y-3 text-sm text-neutral-500">
+                    <li><a href="#" class="hover:text-primary-600">Home</a></li>
+                    <li><a href="#" class="hover:text-primary-600">About</a></li>
+                    <li><a href="#" class="hover:text-primary-600">Contact</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold text-neutral-900 mb-6">Topics</h4>
+                <ul class="space-y-3 text-sm text-neutral-500">
+                    <li><a href="#" class="hover:text-primary-600">Laravel</a></li>
+                    <li><a href="#" class="hover:text-primary-600">Traefik</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold text-neutral-900 mb-6">Weekly Digest</h4>
+                <form class="space-y-2" onsubmit="event.preventDefault(); alert('Subscribed!');">
+                    <input type="email" placeholder="Email address" class="w-full px-4 py-2 bg-neutral-50 border border-neutral-200 rounded-lg text-sm focus:border-primary-500 outline-none" required>
+                    <button class="w-full py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg">Subscribe</button>
+                </form>
+            </div>
+        </div>
+        <div class="border-t border-neutral-100 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-neutral-400">
+            <p>&copy; 2026 Daniel Petrica. All rights reserved.</p>
+            <p class="flex items-center gap-1">Site built by me <i data-lucide="coffee" class="w-3 h-3"></i> Daniel Petrica</p>
+        </div>
+    </div>
+</footer>
+
+<script>
+    lucide.createIcons();
+
+    // Mobile menu toggle
+    const btn = document.getElementById('mobile-menu-btn');
+    const menu = document.getElementById('mobile-menu');
+    if(btn && menu) {
+        btn.addEventListener('click', () => {
+            menu.classList.toggle('hidden');
+        });
+    }
+</script>
+</body>
+</html>
