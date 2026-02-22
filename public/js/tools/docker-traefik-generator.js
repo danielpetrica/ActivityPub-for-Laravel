@@ -199,7 +199,7 @@ services:
     image: ${name}:${appTarget}
     pull_policy: never
     build:
-      context: \${CONTEXT_LOCATION:-.}
+      context: \${GITFOLDER}
       dockerfile: docker/Dockerfile
       target: ${appTarget}
       args:
@@ -239,7 +239,7 @@ services:
     image: ${name}:worker
     pull_policy: never
     build:
-      context: \${CONTEXT_LOCATION:-.}
+      context: \${GITFOLDER}
       dockerfile: docker/Dockerfile
       target: worker
       args:
@@ -596,9 +596,11 @@ echo -en "\\007"
         const hasRedis = cfg.services.includes('redis');
         const dbType = cfg.dbType || 'mysql';
 
+        const gitFolder = cfg.gitFolder || `../${name}.git`;
+
         let out = `APP_ENV=production
 APP_DOMAIN=${cfg.appDomain || 'example.com'}
-CONTEXT_LOCATION=.
+GITFOLDER=${gitFolder}
 `;
         if (isLaravel) {
             out += `
@@ -868,9 +870,10 @@ CLOUDFLARE_DNS_API_TOKEN=your_cloudflare_token_here
                             class="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400">
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold text-neutral-700 mb-1">Git Repo Folder (for run.sh)</label>
+                        <label class="block text-sm font-semibold text-neutral-700 mb-1">Git Repo Folder</label>
                         <input v-model="cfg.gitFolder" type="text" placeholder="../project.git"
                             class="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400">
+                        <p class="text-xs text-neutral-400 mt-1">Used as Docker build context and in run.sh. The Dockerfile is read from this folder.</p>
                     </div>
                 </template>
 
