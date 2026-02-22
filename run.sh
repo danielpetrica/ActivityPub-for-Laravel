@@ -14,6 +14,7 @@ echo "*** Copying files."
 cp -f "${GITFOLDER}/compose.yml" "$LOCALFOLDER/compose.yml"
 cp -f "$LOCALFOLDER/.env" "${GITFOLDER}/.env.${APP_ENV}"
 
+mkdir -p .storage .redis .mysql-db
 # Ensure correct ownership
 sudo chown -R 82:82 .storage
 sudo chown -R 999:999 .redis .mysql-db
