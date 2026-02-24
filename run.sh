@@ -13,6 +13,15 @@ cd "$LOCALFOLDER" || exit 1
 echo "*** Copying files."
 cp -f "${GITFOLDER}/compose.yml" "$LOCALFOLDER/compose.yml"
 cp -f "$LOCALFOLDER/.env" "${GITFOLDER}/.env.${APP_ENV}"
+cp -f "$LOCALFOLDER/run.sh" "${GITFOLDER}/run.sh"
+
+
+echo "*** Check dirrect call."
+# if script is called without --direct, re-invoke it with --direct and stop processing here
+if [ "${1:-}" != "--direct" ]; then
+    echo "*** Re-invoking run.sh with --direct to continue after self-update..."
+    exec bash "$LOCALFOLDER/run.sh" --direct
+fi
 
 mkdir -p .storage .redis .postgres-db
 # Ensure correct ownership
