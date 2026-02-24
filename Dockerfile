@@ -32,6 +32,7 @@ WORKDIR /app
 COPY . /app
 COPY ".env.${APP_ENV:-production}" .env
 COPY --from=vendor /app/vendor /app/vendor
+COPY --from=assets /app/public/build /app/public/build
 
 RUN mkdir -p storage bootstrap/cache && \
     chown -R www-data:www-data storage bootstrap/cache && \
