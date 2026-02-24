@@ -12,8 +12,8 @@ cd "$LOCALFOLDER" || exit 1
 
 echo "*** Copying files."
 cp -f "${GITFOLDER}/compose.yml" "$LOCALFOLDER/compose.yml"
-cp -f "$LOCALFOLDER/.env" "${GITFOLDER}/.env.${APP_ENV}"
-cp -f "$GITFOLDER/run.sh" "${LOCALFOLDER}/run.sh"
+cp -f "${LOCALFOLDER}/.env" "${GITFOLDER}/.env.${APP_ENV}"
+cp -f "${GITFOLDER}/run.sh" "${LOCALFOLDER}/run.sh"
 
 
 echo "*** Check dirrect call."
