@@ -24,8 +24,9 @@ docker compose build && \
     docker compose exec -u root danielpetrica_com_web_${APP_ENV} php artisan down --retry 30 --refresh 30; \
     docker compose up -d --force-recreate && \
     docker compose exec -u root danielpetrica_com_web_${APP_ENV} chown -R www-data:www-data /app && \
-    docker compose exec -u root danielpetrica_com_web_${APP_ENV} php artisan up && \
-    docker compose exec danielpetrica_com_web_${APP_ENV} php artisan optimize && \
     docker compose exec danielpetrica_com_web_${APP_ENV} php artisan migrate --force
+    docker compose exec danielpetrica_com_web_${APP_ENV} php artisan optimize && \
+    docker compose exec -u root danielpetrica_com_web_${APP_ENV} php artisan up && \
+
 
 echo -en "\007"
