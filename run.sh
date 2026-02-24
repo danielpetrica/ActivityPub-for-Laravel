@@ -14,7 +14,9 @@ echo "*** Copying files."
 cp -f "${GITFOLDER}/compose.yml" "$LOCALFOLDER/compose.yml"
 cp -f "${LOCALFOLDER}/.env" "${GITFOLDER}/.env.${APP_ENV}"
 cp -f "${GITFOLDER}/run.sh" "${LOCALFOLDER}/run.sh"
-
+echo "${GITFOLDER}/compose.yml" "$LOCALFOLDER/compose.yml"\n\r\
+ "${LOCALFOLDER}/.env" "${GITFOLDER}/.env.${APP_ENV}"\n\r\
+ "${GITFOLDER}/run.sh" "${LOCALFOLDER}/run.sh";
 
 echo "*** Check dirrect call."
 # if script is called without --direct, re-invoke it with --direct and stop processing here
