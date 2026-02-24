@@ -3,7 +3,7 @@ FROM composer:2 AS vendor
 WORKDIR /app
 
 ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
-RUN install-php-extensions gd bcmath intl pcntl redis pdo_mysql
+RUN install-php-extensions gd bcmath intl pcntl redis pdo_pgsql
 
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --prefer-dist --no-interaction --no-scripts --no-progress
@@ -25,7 +25,7 @@ RUN yarn build
 # Stage 3: Worker (CLI)
 FROM php:8.5-cli-alpine AS worker
 COPY --from=vendor /usr/local/bin/install-php-extensions /usr/local/bin/
-RUN install-php-extensions bcmath intl pcntl gd curl pdo_mysql mbstring redis
+RUN install-php-extensions bcmath intl pcntl gd curl pdo_pgsql mbstring redis
 
 ARG APP_ENV=production
 WORKDIR /app
@@ -46,7 +46,7 @@ WORKDIR /app
 
 ARG APP_ENV=production
 ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
-RUN install-php-extensions bcmath intl pcntl gd curl pdo_mysql mbstring redis
+RUN install-php-extensions bcmath intl pcntl gd curl pdo_pgsql mbstring redis
 
 COPY . /app
 COPY ".env.${APP_ENV:-production}" .env
