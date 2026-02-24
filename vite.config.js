@@ -12,6 +12,7 @@ export default defineConfig({
                 'resources/js/filament/rich-content-plugins/figcaption.js',
                 'resources/js/filament/rich-content-plugins/div.js',
                 'resources/js/filament/rich-content-plugins/iframe.js',
+                'resources/js/filament/rich-content-plugins/image-proxy.js',
             ],
             refresh: true,
         }),

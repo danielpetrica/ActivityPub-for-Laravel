@@ -29,9 +29,9 @@ Route::get('/servizi/{service:slug}/{city:slug}', [LocalServiceController::class
 // Newsletter subscription endpoint (no session / no CSRF)
 Route::post('/subscribe', [NewsletterSubscriptionController::class, 'store'])->name('newsletter.subscribe');
 
-Route::get('demo', [StaticController::class, 'demo'])->name('demo');
-
+Route::get('/demo', [StaticController::class, 'demo'])->name('demo');
 // Sitemaps
+Route::get('/talks/100-container-vps', [StaticController::class, 'vpsContainersTalk'])->name('talks.vps-containers');
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.index');
 Route::get('/sitemap-pages.xml', [SitemapController::class, 'pages'])->name('sitemap.pages');
 Route::get('/sitemap-posts.xml', [SitemapController::class, 'posts'])->name('sitemap.posts');

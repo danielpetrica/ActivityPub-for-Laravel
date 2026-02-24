@@ -21,7 +21,7 @@ sudo chown -R 999:999 .redis .mysql-db
 
 echo "*** Building docker."
 docker compose build && \
-    docker compose exec -u root danielpetrica_com_web_${APP_ENV} php artisan down --retry 30 --refresh 30 && \
+    docker compose exec -u root danielpetrica_com_web_${APP_ENV} php artisan down --retry 30 --refresh 30; \
     docker compose up -d --force-recreate && \
     docker compose exec -u root danielpetrica_com_web_${APP_ENV} chown -R www-data:www-data /app && \
     docker compose exec -u root danielpetrica_com_web_${APP_ENV} php artisan up && \

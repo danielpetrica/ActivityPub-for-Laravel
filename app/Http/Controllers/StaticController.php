@@ -141,4 +141,9 @@ final class StaticController extends Controller
             data: ['structuredData' => $structuredData]
         );
     }
+
+    public function vpsContainersTalk(): View
+    {
+        return view(view: 'talks.vps-containers');
+    }
 }

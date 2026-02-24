@@ -1,4 +1,7 @@
 @props(['title' => 'Contattami'])
+@php
+    $errors = $errors ?? new \Illuminate\Support\ViewErrorBag;
+@endphp
 
 <div id="contact" class="w-full">
     @if(session('contact_success'))
@@ -8,7 +11,9 @@
     @endif
 
     <form action="{{ route('contact.submit') }}" method="POST" class="space-y-5" novalidate>
-        @csrf
+        @if(Session::isStarted())
+            @csrf
+        @endif
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
