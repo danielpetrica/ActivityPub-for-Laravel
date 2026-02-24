@@ -32,7 +32,7 @@ echo "*** Building docker."
 SERVICE="danielpetrica_com_web_${APP_ENV}"
 
 # Build images
-docker compose build && \
+docker compose build -q && \
     echo "*** Checking if $SERVICE is running to put app in maintenance..." && \
     if docker compose ps -q "$SERVICE" >/dev/null 2>&1 && [ -n "$(docker compose ps -q "$SERVICE")" ] && docker inspect -f '{{.State.Running}}' "$(docker compose ps -q "$SERVICE")" 2>/dev/null | grep -q true; then \
         docker compose exec -u root "$SERVICE" php artisan down --retry 2 --refresh 30; \

@@ -123,7 +123,7 @@ services:
 
   db_backup:
     image: tiredofit/db-backup
-    container_name: db_backup_danielpetrica_com_${APP_ENV}
+    container_name: db_backup_danielpetricacom_${APP_ENV}
     depends_on:
       - db
     volumes:
