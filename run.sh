@@ -29,7 +29,7 @@ sudo chown -R 82:82 .storage
 sudo chown -R 999:999 .redis .postgres-db
 
 echo "*** Building docker."
-SERVICE="danielpetrica_com_web_${APP_ENV}"
+SERVICE="worker"
 
 # Build images
 docker compose build -q && \
