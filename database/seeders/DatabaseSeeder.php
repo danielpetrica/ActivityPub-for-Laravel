@@ -43,11 +43,6 @@ class DatabaseSeeder extends Seeder
             $this->seedFakeData();
         }
 
-        // Create Tools
-        Tool::factory()
-            ->count(5)
-            ->create();
-
         // Seed Services
         $this->call(ServiceSeeder::class);
 
