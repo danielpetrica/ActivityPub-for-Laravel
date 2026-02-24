@@ -51,19 +51,7 @@ docker compose build -q && \
     echo "*** Starting containers..." && \
     docker compose up -d --force-recreate && \
     echo "*** Waiting for $SERVICE to become healthy..." && \
-    CID="$(docker compose ps -q "$SERVICE")" && \
-    if [ -n "$CID" ]; then \
-        # Wait up to ~30s for health to be healthy (20x15s in compose.yml); use our own 180s max here.
-        SECONDS_WAITED=0; \
-        until [ "$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}running{{end}}' "$CID" 2>/dev/null)" = "healthy" ]; do \
-            if [ $SECONDS_WAITED -ge 30 ]; then \
-                echo "Timed out waiting for $SERVICE to be healthy."; \
-                break; \
-            fi; \
-            sleep 2; \
-            SECONDS_WAITED=$((SECONDS_WAITED+5)); \
-        done; \
-    fi && \
+    sleep 5 && \
     docker compose exec -u root "$SERVICE" chown -R www-data:www-data /app && \
     docker compose exec "$SERVICE" php artisan migrate --force && \
     docker compose exec "$SERVICE" php artisan optimize && \
