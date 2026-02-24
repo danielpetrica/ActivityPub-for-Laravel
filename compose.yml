@@ -9,7 +9,7 @@ x-volumes: &laravel-volumes
     - ./.storage/framework/:/app/storage/framework
 
 x-common: &common
-  <<: [*default-env, *laravel-]]volumes]
+  <<: [*default-env, *laravel-volumes]
 
 name: danielpetrica_com_${APP_ENV}
 
@@ -24,6 +24,7 @@ services:
       target: frankenphp
       args:
         APP_ENV: ${APP_ENV:-production}
+
     <<: *laravel-volumes
     labels:
       - traefik.enable=true
