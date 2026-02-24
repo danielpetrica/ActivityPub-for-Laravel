@@ -19,7 +19,7 @@ services:
     image: danielpetrica_com:frankenphp
     pull_policy: never
     build:
-      context: ${CONTEXT_LOCATION:-.}
+      context: ${GIT_FOLDER:-.}
       dockerfile: ${GIT_FOLDER}/Dockerfile
       target: frankenphp
       args:
@@ -56,7 +56,7 @@ services:
     image: danielpetrica_com:worker
     pull_policy: never
     build:
-      context: ${CONTEXT_LOCATION:-.}
+      context: ${GIT_FOLDER:-.}
       dockerfile: ${GIT_FOLDER}/Dockerfile
       target: worker
       args:
