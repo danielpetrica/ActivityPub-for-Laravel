@@ -51,7 +51,6 @@ docker compose build -q && \
     echo "*** Starting containers..." && \
     docker compose up -d --force-recreate && \
     echo "*** Waiting for $SERVICE to become healthy..." && \
-    sleep 5 && \
     docker compose exec -u root "$SERVICE" chown -R www-data:www-data /app && \
     docker compose exec "$SERVICE" php artisan migrate --force && \
     docker compose exec "$SERVICE" php artisan optimize && \
