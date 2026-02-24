@@ -46,14 +46,14 @@ docker compose build -q && \
     echo "*** Waiting for $SERVICE to become healthy..." && \
     CID="$(docker compose ps -q "$SERVICE")" && \
     if [ -n "$CID" ]; then \
-        # Wait up to ~5 minutes for health to be healthy (20x15s in compose.yml); use our own 180s max here.
+        # Wait up to ~30s for health to be healthy (20x15s in compose.yml); use our own 180s max here.
         SECONDS_WAITED=0; \
         until [ "$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}running{{end}}' "$CID" 2>/dev/null)" = "healthy" ]; do \
-            if [ $SECONDS_WAITED -ge 180 ]; then \
+            if [ $SECONDS_WAITED -ge 30 ]; then \
                 echo "Timed out waiting for $SERVICE to be healthy."; \
                 break; \
             fi; \
-            sleep 5; \
+            sleep 2; \
             SECONDS_WAITED=$((SECONDS_WAITED+5)); \
         done; \
     fi && \
