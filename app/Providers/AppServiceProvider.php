@@ -46,5 +46,9 @@ class AppServiceProvider extends ServiceProvider
             Js::make('rich-content-plugins/iframe', Vite::asset('resources/js/filament/rich-content-plugins/iframe.js'))->loadedOnRequest(),
             Js::make('rich-content-plugins/image-proxy', Vite::asset('resources/js/filament/rich-content-plugins/image-proxy.js'))->loadedOnRequest(),
         ]);
+
+        if($this->app->environment('production')) {
+            \URL::forceScheme('https');
+        }
     }
 }
