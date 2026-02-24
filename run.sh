@@ -25,8 +25,18 @@ if [ "${1:-}" != "--direct" ]; then
     exec bash "$LOCALFOLDER/run.sh" --direct
 fi
 
-mkdir -p .storage .redis .postgres-db
-# Ensure correct ownership
+# Ensure required host-mounted storage subdirectories exist for Laravel view/cache paths
+mkdir -p \
+  .storage/logs \
+  .storage/app \
+  .storage/framework \
+  .storage/framework/views \
+  .storage/framework/cache \
+  .storage/framework/sessions \
+  .storage/framework/testing \
+  .redis \
+  .postgres-db
+# Ensure correct ownership (www-data on Alpine is uid:gid 82:82; redis is 999:999)
 sudo chown -R 82:82 .storage
 sudo chown -R 999:999 .redis .postgres-db
 
