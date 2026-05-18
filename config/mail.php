@@ -97,6 +97,12 @@ return [
             'retry_after' => 60,
         ],
 
+        'mailcoach' => [
+            'transport' => 'mailcoach',
+            'domain' => env('MAILCOACH_DOMAIN'),
+            'token' => env('MAILCOACH_API_TOKEN'),
+        ],
+
     ],
 
     /*

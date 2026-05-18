@@ -15,6 +15,8 @@
         "laravel/tinker": "^2.10.1",
         "league/flysystem-aws-s3-v3": "^3.0",
         "league/flysystem-path-prefixing": "^3.31",
+        "spatie/laravel-mailcoach-mailer": "^1.6",
+        "spatie/laravel-mailcoach-sdk": "^1.5",
         "ueberdosis/tiptap-php": "^2.1"
     },
     "require-dev": {

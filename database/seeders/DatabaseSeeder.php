@@ -21,11 +21,14 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Create Admin User
-        User::create([
+        $user = User::create([
             'name' => 'Admin',
             'email' => 'admin@danielpetrica.com',
             'password' => Hash::make('password'),
         ]);
+
+        // send email verification to admin user for safety.
+        $user->sendEmailVerificationNotification();
 
         $ghostExportPath = $this->findLatestGhostExport();
 
@@ -102,7 +105,7 @@ class DatabaseSeeder extends Seeder
      */
     protected function findLatestGhostExport(): ?string
     {
-        $files = glob(pattern: storage_path(path: 'app/*.json'));
+        $files = glob(pattern: storage_path(path: 'app/daniel-petrica.ghost.*.json'));
 
         if (empty($files)) {
             return null;
