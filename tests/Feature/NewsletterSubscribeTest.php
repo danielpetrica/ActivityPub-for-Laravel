@@ -1,12 +1,18 @@
 <?php
 
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function () {
+    // The route is now CSRF-protected via web middleware.
+    // Disable CSRF in tests since the JS layer handles it in production.
+    $this->withoutMiddleware(VerifyCsrfToken::class);
+});
+
 it('subscribes via form post and redirects with query flag', function () {
-    // Fake Mailcoach API
     Http::fake([
         '*' => Http::response(status: 200, body: ['ok' => true]),
     ]);
@@ -39,4 +45,12 @@ it('validates email', function () {
     ]);
 
     $response->assertSessionHasErrors();
-})->skip('Frontend is session-less, so validation errors are not flashed.');
+});
+
+it('returns csrf token endpoint', function () {
+    $response = $this->get('/csrf-token');
+
+    $response->assertOk();
+    $response->assertJsonStructure(['csrf_token']);
+    expect($response->json('csrf_token'))->toBeString();
+});

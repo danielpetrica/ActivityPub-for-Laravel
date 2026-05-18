@@ -22,7 +22,7 @@
     </div>
 @endif
 
-<form {{ $attributes->merge(['class' => $formClasses]) }} action="{{ route('newsletter.subscribe') }}" method="POST" novalidate>
+<form {{ $attributes->merge(['class' => $formClasses, 'data-csrf-form' => true]) }} action="{{ route('newsletter.subscribe') }}" method="POST" novalidate>
     <input type="hidden" name="slug" value="{{ $slug }}" />
 
     @if($layout === 'inline')
@@ -44,3 +44,63 @@
         </x-ui.button>
     @endif
 </form>
+
+<script>
+(function() {
+    var CSRF_ENDPOINT = '{{ route('csrf-token') }}';
+
+    function fetchToken() {
+        return fetch(CSRF_ENDPOINT, { cache: 'no-store' })
+            .then(function(r) { return r.json(); })
+            .then(function(data) { return data.csrf_token; })
+            .catch(function() { return ''; });
+    }
+
+    function injectToken(form, token) {
+        var input = form.querySelector('input[name="_token"]');
+        if (!input) {
+            input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = '_token';
+            form.appendChild(input);
+        }
+        input.value = token;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var forms = document.querySelectorAll('form[data-csrf-form]');
+        if (!forms.length) return;
+
+        // Initial token injection
+        fetchToken().then(function(token) {
+            for (var i = 0; i < forms.length; i++) {
+                injectToken(forms[i], token);
+            }
+        });
+
+        // Refresh token on submit to avoid expired-token 419
+        for (var i = 0; i < forms.length; i++) {
+            (function(form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    fetchToken().then(function(token) {
+                        injectToken(form, token);
+
+                        // If token fetch failed, show a user-friendly message
+                        if (!token) {
+                            var msg = document.createElement('p');
+                            msg.className = 'text-sm text-red-600 mt-2';
+                            msg.textContent = 'Could not verify your session. Please try again.';
+                            form.appendChild(msg);
+                            return;
+                        }
+
+                        form.submit();
+                    });
+                });
+            })(forms[i]);
+        }
+    });
+})();
+</script>

@@ -2,7 +2,6 @@
 
 use App\Classes\Business\RedirectBusiness;
 use App\Http\Controllers\LocalServiceController;
-use App\Http\Controllers\NewsletterSubscriptionController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StaticController;
 use Illuminate\Support\Facades\Route;
@@ -25,9 +24,6 @@ Route::get('/tools/{slug}', [StaticController::class, 'showTool'])->name('tools.
 Route::get('/servizi/{service:slug}/{city:slug}', [LocalServiceController::class, 'show'])
     ->name('services.local')
     ->withoutScopedBindings();
-
-// Newsletter subscription endpoint (no session / no CSRF)
-Route::post('/subscribe', [NewsletterSubscriptionController::class, 'store'])->name('newsletter.subscribe');
 
 Route::get('/demo', [StaticController::class, 'demo'])->name('demo');
 // Sitemaps

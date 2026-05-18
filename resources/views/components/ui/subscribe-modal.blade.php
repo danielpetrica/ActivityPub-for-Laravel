@@ -3,7 +3,7 @@
 @endphp
 
 <dialog id="subscribe-dialog" class="backdrop:bg-neutral-900/50 backdrop:backdrop-blur-sm p-0 rounded-2xl border-0 shadow-2xl w-full max-w-md bg-white overflow-hidden focus:outline-none">
-    <form method="POST" action="{{ route('newsletter.subscribe') }}" class="p-6 space-y-4" novalidate>
+    <form method="POST" action="{{ route('newsletter.subscribe') }}" data-csrf-form class="p-6 space-y-4" novalidate>
         <div class="flex items-start justify-between gap-4">
             <div>
                 <h2 class="text-xl font-semibold text-neutral-900">Subscribe to the newsletter</h2>
@@ -59,4 +59,59 @@
 
         // Support ESC to close via native dialog behaviour
     });
+
+    (function() {
+        var CSRF_ENDPOINT = '{{ route('csrf-token') }}';
+
+        function fetchToken() {
+            return fetch(CSRF_ENDPOINT, { cache: 'no-store' })
+                .then(function(r) { return r.json(); })
+                .then(function(data) { return data.csrf_token; })
+                .catch(function() { return ''; });
+        }
+
+        function injectToken(form, token) {
+            var input = form.querySelector('input[name="_token"]');
+            if (!input) {
+                input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = '_token';
+                form.appendChild(input);
+            }
+            input.value = token;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var forms = document.querySelectorAll('form[data-csrf-form]');
+            if (!forms.length) return;
+
+            fetchToken().then(function(token) {
+                for (var i = 0; i < forms.length; i++) {
+                    injectToken(forms[i], token);
+                }
+            });
+
+            for (var i = 0; i < forms.length; i++) {
+                (function(form) {
+                    form.addEventListener('submit', function(e) {
+                        e.preventDefault();
+
+                        fetchToken().then(function(token) {
+                            injectToken(form, token);
+
+                            if (!token) {
+                                var msg = document.createElement('p');
+                                msg.className = 'text-sm text-red-600 mt-2';
+                                msg.textContent = 'Could not verify your session. Please try again.';
+                                form.appendChild(msg);
+                                return;
+                            }
+
+                            form.submit();
+                        });
+                    });
+                })(forms[i]);
+            }
+        });
+    })();
 </script>
