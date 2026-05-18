@@ -10,6 +10,8 @@ class ListPages extends ListRecords
 {
     protected static string $resource = PageResource::class;
 
+    protected ?string $subheading = 'Manage static content pages (About, Contact, Privacy, etc.) with rich content editing, featured images, and SEO metadata. Includes support for custom code injection per page.';
+
     protected function getHeaderActions(): array
     {
         return [

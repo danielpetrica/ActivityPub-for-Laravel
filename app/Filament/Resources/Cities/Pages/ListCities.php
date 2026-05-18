@@ -10,6 +10,8 @@ class ListCities extends ListRecords
 {
     protected static string $resource = CityResource::class;
 
+    protected ?string $subheading = 'Manage a directory of cities with province, region, geographic coordinates, and capital status. Powers location-based pages and local content on the site.';
+
     protected function getHeaderActions(): array
     {
         return [

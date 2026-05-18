@@ -13,6 +13,8 @@ class ListRedirects extends ListRecords
 {
     protected static string $resource = RedirectResource::class;
 
+    protected ?string $subheading = 'Define HTTP redirects from old site paths to new destinations. Useful for preserving SEO value when URLs change or pages are moved.';
+
     protected function getHeaderActions(): array
     {
         return [

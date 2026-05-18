@@ -10,6 +10,8 @@ final class ListNewsletterForms extends ListRecords
 {
     protected static string $resource = NewsletterFormResource::class;
 
+    protected ?string $subheading = 'Create and manage embeddable newsletter subscription forms placed on pages via shortcodes. Each form has customizable title, description, button text, and success message.';
+
     protected function getHeaderActions(): array
     {
         return [

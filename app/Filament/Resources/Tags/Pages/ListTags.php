@@ -10,6 +10,8 @@ class ListTags extends ListRecords
 {
     protected static string $resource = TagResource::class;
 
+    protected ?string $subheading = 'Manage taxonomy tags used to categorize blog posts into topics. Each tag can have its own image, description, and SEO metadata for a dedicated public tag page.';
+
     protected function getHeaderActions(): array
     {
         return [

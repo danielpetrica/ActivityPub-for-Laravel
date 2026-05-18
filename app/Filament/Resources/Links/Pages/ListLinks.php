@@ -13,6 +13,8 @@ class ListLinks extends ListRecords
 {
     protected static string $resource = LinkResource::class;
 
+    protected ?string $subheading = 'Manage navigation links for the site\'s header and footer areas. Supports customizable ordering, position assignment, and external link indicators.';
+
     protected function getHeaderActions(): array
     {
         return [
