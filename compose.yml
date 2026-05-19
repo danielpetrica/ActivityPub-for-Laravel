@@ -90,6 +90,10 @@ services:
   nightwatch-agent:
     container_name: nightwatch-agent
     image: laravelphp/nightwatch-agent:v1
+    environment:
+      NIGHTWATCH_TOKEN: ${NIGHTWATCH_TOKEN}
+      NIGHTWATCH_REQUEST_SAMPLE_RATE: $ {NIGHTWATCH_REQUEST_SAMPLE_RATE:-0.1}
+      NIGHTWATCH_IGNORE_CACHE_EVENTS: $ {NIGHTWATCH_IGNORE_CACHE_EVENTS:-true}
     <<: *default-env
     command: ["php", "artisan", "nightwatch:agent"]
     networks:
