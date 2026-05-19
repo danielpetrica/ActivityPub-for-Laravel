@@ -4,12 +4,7 @@
 
             <!-- Brand & Bio -->
             <div class="lg:col-span-1">
-                <div class="flex items-center gap-2 mb-6">
-                    <div class="h-8 w-8 rounded-full bg-primary-500 flex items-center justify-center">
-                        <span class="text-white font-bold text-sm">DP</span>
-                    </div>
-                    <span class="font-bold text-lg text-neutral-900">danielpetrica.com</span>
-                </div>
+                <x-header-logo/>
                 <p class="text-neutral-500 text-sm leading-relaxed mb-6" itemprop="description">
                     Documenting my journey through Laravel, Docker, and the freelance world. Helping you build better software.
                 </p>
