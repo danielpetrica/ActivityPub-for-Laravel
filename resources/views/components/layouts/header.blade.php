@@ -3,12 +3,7 @@
         <div class="flex justify-between items-center h-16">
 
             <!-- Logo Area -->
-            <a href="/" class="flex-shrink-0 flex items-center gap-3 group focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg p-1" aria-label="Daniel Petrica Home">
-                <div class="h-10 w-10 rounded-full bg-primary-100 border-2 border-primary-500 flex items-center justify-center overflow-hidden group-hover:scale-105 transition-transform">
-                    <i data-lucide="user" class="h-6 w-6 text-primary-600"></i>
-                </div>
-                <span class="font-bold text-xl tracking-tight text-neutral-900 group-hover:text-primary-600 transition-colors">danielpetrica.com</span>
-            </a>
+            <x-header-logo/>
 
             <!-- Desktop Menu -->
             @php
