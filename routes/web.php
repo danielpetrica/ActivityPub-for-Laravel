@@ -7,6 +7,11 @@ use App\Models\User;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Laravel\Nightwatch\Http\Middleware\Sample;
+
+Route::get('/up', function () {
+    return response()->noContent();
+})->middleware(Sample::never());
 
 Route::get(uri: '/admin/media-proxy', action: MediaProxyController::class)
     ->middleware(middleware: ['auth'])
