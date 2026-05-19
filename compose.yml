@@ -87,6 +87,15 @@ services:
       - internal
     restart: unless-stopped
 
+    nightwatch-agent:
+      container_name: nightwatch-agent
+      image: laravelphp/nightwatch-agent:v1
+      <<: *default-env
+      command: ["php", "artisan", "nightwatch:agent"]
+      networks:
+        - internal
+      restart: unless-stopped
+
   db:
     image: postgres:18
     container_name: danielpetrica_com_db_${APP_ENV}
