@@ -6,6 +6,7 @@ use App\Models\Page;
 use App\Models\Post;
 use App\Models\Tag;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -43,12 +44,16 @@ final class CleanupOgImages extends Command
         }
 
         // Clean up non-model-tied images (homepage, all-posts)
-        $staticPaths = ['homepage.png', 'all-posts.png'];
-        foreach ($staticPaths as $path) {
+        $staticPaths = [
+            'homepage.png' => 'og-image.homepage',
+            'all-posts.png' => 'og-image.all-posts',
+        ];
+        foreach ($staticPaths as $path => $cacheKey) {
             if ($disk->exists($path)) {
                 $lastModified = $disk->lastModified($path);
-                if ($lastModified && $lastModified < $cutoff->timestamp) {
+                if ($lastModified !== false && $lastModified < $cutoff->timestamp) {
                     $disk->delete($path);
+                    Cache::forget(key: $cacheKey);
                     $deleted++;
                 }
             }

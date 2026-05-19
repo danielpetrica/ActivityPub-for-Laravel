@@ -1,14 +1,12 @@
 @php
-    use App\Classes\Business\OgImageBusiness;
-
     if ($tag->image_path) {
-        $metaImage = asset('storage/' . $tag->image_path);
+        $metaImage = Storage::url($tag->image_path);
     } elseif ($tag->og_image && $tag->og_image_generated_at === null) {
         $metaImage = $tag->og_image;
     } elseif ($tag->og_image && $tag->og_image_generated_at !== null) {
         $metaImage = Storage::disk('og-images')->url($tag->og_image);
     } else {
-        $metaImage = OgImageBusiness::generateForTag($tag);
+        $metaImage = null;
     }
 @endphp
 
@@ -20,7 +18,7 @@
     <x-layouts.hero
         :title="'Tag: ' . $tag->name"
         :excerpt="$tag->description ?? 'Browsing all articles tagged with ' . $tag->name"
-        :image="$tag->image_path ? asset('storage/' . $tag->image_path) : null"
+        :image="$tag->image_path ? Storage::url($tag->image_path) : null"
     />
 
     <section class="py-20 bg-white">

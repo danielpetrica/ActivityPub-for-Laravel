@@ -4,12 +4,16 @@ namespace App\Observers;
 
 use App\Classes\Business\OgImageBusiness;
 use App\Models\Tag;
+use Illuminate\Support\Facades\Log;
 
 final class TagObserver
 {
     public function saved(Tag $tag): void
     {
-        if ($tag->og_image_generated_at !== null) {
+        $needsGeneration = $tag->og_image_generated_at === null
+            || $tag->wasChanged(['name', 'description', 'og_title', 'og_description', 'meta_description']);
+
+        if ($needsGeneration) {
             OgImageBusiness::generateForTag(tag: $tag);
         }
     }
@@ -17,7 +21,14 @@ final class TagObserver
     public function deleted(Tag $tag): void
     {
         if ($tag->og_image) {
-            OgImageBusiness::deleteOgImage(path: $tag->og_image);
+            try {
+                OgImageBusiness::deleteOgImage(path: $tag->og_image);
+            } catch (\Throwable $e) {
+                Log::error('TagObserver: failed to delete OG image', [
+                    'tag_id' => $tag->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
     }
 }

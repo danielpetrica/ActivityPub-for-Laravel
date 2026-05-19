@@ -16,6 +16,9 @@
     <meta property="og:url" content="{{ $canonical ?? url()->current() }}" />
     @isset($metaImage)
         <meta property="og:image" content="{{ $metaImage }}" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:type" content="image/png" />
     @endisset
 
     {{-- Twitter Cards --}}

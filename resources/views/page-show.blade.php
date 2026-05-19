@@ -1,6 +1,5 @@
 @php
     use App\Actions\RenderPostHtmlAction;
-    use App\Classes\Business\OgImageBusiness;
 
     $canonical = route('pages.show', $page->slug);
     $metaTitle = $page->meta_title ?? $page->title;
@@ -13,7 +12,7 @@
     } elseif ($page->og_image && $page->og_image_generated_at !== null) {
         $metaImage = Storage::disk('og-images')->url($page->og_image);
     } else {
-        $metaImage = OgImageBusiness::generateForPage($page);
+        $metaImage = null;
     }
 
     $structuredData = [

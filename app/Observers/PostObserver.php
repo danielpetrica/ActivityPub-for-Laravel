@@ -5,6 +5,7 @@ namespace App\Observers;
 use App\Actions\PurgePostCacheAction;
 use App\Classes\Business\OgImageBusiness;
 use App\Models\Post;
+use Illuminate\Support\Facades\Log;
 
 final class PostObserver
 {
@@ -12,7 +13,10 @@ final class PostObserver
     {
         PurgePostCacheAction::execute($post);
 
-        if ($post->og_image_generated_at !== null) {
+        $needsGeneration = $post->og_image_generated_at === null
+            || $post->wasChanged(['title', 'excerpt', 'og_title', 'og_description', 'meta_description']);
+
+        if ($needsGeneration) {
             OgImageBusiness::generateForPost(post: $post);
         }
     }
@@ -22,7 +26,14 @@ final class PostObserver
         PurgePostCacheAction::execute($post);
 
         if ($post->og_image) {
-            OgImageBusiness::deleteOgImage(path: $post->og_image);
+            try {
+                OgImageBusiness::deleteOgImage(path: $post->og_image);
+            } catch (\Throwable $e) {
+                Log::error('PostObserver: failed to delete OG image', [
+                    'post_id' => $post->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
     }
 }

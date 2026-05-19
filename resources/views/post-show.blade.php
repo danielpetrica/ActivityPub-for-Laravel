@@ -1,6 +1,5 @@
 @php
     use App\Actions\RenderPostHtmlAction;
-    use App\Classes\Business\OgImageBusiness;
 
     $canonical = route('posts.show', $post->slug);
     $metaTitle = $post->meta_title ?? $post->title;
@@ -13,7 +12,7 @@
     } elseif ($post->og_image && $post->og_image_generated_at !== null) {
         $metaImage = Storage::disk('og-images')->url($post->og_image);
     } else {
-        $metaImage = OgImageBusiness::generateForPost($post);
+        $metaImage = null;
     }
 
     $ogType = 'article';
