@@ -3,23 +3,26 @@
 namespace App\Observers;
 
 use App\Actions\PurgePostCacheAction;
+use App\Classes\Business\OgImageBusiness;
 use App\Models\Page;
 
 final class PageObserver
 {
-    /**
-     * Handle the Page "saved" event.
-     */
     public function saved(Page $page): void
     {
         PurgePostCacheAction::execute($page);
+
+        if ($page->og_image_generated_at !== null) {
+            OgImageBusiness::generateForPage(page: $page);
+        }
     }
 
-    /**
-     * Handle the Page "deleted" event.
-     */
     public function deleted(Page $page): void
     {
         PurgePostCacheAction::execute($page);
+
+        if ($page->og_image) {
+            OgImageBusiness::deleteOgImage(path: $page->og_image);
+        }
     }
 }

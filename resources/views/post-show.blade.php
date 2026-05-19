@@ -1,10 +1,21 @@
 @php
     use App\Actions\RenderPostHtmlAction;
+    use App\Classes\Business\OgImageBusiness;
 
     $canonical = route('posts.show', $post->slug);
     $metaTitle = $post->meta_title ?? $post->title;
     $metaDescription = $post->meta_description ?? $post->excerpt ?? '';
-    $metaImage = $post->feature_image_path ? Storage::url($post->feature_image_path) : null;
+
+    if ($post->feature_image_path) {
+        $metaImage = Storage::url($post->feature_image_path);
+    } elseif ($post->og_image && $post->og_image_generated_at === null) {
+        $metaImage = $post->og_image;
+    } elseif ($post->og_image && $post->og_image_generated_at !== null) {
+        $metaImage = Storage::disk('og-images')->url($post->og_image);
+    } else {
+        $metaImage = OgImageBusiness::generateForPost($post);
+    }
+
     $ogType = 'article';
     $articlePublished = $post->published_at?->toDateString();
     $articleModified = $post->updated_at?->toDateString();

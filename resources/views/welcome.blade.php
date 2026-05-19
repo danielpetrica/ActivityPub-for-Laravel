@@ -1,6 +1,13 @@
+@php
+    use App\Classes\Business\OgImageBusiness;
+
+    $metaImage = OgImageBusiness::generateForHomepage();
+@endphp
+
 <x-layouts.app
     title="Daniel Petrica - Tech Blog"
     description="Personal blog project for Daniel Petrica, focusing on tech articles."
+    :metaImage="$metaImage"
 >
     @if($featuredPost)
         <x-layouts.hero

@@ -25,6 +25,7 @@
     @isset($metaImage)
         <meta name="twitter:image" content="{{ $metaImage }}" />
     @endisset
+    <meta name="twitter:site" content="{{config('app.url')}}">
 
     {{-- Article specific meta when available --}}
     @isset($articlePublished)

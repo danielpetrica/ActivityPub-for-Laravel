@@ -73,6 +73,19 @@ return [
             'prefix' => 'danielpetrica_com/files',
         ],
 
+        'og-images' => [
+            'driver' => 's3',
+            'key' => env('HETZNER_S3_ACCESS_KEY_ID'),
+            'secret' => env('HETZNER_S3_SECRET_ACCESS_KEY'),
+            'region' => 'us-east-1',
+            'bucket' => env('HETZNER_S3_BUCKET'),
+            'endpoint' => env('HETZNER_S3_ENDPOINT'),
+            'use_path_style_endpoint' => true,
+            'throw' => false,
+            'visibility' => 'public',
+            'prefix' => 'danielpetrica_com/og-images',
+        ],
+
     ],
 
     /*

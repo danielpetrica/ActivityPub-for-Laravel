@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  * @property string|null $og_title
  * @property string|null $og_description
  * @property string|null $og_image
+ * @property \Illuminate\Support\Carbon|null $og_image_generated_at
  * @property string|null $twitter_title
  * @property string|null $twitter_description
  * @property string|null $twitter_image
@@ -44,6 +45,7 @@ class Page extends Model
     protected $casts = [
         'content' => 'array',
         'status' => PostStatus::class,
+        'og_image_generated_at' => 'datetime',
         'show_title_and_feature_image' => 'bool',
     ];
 

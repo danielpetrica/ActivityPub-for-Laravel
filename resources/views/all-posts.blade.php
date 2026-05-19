@@ -1,6 +1,13 @@
+@php
+    use App\Classes\Business\OgImageBusiness;
+
+    $metaImage = OgImageBusiness::generateForAllPosts();
+@endphp
+
 <x-layouts.app
     title="All Posts - Daniel Petrica"
     description="Browsing all articles about Laravel, DevOps, and more."
+    :metaImage="$metaImage"
 >
     <x-layouts.hero
         title="All Posts"

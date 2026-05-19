@@ -1,6 +1,21 @@
+@php
+    use App\Classes\Business\OgImageBusiness;
+
+    if ($tag->image_path) {
+        $metaImage = asset('storage/' . $tag->image_path);
+    } elseif ($tag->og_image && $tag->og_image_generated_at === null) {
+        $metaImage = $tag->og_image;
+    } elseif ($tag->og_image && $tag->og_image_generated_at !== null) {
+        $metaImage = Storage::disk('og-images')->url($tag->og_image);
+    } else {
+        $metaImage = OgImageBusiness::generateForTag($tag);
+    }
+@endphp
+
 <x-layouts.app
     :title="$tag->meta_title ?? 'Posts tagged with ' . $tag->name . ' - Daniel Petrica'"
     :description="$tag->meta_description ?? 'Browsing all articles tagged with ' . $tag->name"
+    :metaImage="$metaImage"
 >
     <x-layouts.hero
         :title="'Tag: ' . $tag->name"

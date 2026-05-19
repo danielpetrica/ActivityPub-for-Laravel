@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property string|null $og_title
  * @property string|null $og_description
  * @property string|null $og_image
+ * @property \Illuminate\Support\Carbon|null $og_image_generated_at
  * @property string|null $twitter_title
  * @property string|null $twitter_description
  * @property string|null $twitter_image
@@ -34,7 +35,7 @@ class Tag extends Model
     protected $guarded = [];
 
     protected $casts = [
-        // No JSON casts now for SEO; explicit columns are used.
+        'og_image_generated_at' => 'datetime',
     ];
 
     public function posts(): BelongsToMany

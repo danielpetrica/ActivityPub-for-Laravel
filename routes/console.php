@@ -9,3 +9,5 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('app:refresh-redirects-cache')->twiceDaily(1, 13);
+
+Schedule::command('app:cleanup-og-images')->daily();

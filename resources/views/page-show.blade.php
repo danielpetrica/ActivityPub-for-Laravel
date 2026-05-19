@@ -1,9 +1,21 @@
 @php
     use App\Actions\RenderPostHtmlAction;
+    use App\Classes\Business\OgImageBusiness;
 
     $canonical = route('pages.show', $page->slug);
     $metaTitle = $page->meta_title ?? $page->title;
     $metaDescription = $page->meta_description ?? $page->excerpt ?? '';
+
+    if ($page->feature_image_path) {
+        $metaImage = Storage::url($page->feature_image_path);
+    } elseif ($page->og_image && $page->og_image_generated_at === null) {
+        $metaImage = $page->og_image;
+    } elseif ($page->og_image && $page->og_image_generated_at !== null) {
+        $metaImage = Storage::disk('og-images')->url($page->og_image);
+    } else {
+        $metaImage = OgImageBusiness::generateForPage($page);
+    }
+
     $structuredData = [
         '@context' => 'https://schema.org',
         '@type' => 'WebPage',
@@ -17,6 +29,7 @@
 <x-layouts.app
     :title="$metaTitle"
     :description="$metaDescription"
+    :metaImage="$metaImage"
     :structuredData="$structuredData"
     :canonical="$canonical"
 >
