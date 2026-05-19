@@ -99,6 +99,12 @@ services:
     networks:
       - internal
     restart: unless-stopped
+    healthcheck:
+      test: php nightwatch-status
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
 
   db:
     image: postgres:18
