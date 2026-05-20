@@ -1,1 +1,5 @@
 /run.sh
+.env*
+auth.json
+deploy/
+.git/
