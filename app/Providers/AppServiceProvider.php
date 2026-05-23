@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\Link;
 use App\Models\Page;
 use App\Models\Post;
 use App\Models\Tag;
+use App\Observers\LinkObserver;
 use App\Observers\PageObserver;
 use App\Observers\PostObserver;
 use App\Observers\TagObserver;
@@ -39,7 +41,7 @@ class AppServiceProvider extends ServiceProvider
         Page::observe(PageObserver::class);
         Tag::observe(TagObserver::class);
 
-        \App\Models\Link::observe(\App\Observers\LinkObserver::class);
+        Link::observe(LinkObserver::class);
 
         // Register TipTap JS extensions for the Filament RichEditor.
         FilamentAsset::register([

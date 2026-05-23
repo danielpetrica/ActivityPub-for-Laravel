@@ -16,6 +16,9 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tiptap\Editor;
+use Tiptap\Extensions\StarterKit;
+use Tiptap\Marks\Link;
+use Tiptap\Nodes\Image;
 
 final class GhostImportBusiness
 {
@@ -116,9 +119,9 @@ final class GhostImportBusiness
     {
         return new Editor(configuration: [
             'extensions' => [
-                new \Tiptap\Extensions\StarterKit,
-                new \Tiptap\Nodes\Image,
-                new \Tiptap\Marks\Link,
+                new StarterKit,
+                new Image,
+                new Link,
                 new Div,
                 new Figure,
                 new Figcaption,

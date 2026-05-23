@@ -2,11 +2,12 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Tag;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @property-read \App\Models\Tag $resource
+ * @property-read Tag $resource
  */
 final class TagResource extends JsonResource
 {

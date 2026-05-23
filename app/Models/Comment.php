@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use Database\Factories\CommentFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -13,14 +15,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $author_name
  * @property string $comment
  * @property bool $is_approved
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @property-read Post $post
  * @property-read User|null $user
  */
 class Comment extends Model
 {
-    /** @use HasFactory<\Database\Factories\CommentFactory> */
+    /** @use HasFactory<CommentFactory> */
     use HasFactory;
 
     protected $guarded = [];

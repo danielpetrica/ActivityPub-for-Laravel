@@ -1,6 +1,6 @@
 <?php
 
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 
@@ -9,7 +9,7 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     // The route is now CSRF-protected via web middleware.
     // Disable CSRF in tests since the JS layer handles it in production.
-    $this->withoutMiddleware(VerifyCsrfToken::class);
+    $this->withoutMiddleware(PreventRequestForgery::class);
 });
 
 it('subscribes via form post and redirects with query flag', function () {

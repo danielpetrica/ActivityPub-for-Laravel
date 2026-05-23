@@ -3,11 +3,12 @@
 namespace Database\Factories;
 
 use App\Enums\PostStatus;
+use App\Models\Page;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Page>
+ * @extends Factory<Page>
  */
 class PageFactory extends Factory
 {

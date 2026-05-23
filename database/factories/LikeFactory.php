@@ -2,10 +2,12 @@
 
 namespace Database\Factories;
 
+use App\Models\Like;
+use App\Models\Post;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Like>
+ * @extends Factory<Like>
  */
 class LikeFactory extends Factory
 {
@@ -17,7 +19,7 @@ class LikeFactory extends Factory
     public function definition(): array
     {
         return [
-            'post_id' => \App\Models\Post::factory(),
+            'post_id' => Post::factory(),
             'ip_address' => $this->faker->ipv4(),
             'user_agent' => $this->faker->userAgent(),
         ];

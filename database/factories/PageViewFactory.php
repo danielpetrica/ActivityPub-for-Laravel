@@ -2,10 +2,12 @@
 
 namespace Database\Factories;
 
+use App\Models\PageView;
+use App\Models\Post;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\PageView>
+ * @extends Factory<PageView>
  */
 class PageViewFactory extends Factory
 {
@@ -18,7 +20,7 @@ class PageViewFactory extends Factory
     {
         return [
             'viewable_id' => 1,
-            'viewable_type' => \App\Models\Post::class,
+            'viewable_type' => Post::class,
             'ip_address' => $this->faker->ipv4(),
             'referer' => $this->faker->url(),
             'user_agent' => $this->faker->userAgent(),

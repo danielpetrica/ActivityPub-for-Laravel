@@ -2,11 +2,12 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Page;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @property-read \App\Models\Page $resource
+ * @property-read Page $resource
  */
 final class PageResource extends JsonResource
 {

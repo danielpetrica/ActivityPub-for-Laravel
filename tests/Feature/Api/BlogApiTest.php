@@ -3,6 +3,8 @@
 use App\Enums\PostStatus;
 use App\Models\Comment;
 use App\Models\Post;
+use App\Models\Tag;
+use App\Models\Tool;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 
@@ -115,7 +117,7 @@ it('prevents multiple likes from same IP today', function () {
 });
 
 it('can fetch a tag and its posts', function () {
-    $tag = \App\Models\Tag::factory()->create(['name' => 'Laravel', 'slug' => 'laravel']);
+    $tag = Tag::factory()->create(['name' => 'Laravel', 'slug' => 'laravel']);
     $post = Post::factory()->create(['status' => PostStatus::Published]);
     $post->tags()->attach($tag);
 
@@ -127,7 +129,7 @@ it('can fetch a tag and its posts', function () {
 });
 
 it('can fetch a tool page', function () {
-    $tool = \App\Models\Tool::factory()->create([
+    $tool = Tool::factory()->create([
         'name' => 'HTML Encoder',
         'slug' => 'html-encoder',
         'html_content' => '<div id="tool">Tool content</div>',

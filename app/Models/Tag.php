@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use Database\Factories\TagFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -17,19 +20,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property string|null $og_title
  * @property string|null $og_description
  * @property string|null $og_image
- * @property \Illuminate\Support\Carbon|null $og_image_generated_at
+ * @property Carbon|null $og_image_generated_at
  * @property string|null $twitter_title
  * @property string|null $twitter_description
  * @property string|null $twitter_image
  * @property string|null $accent_color
  * @property string|null $canonical_url
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Post> $posts
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ * @property-read Collection<int, Post> $posts
  */
 class Tag extends Model
 {
-    /** @use HasFactory<\Database\Factories\TagFactory> */
+    /** @use HasFactory<TagFactory> */
     use HasFactory;
 
     protected $guarded = [];

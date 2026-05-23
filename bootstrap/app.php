@@ -1,8 +1,14 @@
 <?php
 
+use App\Http\Middleware\AnalyticsMiddleware;
+use App\Http\Middleware\LogMcpRequest;
+use App\Http\Middleware\SetCacheControlHeader;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Routing\Middleware\ThrottleRequests;
+use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -10,18 +16,18 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         then: function (): void {
-            \Illuminate\Support\Facades\Route::middleware('static')
+            Route::middleware('static')
                 ->group(__DIR__.'/../routes/static.php');
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->append(middleware: \App\Http\Middleware\AnalyticsMiddleware::class);
+        $middleware->append(middleware: AnalyticsMiddleware::class);
 
         $middleware->group(
             group: 'static',
             middleware: [
-                \App\Http\Middleware\SetCacheControlHeader::class,
-                \Illuminate\Routing\Middleware\SubstituteBindings::class,
+                SetCacheControlHeader::class,
+                SubstituteBindings::class,
             ]
         );
 
@@ -30,8 +36,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->group(
             group: 'mcp',
             middleware: [
-                \App\Http\Middleware\LogMcpRequest::class,
-                \Illuminate\Routing\Middleware\ThrottleRequests::class,
+                LogMcpRequest::class,
+                ThrottleRequests::class,
             ]
         )->throttleApi(limiter: 'mcp', redis: true);
     })

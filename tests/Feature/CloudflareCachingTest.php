@@ -1,17 +1,19 @@
 <?php
 
+use App\Enums\PostStatus;
 use App\Models\Page;
 use App\Models\Post;
 use App\Models\Tag;
 use App\Models\Tool;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
 test('static routes have cloudflare caching headers', function (string $route) {
     // Create necessary data if route requires it
     if (str_contains($route, 'posts.show')) {
-        Post::factory()->create(['slug' => 'test-post', 'status' => \App\Enums\PostStatus::Published]);
+        Post::factory()->create(['slug' => 'test-post', 'status' => PostStatus::Published]);
         $url = route($route, 'test-post');
     } elseif (str_contains($route, 'tags.show')) {
         Tag::factory()->create(['slug' => 'test-tag']);
@@ -21,11 +23,11 @@ test('static routes have cloudflare caching headers', function (string $route) {
         $url = route($route, 'test-tool');
     } elseif (str_contains($route, 'pages.show')) {
         // We create a page manually to avoid factory issues with seo_metadata
-        \Illuminate\Support\Facades\DB::table('pages')->insert([
+        DB::table('pages')->insert([
             'title' => 'Test Page',
             'slug' => 'test-page',
             'content' => json_encode(['type' => 'doc', 'content' => []]),
-            'status' => \App\Enums\PostStatus::Published->value,
+            'status' => PostStatus::Published->value,
             'created_at' => now(),
             'updated_at' => now(),
         ]);

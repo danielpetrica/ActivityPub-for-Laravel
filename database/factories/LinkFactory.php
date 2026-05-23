@@ -2,10 +2,12 @@
 
 namespace Database\Factories;
 
+use App\Enums\LinkPosition;
+use App\Models\Link;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Link>
+ * @extends Factory<Link>
  */
 class LinkFactory extends Factory
 {
@@ -17,7 +19,7 @@ class LinkFactory extends Factory
     public function definition(): array
     {
         return [
-            'position' => \App\Enums\LinkPosition::Footer,
+            'position' => LinkPosition::Footer,
             'label' => $this->faker->words(3, true),
             'url' => $this->faker->url(),
             'sort_order' => $this->faker->numberBetween(0, 100),

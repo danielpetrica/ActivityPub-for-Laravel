@@ -7,6 +7,7 @@
         "opencode",
         "phpstorm"
     ],
+    "cloud": false,
     "editors": [
         "claude_code",
         "codex",
@@ -16,8 +17,14 @@
         "phpstorm",
         "vscode"
     ],
-    "guidelines": [
-        "filament/filament",
-        "filament/blueprint"
+    "guidelines": true,
+    "skills": [
+        "ai-sdk-development",
+        "laravel-best-practices",
+        "configuring-horizon",
+        "configure-nightwatch",
+        "livewire-development",
+        "pest-testing",
+        "tailwindcss-development"
     ]
 }

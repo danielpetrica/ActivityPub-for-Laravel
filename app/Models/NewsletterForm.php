@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use Database\Factories\NewsletterFormFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -14,12 +16,12 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $button_text
  * @property string $success_message
  * @property bool $is_active
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  */
 class NewsletterForm extends Model
 {
-    /** @use HasFactory<\Database\Factories\NewsletterFormFactory> */
+    /** @use HasFactory<NewsletterFormFactory> */
     use HasFactory;
 
     protected $guarded = [];

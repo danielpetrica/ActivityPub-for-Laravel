@@ -1,10 +1,13 @@
 <?php
 
 use App\Ai\Agents\SeoGenerator;
+use App\Filament\Resources\Pages\Pages\CreatePage;
+use App\Filament\Resources\Pages\Pages\EditPage;
 use App\Models\Page;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Ai\Prompts\AgentPrompt;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
@@ -25,7 +28,7 @@ beforeEach(function () {
 });
 
 it('can generate SEO metadata via the action', function () {
-    SeoGenerator::fake(function (\Laravel\Ai\Prompts\AgentPrompt $prompt) {
+    SeoGenerator::fake(function (AgentPrompt $prompt) {
         return [
             'meta_title' => 'Generated Meta Title',
             'meta_description' => 'Generated meta description for the page.',
@@ -38,7 +41,7 @@ it('can generate SEO metadata via the action', function () {
 
     $page = Page::factory()->create();
 
-    Livewire::test(\App\Filament\Resources\Pages\Pages\EditPage::class, [
+    Livewire::test(EditPage::class, [
         'record' => $page->getKey(),
     ])
         ->mountAction('generateSeo')
@@ -46,7 +49,7 @@ it('can generate SEO metadata via the action', function () {
 });
 
 it('generates SEO and fills form fields on edit page', function () {
-    SeoGenerator::fake(function (\Laravel\Ai\Prompts\AgentPrompt $prompt) {
+    SeoGenerator::fake(function (AgentPrompt $prompt) {
         return [
             'meta_title' => 'Generated Meta Title',
             'meta_description' => 'Generated meta description for the page.',
@@ -67,7 +70,7 @@ it('generates SEO and fills form fields on edit page', function () {
         ],
     ]);
 
-    Livewire::test(\App\Filament\Resources\Pages\Pages\EditPage::class, [
+    Livewire::test(EditPage::class, [
         'record' => $page->getKey(),
     ])
         ->callAction('generateSeo', data: [
@@ -75,7 +78,7 @@ it('generates SEO and fills form fields on edit page', function () {
         ])
         ->assertHasNoFormErrors();
 
-    SeoGenerator::assertPrompted(function (\Laravel\Ai\Prompts\AgentPrompt $prompt) {
+    SeoGenerator::assertPrompted(function (AgentPrompt $prompt) {
         return str_contains($prompt->prompt, 'Test Page')
             && str_contains($prompt->prompt, 'Test content');
     });
@@ -83,12 +86,12 @@ it('generates SEO and fills form fields on edit page', function () {
 
 it('handles generation failure gracefully', function () {
     SeoGenerator::fake(function () {
-        throw new \Exception('API error');
+        throw new Exception('API error');
     });
 
     $page = Page::factory()->create();
 
-    Livewire::test(\App\Filament\Resources\Pages\Pages\EditPage::class, [
+    Livewire::test(EditPage::class, [
         'record' => $page->getKey(),
     ])
         ->callAction('generateSeo', data: [
@@ -99,7 +102,7 @@ it('handles generation failure gracefully', function () {
 it('shows generate seo button on create page', function () {
     SeoGenerator::fake();
 
-    Livewire::test(\App\Filament\Resources\Pages\Pages\CreatePage::class)
+    Livewire::test(CreatePage::class)
         ->mountAction('generateSeo')
         ->assertActionMounted('generateSeo');
 });

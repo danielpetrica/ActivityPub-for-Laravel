@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Carbon\CarbonInterface;
+use Database\Factories\CityFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -15,12 +17,12 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $description
  * @property float|null $latitude
  * @property float|null $longitude
- * @property \Carbon\CarbonInterface $created_at
- * @property \Carbon\CarbonInterface $updated_at
+ * @property CarbonInterface $created_at
+ * @property CarbonInterface $updated_at
  */
 class City extends Model
 {
-    /** @use HasFactory<\Database\Factories\CityFactory> */
+    /** @use HasFactory<CityFactory> */
     use HasFactory;
 
     protected $guarded = [];

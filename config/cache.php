@@ -1,5 +1,10 @@
 <?php
 
+use App\Models\Link;
+use App\Models\Post;
+use App\Models\Redirect;
+use App\Models\Tag;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 return [
@@ -113,5 +118,27 @@ return [
     */
 
     'prefix' => env('CACHE_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-cache-'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Serializable Classes
+    |--------------------------------------------------------------------------
+    |
+    | This option controls which classes may be unserialized from the cache.
+    | When set to false (default), no PHP objects may be unserialized from
+    | the cache, which helps prevent deserialization attacks if your app
+    | key is ever leaked. If you intentionally store objects in cache,
+    | list their class names here.
+    |
+    */
+
+    'serializable_classes' => [
+        Collection::class,
+        Illuminate\Database\Eloquent\Collection::class,
+        Link::class,
+        Post::class,
+        Redirect::class,
+        Tag::class,
+    ],
 
 ];

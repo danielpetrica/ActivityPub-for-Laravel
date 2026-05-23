@@ -2,11 +2,12 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @property-read \App\Models\Post $resource
+ * @property-read Post $resource
  */
 final class PostResource extends JsonResource
 {

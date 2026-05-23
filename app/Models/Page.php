@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use App\Enums\PostStatus;
+use Database\Factories\PageFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -18,7 +21,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  * @property string|null $og_title
  * @property string|null $og_description
  * @property string|null $og_image
- * @property \Illuminate\Support\Carbon|null $og_image_generated_at
+ * @property Carbon|null $og_image_generated_at
  * @property string|null $twitter_title
  * @property string|null $twitter_description
  * @property string|null $twitter_image
@@ -31,13 +34,13 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  * @property bool $show_title_and_feature_image
  * @property string|null $excerpt
  * @property string|null $ghost_uuid
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, PageView> $pageViews
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ * @property-read Collection<int, PageView> $pageViews
  */
 class Page extends Model
 {
-    /** @use HasFactory<\Database\Factories\PageFactory> */
+    /** @use HasFactory<PageFactory> */
     use HasFactory;
 
     protected $guarded = [];

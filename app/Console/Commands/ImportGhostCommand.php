@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Classes\Business\Import\Ghost\GhostImportBusiness;
 use Illuminate\Console\Command;
 
 class ImportGhostCommand extends Command
@@ -35,7 +36,7 @@ class ImportGhostCommand extends Command
         $this->info(string: "Starting Ghost import from {$path}".($dryRun ? ' (DRY RUN)' : ''));
 
         try {
-            $importer = new \App\Classes\Business\Import\Ghost\GhostImportBusiness(
+            $importer = new GhostImportBusiness(
                 ghostBaseUrl: $ghostBaseUrl,
                 dryRun: $dryRun
             );

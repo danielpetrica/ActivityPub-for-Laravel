@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -11,9 +13,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property string $text
  * @property bool $is_active
  * @property bool $is_cross_site
- * @property \Carbon\CarbonInterface $created_at
- * @property \Carbon\CarbonInterface $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tag> $tags
+ * @property CarbonInterface $created_at
+ * @property CarbonInterface $updated_at
+ * @property-read Collection<int, Tag> $tags
  */
 final class Announcement extends Model
 {

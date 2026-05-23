@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Carbon\CarbonInterface;
+use Database\Factories\CaseStudyFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -13,12 +15,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property string|null $description
  * @property array|null $images
  * @property bool $is_active
- * @property \Carbon\CarbonInterface $created_at
- * @property \Carbon\CarbonInterface $updated_at
+ * @property CarbonInterface $created_at
+ * @property CarbonInterface $updated_at
  */
 class CaseStudy extends Model
 {
-    /** @use HasFactory<\Database\Factories\CaseStudyFactory> */
+    /** @use HasFactory<CaseStudyFactory> */
     use HasFactory;
 
     protected $guarded = [];

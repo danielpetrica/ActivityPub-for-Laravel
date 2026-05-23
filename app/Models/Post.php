@@ -3,11 +3,15 @@
 namespace App\Models;
 
 use App\Enums\PostStatus;
+use Database\Factories\PostFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -20,7 +24,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  * @property string|null $og_title
  * @property string|null $og_description
  * @property string|null $og_image
- * @property \Illuminate\Support\Carbon|null $og_image_generated_at
+ * @property Carbon|null $og_image_generated_at
  * @property string|null $twitter_title
  * @property string|null $twitter_description
  * @property string|null $twitter_image
@@ -34,18 +38,18 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  * @property string|null $excerpt
  * @property string|null $ghost_uuid
  * @property int|null $primary_tag_id
- * @property \Illuminate\Support\Carbon|null $published_at
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
+ * @property Carbon|null $published_at
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @property-read Tag|null $primaryTag
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Tag> $tags
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Comment> $comments
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Like> $likes
- * @property-read \Illuminate\Database\Eloquent\Collection<int, PageView> $pageViews
+ * @property-read Collection<int, Tag> $tags
+ * @property-read Collection<int, Comment> $comments
+ * @property-read Collection<int, Like> $likes
+ * @property-read Collection<int, PageView> $pageViews
  */
 class Post extends Model
 {
-    /** @use HasFactory<\Database\Factories\PostFactory> */
+    /** @use HasFactory<PostFactory> */
     use HasFactory;
 
     protected $guarded = [];
@@ -64,7 +68,7 @@ class Post extends Model
         return $this->belongsToMany(related: Tag::class);
     }
 
-    public function primaryTag(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function primaryTag(): BelongsTo
     {
         return $this->belongsTo(related: Tag::class, foreignKey: 'primary_tag_id');
     }
