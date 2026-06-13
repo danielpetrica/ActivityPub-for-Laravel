@@ -11,21 +11,30 @@ x-volumes: &laravel-volumes
 x-common: &common
   <<: [*default-env, *laravel-volumes]
 
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-deploy-resources: &deploy-resources
+  deploy:
+    resources:
+      limits:
+        memory: 512M
+      reservations:
+        memory: 128M
+
 name: danielpetrica_com_${APP_ENV}
 
 services:
-  app:
+  danielpetrica_com:
     container_name: danielpetrica_com_web_${APP_ENV}
-    image: danielpetrica_com:frankenphp
-    pull_policy: never
-    build:
-      context: ${GIT_FOLDER:-.}
-      dockerfile: ${GIT_FOLDER}/Dockerfile
-      target: frankenphp
-      args:
-        APP_ENV: ${APP_ENV:-production}
-
-    <<: *laravel-volumes
+    image: ghcr.io/danielpetrica/danielpetrica.com/web:latest
+    pull_policy: always
+    <<: [*common, *deploy-resources]
+    shm_size: '256M'
+    stop_grace_period: 30s
     labels:
       - traefik.enable=true
       - traefik.http.routers.danielpetrica_com_${APP_ENV}-https.rule=Host(`${APP_DOMAIN}`)
@@ -37,67 +46,86 @@ services:
       SERVER_NAME: ${APP_DOMAIN:-:80}
       SERVER_ROOT: /app/public
     depends_on:
-      - db
-      - redis
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
     networks:
       - internal
       - traefik
     restart: unless-stopped
-    command: ["php", "artisan", "octane:frankenphp", "--host=0.0.0.0", "--port=80", "--workers=4"]
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:80/up || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 20
-      start_period: 40s
+      test: [
+        "CMD-SHELL",
+        "response=$(curl -fsS http://127.0.0.1:80/up 2>&1) || { rc=$$?; echo \"[healthcheck] GET /up failed with code $$rc, response: $$response\" >&2; exit 1; }"
+      ]
+      interval: 40s
+      timeout: 30s
+      retries: 10
+      start_period: 60s
+    logging: *default-logging
 
   worker:
     container_name: danielpetrica_com_worker_${APP_ENV}
-    image: danielpetrica_com:worker
-    pull_policy: never
-    build:
-      context: ${GIT_FOLDER:-.}
-      dockerfile: ${GIT_FOLDER}/Dockerfile
-      target: worker
-      args:
-        APP_ENV: ${APP_ENV:-production}
+    image: ghcr.io/danielpetrica/danielpetrica.com/worker:latest
+    pull_policy: always
     <<: *common
     command: ["php", "artisan", "horizon"]
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 64M
     depends_on:
-      - db
-      - redis
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
     networks:
       - internal
     restart: unless-stopped
+    logging: *default-logging
     healthcheck:
-      test: ["CMD-SHELL", "php artisan inspire >/dev/null 2>&1 || exit 1"]
+      test: ["CMD-SHELL", "php artisan about >/dev/null 2>&1 || exit 1"]
       interval: 15s
       timeout: 2s
       retries: 10
 
   scheduler:
     container_name: danielpetrica_com_scheduler_${APP_ENV}
-    image: danielpetrica_com:worker
-    <<: *laravel-volumes
+    image: ghcr.io/danielpetrica/danielpetrica.com/worker:latest
+    pull_policy: always
+    <<: *common
     command: ["php", "artisan", "schedule:work"]
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 32M
     depends_on:
-      - db
-      - redis
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
     networks:
       - internal
     restart: unless-stopped
+    logging: *default-logging
 
   nightwatch-agent:
     container_name: nightwatch-agent
     image: laravelphp/nightwatch-agent:v1
     environment:
       NIGHTWATCH_TOKEN: ${NIGHTWATCH_TOKEN}
-      NIGHTWATCH_REQUEST_SAMPLE_RATE: $ {NIGHTWATCH_REQUEST_SAMPLE_RATE:-0.1}
-      NIGHTWATCH_IGNORE_CACHE_EVENTS: $ {NIGHTWATCH_IGNORE_CACHE_EVENTS:-true}
+      NIGHTWATCH_REQUEST_SAMPLE_RATE: ${NIGHTWATCH_REQUEST_SAMPLE_RATE:-0.1}
+      NIGHTWATCH_IGNORE_CACHE_EVENTS: ${NIGHTWATCH_IGNORE_CACHE_EVENTS:-true}
     command: ["php", "artisan", "nightwatch:agent"]
     networks:
       - internal
     restart: unless-stopped
+    logging: *default-logging
     healthcheck:
       test: php nightwatch-status
       interval: 30s
@@ -108,15 +136,23 @@ services:
   db:
     image: postgres:18
     container_name: danielpetrica_com_db_${APP_ENV}
+    command:
+      - -c shared_buffers=128MB
+      - -c effective_cache_size=384MB
+      - -c max_connections=50
+      - -c wal_buffers=16MB
+      - -c max_wal_size=1GB
+      - -c checkpoint_timeout=15min
+    logging: *default-logging
     env_file: .env
     environment:
       POSTGRES_DB: ${DB_DATABASE:-app}
       POSTGRES_USER: ${DB_USERNAME:-app}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
     ports:
-      - "${DB_EXPOSE_PORT:-15432}:5432"
+      - "127.0.0.1:${DB_EXPOSE_PORT:-15432}:5432"
     volumes:
-      - ./.postgres-db/:/var/lib/postgresql
+      - postgres-data:/var/lib/postgresql
     networks:
       - internal
     restart: always
@@ -125,12 +161,13 @@ services:
       timeout: 20s
       retries: 10
       start_period: 30s
+      interval: 10s
 
   redis:
     image: redis:alpine
     container_name: danielpetrica_com_redis_${APP_ENV}
     volumes:
-      - ./.redis/redis:/data
+      - redis-data:/data
     networks:
       - internal
     healthcheck:
@@ -138,6 +175,8 @@ services:
       start_period: 30s
       retries: 10
     restart: unless-stopped
+    command: redis-server --save 3600 1 --save 300 10
+    logging: *default-logging
 
   db_backup:
     image: tiredofit/db-backup
@@ -151,7 +190,7 @@ services:
       - DB01_TYPE=postgres
       - DB01_HOST=${DB_HOST:-db}
       - DB01_NAME=${DB_DATABASE}
-      - DB01_USER=root
+      - DB01_USER=${DB_USERNAME:-app}
       - DB01_PASS=${DB_PASSWORD}
       - DB01_BACKUP_BEGIN=+0
       - DB01_BACKUP_INTERVAL=1440
@@ -163,6 +202,11 @@ services:
     networks:
       - internal
     restart: always
+    logging: *default-logging
+
+volumes:
+  redis-data:
+  postgres-data:
 
 networks:
   internal:

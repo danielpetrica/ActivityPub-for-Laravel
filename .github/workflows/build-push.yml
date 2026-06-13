@@ -1,0 +1,165 @@
+name: Build and Push Docker Images
+
+# Builds multi-arch images on native runners (amd64 + arm64) and merges
+# them into multi-arch manifests. Uses a local Docker registry to share
+# vendor+assets layer cache between the builds within each job.
+
+on:
+    push:
+        tags:
+            - 'v*'
+    workflow_dispatch:
+
+permissions:
+    contents: read
+    packages: write
+
+jobs:
+    build:
+        name: ${{ matrix.image }} (${{ matrix.arch }})
+        runs-on: ${{ matrix.runner }}
+        timeout-minutes: 30
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - target: frankenphp
+                      image: web
+                      arch: amd64
+                      platform: linux/amd64
+                      runner: ubuntu-latest
+
+                    - target: frankenphp
+                      image: web
+                      arch: arm64
+                      platform: linux/arm64
+                      runner: ubuntu-24.04-arm
+
+                    - target: worker
+                      image: worker
+                      arch: amd64
+                      platform: linux/amd64
+                      runner: ubuntu-latest
+
+                    - target: worker
+                      image: worker
+                      arch: arm64
+                      platform: linux/arm64
+                      runner: ubuntu-24.04-arm
+
+        steps:
+            - uses: actions/checkout@v6
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v4
+              with:
+                  buildkitd-flags: --debug
+                  driver-opts: network=host
+
+            - uses: docker/login-action@v4
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.repository_owner }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Generate minimal .env for build
+              run: |
+                  cat > .env << 'EOF'
+                  APP_ENV=production
+                  APP_KEY=base64:dummykeyforbuildpurposesonly
+                  APP_DEBUG=false
+                  APP_URL=http://localhost
+                  DB_CONNECTION=sqlite
+                  SESSION_DRIVER=database
+                  CACHE_STORE=database
+                  QUEUE_CONNECTION=database
+                  REDIS_CLIENT=phpredis
+                  LOG_CHANNEL=stack
+                  LOG_LEVEL=error
+                  EOF
+                  cp .env .env.production
+
+            - name: Start local Docker registry
+              run: docker run -d -p 5000:5000 --name registry registry:2
+
+            - name: Build & cache vendor+assets stages
+              env:
+                  COMPOSER_AUTH: >-
+                      {"http-basic":{"packages.filamentphp.com":{"username":"andrei@danielpetrica.com","password":"${{ secrets.FILAMENT_TOKEN }}"}}}
+              run: |
+                  docker buildx build \
+                      --cache-to type=registry,ref=localhost:5000/danielpetrica.com/cache:vendor-${{ matrix.arch }},mode=max \
+                      --secret id=composer_auth,env=COMPOSER_AUTH \
+                      --platform ${{ matrix.platform }} \
+                      --target vendor \
+                      .
+
+            - name: Build & Push ${{ matrix.image }} (${{ matrix.arch }})
+              env:
+                  COMPOSER_AUTH: >-
+                      {"http-basic":{"packages.filamentphp.com":{"username":"andrei@danielpetrica.com","password":"${{ secrets.FILAMENT_TOKEN }}"}}}
+              run: |
+                  docker buildx build \
+                      --cache-from type=registry,ref=localhost:5000/danielpetrica.com/cache:vendor-${{ matrix.arch }} \
+                      --secret id=composer_auth,env=COMPOSER_AUTH \
+                      --platform ${{ matrix.platform }} \
+                      --target ${{ matrix.target }} \
+                      --tag ghcr.io/${{ github.repository_owner }}/danielpetrica.com/${{ matrix.image }}:${{ github.ref_name }}-${{ matrix.arch }} \
+                      --push \
+                      .
+
+            - name: Stop local registry
+              if: always()
+              run: docker stop registry && docker rm registry
+
+    merge:
+        name: Merge Multi-Arch Manifests
+        needs: build
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        steps:
+            - uses: docker/setup-buildx-action@v4
+
+            - uses: docker/login-action@v4
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.repository_owner }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Merge web manifest
+              run: |
+                  docker buildx imagetools create \
+                      -t ghcr.io/${{ github.repository_owner }}/danielpetrica.com/web:${{ github.ref_name }} \
+                      ghcr.io/${{ github.repository_owner }}/danielpetrica.com/web:${{ github.ref_name }}-amd64 \
+                      ghcr.io/${{ github.repository_owner }}/danielpetrica.com/web:${{ github.ref_name }}-arm64
+                  docker buildx imagetools create \
+                      -t ghcr.io/${{ github.repository_owner }}/danielpetrica.com/web:latest \
+                      ghcr.io/${{ github.repository_owner }}/danielpetrica.com/web:${{ github.ref_name }}-amd64 \
+                      ghcr.io/${{ github.repository_owner }}/danielpetrica.com/web:${{ github.ref_name }}-arm64
+
+            - name: Merge worker manifest
+              run: |
+                  docker buildx imagetools create \
+                      -t ghcr.io/${{ github.repository_owner }}/danielpetrica.com/worker:${{ github.ref_name }} \
+                      ghcr.io/${{ github.repository_owner }}/danielpetrica.com/worker:${{ github.ref_name }}-amd64 \
+                      ghcr.io/${{ github.repository_owner }}/danielpetrica.com/worker:${{ github.ref_name }}-arm64
+                  docker buildx imagetools create \
+                      -t ghcr.io/${{ github.repository_owner }}/danielpetrica.com/worker:latest \
+                      ghcr.io/${{ github.repository_owner }}/danielpetrica.com/worker:${{ github.ref_name }}-amd64 \
+                      ghcr.io/${{ github.repository_owner }}/danielpetrica.com/worker:${{ github.ref_name }}-arm64
+
+    deploy:
+        name: Deploy to Server
+        needs: merge
+        if: startsWith(github.ref, 'refs/tags/')
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - name: Deploy via SSH
+              uses: appleboy/ssh-action@v1.2.5
+              with:
+                  host: ${{ secrets.DEPLOY_HOST }}
+                  username: ubuntu
+                  key: ${{ secrets.DEPLOY_SSH_KEY }}
+                  script: |
+                      cd /home/ubuntu/traefik/danielpetrica/prod && ./deploy.sh

@@ -1,14 +1,4 @@
-# Stage 1: Vendor
-FROM composer:2 AS vendor
-WORKDIR /app
-
-ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
-RUN install-php-extensions gd bcmath intl pcntl redis pdo_pgsql
-
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --prefer-dist --no-interaction --no-scripts --no-progress
-
-# Stage 2: Assets
+# Stage 1: Assets (frontend build)
 FROM node:22-alpine AS assets
 WORKDIR /app
 
@@ -22,26 +12,77 @@ COPY public ./public
 ENV NODE_ENV=production
 RUN yarn build
 
-# Stage 3: Worker (CLI)
+# Stage 2: Vendor (PHP dependencies)
+FROM composer:2 AS vendor
+WORKDIR /app
+
+ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
+RUN install-php-extensions gd bcmath intl pcntl redis pdo_pgsql curl mbstring
+
+COPY composer.json composer.lock ./
+
+COPY --link app/ app/
+COPY --link artisan .
+COPY --link bootstrap/ bootstrap/
+COPY --link routes/ routes/
+COPY .env .env
+
+ENV APP_ENV=production
+RUN --mount=type=secret,id=composer_auth \
+    mkdir -p /root/.composer && \
+    if [ -f /run/secrets/composer_auth ]; then \
+        cp /run/secrets/composer_auth /root/.composer/auth.json; \
+    fi
+
+RUN mkdir -p storage/bootstrap/cache \
+             storage/framework/cache/data \
+             storage/framework/sessions \
+             storage/framework/views \
+             storage/logs && \
+    chmod -R 775 storage bootstrap/cache
+
+COPY --from=assets /app/public/build/ /app/public/build/
+
+ENV COMPOSER_CACHE_DIR=/tmp/cache
+RUN --mount=type=cache,target=/tmp/cache \
+    composer install --no-dev --prefer-dist --no-interaction
+
+RUN rm -f /root/.composer/auth.json || true; \
+    rm -f /app/.composer/auth.json || true; \
+    rm -f /tmp/* /var/tmp/* || true
+
+COPY --link config/ config/
+COPY --link database/ database/
+COPY --link storage/ storage/
+
+# Stage 3: Worker image (CLI — runs Horizon / schedule:work)
 FROM php:8.5-cli-alpine AS worker
 COPY --from=vendor /usr/local/bin/install-php-extensions /usr/local/bin/
 RUN install-php-extensions bcmath intl pcntl gd curl pdo_pgsql mbstring redis
 
 ARG APP_ENV=production
 WORKDIR /app
-COPY . /app
-COPY ".env.${APP_ENV:-production}" .env
+COPY --link app/ app/
+COPY --link bootstrap/ bootstrap/
+COPY --link config/ config/
+COPY --link routes/ routes/
+COPY --link database/ database/
+COPY --link artisan .
+COPY .env .env
+COPY --link composer.json .
+COPY --link resources/ resources/
 COPY --from=vendor /app/vendor /app/vendor
+
 COPY --from=assets /app/public/build /app/public/build
 
-RUN mkdir -p storage bootstrap/cache && \
-    chown -R www-data:www-data storage bootstrap/cache && \
-    chmod -R 775 storage bootstrap/cache
+RUN mkdir -p storage bootstrap/cache
+RUN chown -R www-data:www-data /app
+RUN chmod -R 775 storage bootstrap/cache
 
 USER www-data
-CMD ["php", "artisan", "queue:work", "--tries=3", "--sleep=1"]
+CMD ["php", "artisan", "horizon"]
 
-# Stage 4: FrankenPHP (Web)
+# Stage 4: Web image (FrankenPHP / Octane)
 FROM dunglas/frankenphp:php8.5-alpine AS frankenphp
 WORKDIR /app
 
@@ -49,13 +90,38 @@ ARG APP_ENV=production
 ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 RUN install-php-extensions bcmath intl pcntl gd curl pdo_pgsql mbstring redis
 
-COPY . /app
-COPY ".env.${APP_ENV:-production}" .env
+COPY --link app/ app/
+COPY --link bootstrap/ bootstrap/
+COPY --link config/ config/
+COPY --link routes/ routes/
+COPY --link database/ database/
+COPY --link artisan .
+COPY --link composer.json .
+COPY --link resources/ resources/
+
+COPY .env .env
 COPY --from=vendor /app/vendor /app/vendor
+
 COPY --from=assets /app/public/build /app/public/build
 
-RUN mkdir -p storage bootstrap/cache && \
-    chown -R www-data:www-data storage bootstrap/cache && \
-    chmod -R 775 storage bootstrap/cache
+COPY --from=vendor /usr/local/bin/install-php-extensions /usr/local/bin/install-php-extensions
+COPY --from=vendor /usr/bin/composer /usr/bin/composer
 
-CMD ["php", "artisan", "octane:frankenphp", "--host=0.0.0.0", "--port=80", "--workers=6"]
+COPY php-prod.ini /usr/local/etc/php/php.ini
+
+COPY --link public/ public/
+
+COPY entrypoint.sh .
+RUN chmod +x /app/entrypoint.sh
+
+RUN mkdir -p storage/bootstrap/cache \
+             storage/framework/cache/data \
+             storage/framework/sessions \
+             storage/framework/views \
+             storage/logs \
+    && chown -R www-data:www-data /app \
+    && chmod -R 775 storage bootstrap/cache
+
+USER www-data
+
+ENTRYPOINT ["/app/entrypoint.sh"]
