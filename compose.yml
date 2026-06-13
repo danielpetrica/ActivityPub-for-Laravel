@@ -136,13 +136,14 @@ services:
   db:
     image: postgres:18
     container_name: danielpetrica_com_db_${APP_ENV}
-    command:
-      - -c shared_buffers=128MB
-      - -c effective_cache_size=384MB
-      - -c max_connections=50
-      - -c wal_buffers=16MB
-      - -c max_wal_size=1GB
-      - -c checkpoint_timeout=15min
+    command: >
+      postgres
+      -c shared_buffers=128MB
+      -c effective_cache_size=384MB
+      -c max_connections=50
+      -c wal_buffers=16MB
+      -c max_wal_size=1GB
+      -c checkpoint_timeout=15min
     logging: *default-logging
     env_file: .env
     environment:
@@ -152,7 +153,7 @@ services:
     ports:
       - "127.0.0.1:${DB_EXPOSE_PORT:-15432}:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql
+      - ./.postgres-db/:/var/lib/postgresql
     networks:
       - internal
     restart: always
@@ -206,7 +207,6 @@ services:
 
 volumes:
   redis-data:
-  postgres-data:
 
 networks:
   internal:
