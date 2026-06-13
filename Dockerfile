@@ -41,6 +41,8 @@ RUN mkdir -p storage/bootstrap/cache \
              storage/logs && \
     chmod -R 775 storage bootstrap/cache
 
+RUN touch database/database.sqlite
+
 COPY --from=assets /app/public/build/ /app/public/build/
 
 ENV COMPOSER_CACHE_DIR=/tmp/cache
