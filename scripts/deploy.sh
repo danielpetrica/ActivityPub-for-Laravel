@@ -2,6 +2,18 @@
 # deploy.sh — Pull pre-built images and perform zero-downtime deployment
 
 set -e
+
+APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="/home/ubuntu/traefik/danielpetrica/danielpetrica.com"
+
+# Self-update: if the repo has a newer version, replace and re-execute.
+# This runs AFTER git pull (step 1), so the repo is always current.
+SELF_SRC="$REPO_DIR/scripts/deploy.sh"
+if [ -f "$SELF_SRC" ] && [ "$SELF_SRC" -nt "$APP_DIR/deploy.sh" ]; then
+    cp "$SELF_SRC" "$APP_DIR/deploy.sh"
+    exec "$APP_DIR/deploy.sh" "$@"
+fi
+
 source .env
 
 RED='\033[0;31m'
@@ -9,15 +21,13 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_DIR="/home/ubuntu/traefik/danielpetrica/danielpetrica.com"
 NTFY_URL="${NTFY_URL:-}"
 
 DEPLOY_START=$(date +%s)
 
 if [ -n "$NTFY_URL" ]; then
   curl -s -H "Content-Type: application/json" \
-    -d '{"message":"danielpetrica.com deployment started","title":"\360\237\232\200 Deploy Started","priority":"low"}' \
+    -d '{"message":"danielpetrica.com deployment started","title":"Deploy Started","priority":"low"}' \
     "$NTFY_URL" > /dev/null 2>&1 || true
 fi
 
@@ -27,8 +37,21 @@ cd "${REPO_DIR}" || exit
 echo -e "${GREEN}[1/7] Pulling latest code...${NC}"
 git pull || true
 
+# Self-update check again after pull (in case script was updated)
+SELF_SRC="$REPO_DIR/scripts/deploy.sh"
+if [ -f "$SELF_SRC" ] && [ "$SELF_SRC" -nt "$APP_DIR/deploy.sh" ]; then
+    echo -e "${YELLOW}  (deploy.sh updated, restarting...)${NC}"
+    cp "$SELF_SRC" "$APP_DIR/deploy.sh"
+    exec "$APP_DIR/deploy.sh" "$@"
+fi
+
 cd "${APP_DIR}" || exit
-echo -e "${GREEN}[2/7] Copying compose file & pulling images...${NC}"
+
+# CI handles docker login before this script. For manual runs, allow GHCR_TOKEN.
+echo -e "${GREEN}[2/7] Pulling images...${NC}"
+if [ -n "${GHCR_TOKEN}" ]; then
+    printf '%s\n' "${GHCR_TOKEN}" | docker login ghcr.io -u danielpetrica --password-stdin
+fi
 cp "$REPO_DIR/compose.yml" "$APP_DIR/compose.yml"
 docker compose pull
 
@@ -43,7 +66,7 @@ docker compose stop -t 30 worker scheduler 2>/dev/null || \
 echo -e "${GREEN}[5/7] Starting containers...${NC}"
 docker compose up -d --remove-orphans
 
-echo -e "${GREEN}[6/7] Running migrations & optimize...${NC}"
+echo -e "${GREEN}[6/7] Running migrations...${NC}"
 docker compose exec -T danielpetrica_com php artisan migrate --force
 
 echo -e "${GREEN}[7/7] Starting worker & scheduler...${NC}"
@@ -60,6 +83,6 @@ docker compose ps
 
 if [ -n "$NTFY_URL" ]; then
   curl -s -H "Content-Type: application/json" \
-    -d "{\"message\":\"danielpetrica.com deployed in ${DURATION}s\",\"title\":\"\342\234\205 Deploy Complete\"}" \
+    -d "{\"message\":\"danielpetrica.com deployed in ${DURATION}s\",\"title\":\"Deploy Complete\"}" \
     "$NTFY_URL" > /dev/null 2>&1 || true
 fi
