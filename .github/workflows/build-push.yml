@@ -162,8 +162,4 @@ jobs:
                   username: ubuntu
                   key: ${{ secrets.DEPLOY_SSH_KEY }}
                   script: |
-                      cd /home/ubuntu/traefik/danielpetrica/prod
-                      printf '%s' '${{ secrets.DEPLOY_GHCR_TOKEN }}' > /tmp/ghcr_token
-                      docker login ghcr.io -u danielpetrica --password-stdin < /tmp/ghcr_token
-                      rm -f /tmp/ghcr_token
-                      ./deploy.sh
+                      cd /home/ubuntu/traefik/danielpetrica/prod && ./deploy.sh
