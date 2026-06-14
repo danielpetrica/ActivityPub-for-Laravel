@@ -73,7 +73,10 @@ docker compose up -d --remove-orphans
 echo -e "${GREEN}[6/7] Running migrations...${NC}"
 docker compose exec -T danielpetrica_com php artisan migrate --force
 
-echo -e "${GREEN}[7/7] Starting worker & scheduler...${NC}"
+echo -e "${GREEN}[7/7] Optimizing & caching config...${NC}"
+docker compose exec -T danielpetrica_com php artisan optimize
+
+echo -e "${GREEN}  Starting worker & scheduler...${NC}"
 docker compose start worker scheduler
 
 echo -e "${GREEN}  Disabling maintenance mode...${NC}"
