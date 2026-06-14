@@ -47,6 +47,10 @@ fi
 
 cd "${APP_DIR}" || exit
 
+# Ensure storage directories are writable by containers (Alpine-based: www-data = UID 82)
+mkdir -p .storage/{logs,app,framework}
+chown -R 82:82 .storage/ 2>/dev/null || true
+
 # CI handles docker login before this script. For manual runs, allow GHCR_TOKEN.
 echo -e "${GREEN}[2/7] Pulling images...${NC}"
 if [ -n "${GHCR_TOKEN}" ]; then

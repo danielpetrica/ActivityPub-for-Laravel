@@ -78,10 +78,10 @@ COPY --from=vendor /app/vendor /app/vendor
 COPY --from=assets /app/public/build /app/public/build
 
 RUN mkdir -p storage bootstrap/cache
-RUN chown -R www-data:www-data /app
+RUN chown -R 82:82 /app
 RUN chmod -R 775 storage bootstrap/cache
 
-USER www-data
+USER 82
 CMD ["php", "artisan", "horizon"]
 
 # Stage 4: Web image (FrankenPHP / Octane)
@@ -121,9 +121,9 @@ RUN mkdir -p storage/bootstrap/cache \
              storage/framework/sessions \
              storage/framework/views \
              storage/logs \
-    && chown -R www-data:www-data /app \
+    && chown -R 82:82 /app /data/caddy /config/caddy \
     && chmod -R 775 storage bootstrap/cache
 
-USER www-data
+USER 82
 
 ENTRYPOINT ["/app/entrypoint.sh"]
