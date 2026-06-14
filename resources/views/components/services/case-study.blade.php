@@ -5,7 +5,7 @@
         @if($caseStudy->images && count($caseStudy->images) > 0)
             <div class="aspect-video overflow-hidden bg-neutral-100">
                 <img
-                    src="{{ Storage::url($caseStudy->images[0]) }}"
+                    src="{{ \App\Classes\Business\MediaUrlBusiness::forMedia($caseStudy->images[0]) }}"
                     alt="{{ $caseStudy->title }}"
                     class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
                 >

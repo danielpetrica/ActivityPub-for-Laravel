@@ -2,9 +2,14 @@
 
 use App\Classes\Business\RedirectBusiness;
 use App\Http\Controllers\LocalServiceController;
+use App\Http\Controllers\ObjectProxyController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StaticController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/objectproxy/{disk}/{path}', [ObjectProxyController::class, '__invoke'])
+    ->where(name: 'path', expression: '.*')
+    ->name(name: 'objectproxy');
 
 Route::get('/', [StaticController::class, 'welcome'])->name('welcome');
 

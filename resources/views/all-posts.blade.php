@@ -1,4 +1,5 @@
 @php
+    use App\Classes\Business\MediaUrlBusiness;
     use App\Classes\Business\OgImageBusiness;
 
     $metaImage = OgImageBusiness::generateForAllPosts();
@@ -25,7 +26,7 @@
                         readTime="8 min"
                         :tags="$post->tags"
                         :url="route('posts.show', $post->slug)"
-                        :image="$post->feature_image_path ? Storage::url($post->feature_image_path) : null"
+                        :image="$post->feature_image_path ? MediaUrlBusiness::forMedia($post->feature_image_path) : null"
                     />
                 @endforeach
             </div>

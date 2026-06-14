@@ -1,10 +1,12 @@
 @php
+    use App\Classes\Business\MediaUrlBusiness;
+
     if ($tag->image_path) {
-        $metaImage = Storage::url($tag->image_path);
+        $metaImage = MediaUrlBusiness::forMedia($tag->image_path);
     } elseif ($tag->og_image && $tag->og_image_generated_at === null) {
         $metaImage = $tag->og_image;
     } elseif ($tag->og_image && $tag->og_image_generated_at !== null) {
-        $metaImage = Storage::disk('og-images')->url($tag->og_image);
+        $metaImage = MediaUrlBusiness::forOgImage($tag->og_image);
     } else {
         $metaImage = null;
     }
@@ -18,7 +20,7 @@
     <x-layouts.hero
         :title="'Tag: ' . $tag->name"
         :excerpt="$tag->description ?? 'Browsing all articles tagged with ' . $tag->name"
-        :image="$tag->image_path ? Storage::url($tag->image_path) : null"
+        :image="$tag->image_path ? MediaUrlBusiness::forMedia($tag->image_path) : null"
     />
 
     <section class="py-20 bg-white">
@@ -32,7 +34,7 @@
                         readTime="8 min"
                         :tags="$post->tags"
                         :url="route('posts.show', $post->slug)"
-                        :image="$post->feature_image_path ? Storage::url($post->feature_image_path) : null"
+                        :image="$post->feature_image_path ? MediaUrlBusiness::forMedia($post->feature_image_path) : null"
                     />
                 @endforeach
             </div>

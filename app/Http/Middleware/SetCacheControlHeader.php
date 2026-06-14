@@ -19,6 +19,14 @@ class SetCacheControlHeader
         $response = $next($request);
 
         if ($this->shouldCacheResponse($request, $response)) {
+            // When the controller already set explicit cache directives (e.g. ObjectProxyController),
+            // don't override them with the default two-hour cache.
+            if ($response->headers->hasCacheControlDirective('public') && $response->headers->hasCacheControlDirective('max-age')) {
+                $response->headers->remove('x-powered-by');
+
+                return $response;
+            }
+
             $response->setPublic();
             $response->setMaxAge(TTLEnum::TwoHours->getSeconds());
             $response->setExpires(now()->addSeconds(TTLEnum::OneHour->getSeconds()));

@@ -57,7 +57,7 @@ final class OgImageBusiness
             'disk' => self::DISK,
         ]);
 
-        return $disk->url(path: $path);
+        return MediaUrlBusiness::forOgImage(path: $path);
     }
 
     public static function deleteOgImage(string $path): void
@@ -113,7 +113,7 @@ final class OgImageBusiness
             return null;
         }
 
-        return Storage::disk(name: self::DISK)->url(path: $model->og_image);
+        return MediaUrlBusiness::forOgImage(path: $model->og_image);
     }
 
     public static function generateForPost(Post $post): ?string
