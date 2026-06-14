@@ -64,15 +64,7 @@ FROM php:8.5-cli-alpine AS worker
 COPY --from=vendor /usr/local/bin/install-php-extensions /usr/local/bin/
 RUN install-php-extensions bcmath intl pcntl gd curl pdo_pgsql mbstring
 
-# phpredis compiled from GitHub (no PECL release for PHP 8.5 yet)
-RUN git clone --depth 1 --branch 6.3.0 https://github.com/phpredis/phpredis.git /tmp/phpredis \
-    && cd /tmp/phpredis \
-    && phpize \
-    && ./configure \
-    && make -j$(nproc) \
-    && make install \
-    && docker-php-ext-enable redis \
-    && rm -rf /tmp/phpredis
+# Redis via predis Composer package (no C extension required)
 
 ARG APP_ENV=production
 WORKDIR /app
@@ -104,15 +96,7 @@ ARG APP_ENV=production
 ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 RUN install-php-extensions bcmath intl pcntl gd curl pdo_pgsql mbstring
 
-# phpredis compiled from GitHub (no PECL release for PHP 8.5 yet)
-RUN git clone --depth 1 --branch 6.3.0 https://github.com/phpredis/phpredis.git /tmp/phpredis \
-    && cd /tmp/phpredis \
-    && phpize \
-    && ./configure \
-    && make -j$(nproc) \
-    && make install \
-    && docker-php-ext-enable redis \
-    && rm -rf /tmp/phpredis
+# Redis via predis Composer package (no C extension required)
 
 COPY --link app/ app/
 COPY --link bootstrap/ bootstrap/
