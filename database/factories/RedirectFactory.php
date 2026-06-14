@@ -18,7 +18,9 @@ class RedirectFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'path' => '/' . $this->faker->slug(),
+            'destination_url' => $this->faker->url(),
+            'is_enabled' => true,
         ];
     }
 }

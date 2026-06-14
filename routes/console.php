@@ -11,3 +11,5 @@ Artisan::command('inspire', function () {
 Schedule::command('app:refresh-redirects-cache')->twiceDaily(1, 13);
 
 Schedule::command('app:cleanup-og-images')->daily();
+
+Schedule::command('app:refresh-popular-action-versions')->daily();

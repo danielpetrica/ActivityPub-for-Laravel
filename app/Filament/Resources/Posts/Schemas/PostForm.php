@@ -9,6 +9,7 @@ use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
@@ -37,7 +38,7 @@ class PostForm
                                 MediaBlocksRichContentPlugin::make(),
                             ])
                             ->columnSpanFull(),
-                        RichEditor::make('excerpt')
+                        Textarea::make('excerpt')
                             ->columnSpanFull(),
                     ])->columns(2)
                     ->columnSpanFull(),
@@ -101,9 +102,9 @@ class PostForm
 
                 Section::make('Code Injection')
                     ->components([
-                        RichEditor::make('codeinjection_head')
+                        Textarea::make('codeinjection_head')
                             ->label('Header Injection'),
-                        RichEditor::make('codeinjection_foot')
+                        Textarea::make('codeinjection_foot')
                             ->label('Footer Injection'),
                     ])->columns(2)
                     ->collapsed(),

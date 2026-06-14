@@ -8,13 +8,28 @@
             <!-- Desktop Menu -->
             @php
                 $headerLinks = \App\Classes\Business\LinkBusiness::getLinksForPosition(\App\Enums\LinkPosition::Header);
+
+                $categoryLinks = [
+                    ['label' => 'Freelance', 'slug' => 'freelance'],
+                    ['label' => 'LaraPlugins.io', 'slug' => 'laraplugins-io'],
+                    ['label' => 'Traefik', 'slug' => 'traefik'],
+                    ['label' => 'Laravel', 'slug' => 'laravel'],
+                ];
             @endphp
-            <div class="hidden md:flex space-x-8 items-center" role="menubar">
+            <div class="hidden md:flex items-center space-x-8" role="menubar">
                 @foreach($headerLinks as $link)
                     <a href="{{ $link->url }}"
                        @if($link->is_external) target="_blank" rel="noopener noreferrer" @endif
                        class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors focus:outline-none focus:text-primary-600"
                        role="menuitem">{{ $link->label }}</a>
+                @endforeach
+
+                <span class="w-px h-4 bg-neutral-200" aria-hidden="true"></span>
+
+                @foreach($categoryLinks as $cat)
+                    <a href="{{ route('tags.show', $cat['slug']) }}"
+                       class="text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors focus:outline-none focus:text-primary-700"
+                       role="menuitem">{{ $cat['label'] }}</a>
                 @endforeach
             </div>
 
@@ -45,6 +60,15 @@
                    @if($link->is_external) target="_blank" rel="noopener noreferrer" @endif
                    class="block px-3 py-2 rounded-md text-base font-medium text-neutral-900 hover:bg-primary-50 hover:text-primary-600">{{ $link->label }}</a>
             @endforeach
+
+            <div class="pt-4 border-t border-neutral-100 mt-2">
+                <p class="px-3 py-1 text-xs font-bold text-neutral-400 uppercase tracking-wider">Categories</p>
+                @foreach($categoryLinks as $cat)
+                    <a href="{{ route('tags.show', $cat['slug']) }}"
+                       class="block px-3 py-2 rounded-md text-base font-medium text-primary-600 hover:bg-primary-50 hover:text-primary-700">{{ $cat['label'] }}</a>
+                @endforeach
+            </div>
+
             <div class="pt-4 border-t border-neutral-100 mt-2">
                 <button id="mobile-search-open-btn" class="flex items-center gap-3 w-full px-3 py-2 text-base font-medium text-neutral-900 hover:bg-primary-50 hover:text-primary-600 rounded-md transition-colors">
                     <i data-lucide="search" class="h-5 w-5"></i>

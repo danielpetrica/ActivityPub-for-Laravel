@@ -19,15 +19,7 @@ WORKDIR /app
 ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 RUN install-php-extensions gd bcmath intl pcntl pdo_pgsql curl mbstring
 
-# phpredis not yet on PECL for PHP 8.5 — compile from GitHub source
-RUN git clone --depth 1 --branch 6.3.0 https://github.com/phpredis/phpredis.git /tmp/phpredis \
-    && cd /tmp/phpredis \
-    && phpize \
-    && ./configure \
-    && make -j$(nproc) \
-    && make install \
-    && docker-php-ext-enable redis \
-    && rm -rf /tmp/phpredis
+RUN pecl install redis && docker-php-ext-enable redis
 
 COPY composer.json composer.lock ./
 
