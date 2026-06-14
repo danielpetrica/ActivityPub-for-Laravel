@@ -19,7 +19,7 @@ WORKDIR /app
 ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 RUN install-php-extensions gd bcmath intl pcntl pdo_pgsql curl mbstring
 
-RUN pecl install redis && docker-php-ext-enable redis
+# Redis via predis Composer package (no C extension required)
 
 COPY composer.json composer.lock ./
 
