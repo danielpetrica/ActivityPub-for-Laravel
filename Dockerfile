@@ -17,7 +17,17 @@ FROM composer:2 AS vendor
 WORKDIR /app
 
 ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
-RUN install-php-extensions gd bcmath intl pcntl redis pdo_pgsql curl mbstring
+RUN install-php-extensions gd bcmath intl pcntl pdo_pgsql curl mbstring
+
+# phpredis not yet on PECL for PHP 8.5 — compile from GitHub source
+RUN git clone --depth 1 --branch 6.3.0 https://github.com/phpredis/phpredis.git /tmp/phpredis \
+    && cd /tmp/phpredis \
+    && phpize \
+    && ./configure \
+    && make -j$(nproc) \
+    && make install \
+    && docker-php-ext-enable redis \
+    && rm -rf /tmp/phpredis
 
 COPY composer.json composer.lock ./
 
@@ -60,7 +70,17 @@ COPY --link storage/ storage/
 # Stage 3: Worker image (CLI — runs Horizon / schedule:work)
 FROM php:8.5-cli-alpine AS worker
 COPY --from=vendor /usr/local/bin/install-php-extensions /usr/local/bin/
-RUN install-php-extensions bcmath intl pcntl gd curl pdo_pgsql mbstring redis
+RUN install-php-extensions bcmath intl pcntl gd curl pdo_pgsql mbstring
+
+# phpredis compiled from GitHub (no PECL release for PHP 8.5 yet)
+RUN git clone --depth 1 --branch 6.3.0 https://github.com/phpredis/phpredis.git /tmp/phpredis \
+    && cd /tmp/phpredis \
+    && phpize \
+    && ./configure \
+    && make -j$(nproc) \
+    && make install \
+    && docker-php-ext-enable redis \
+    && rm -rf /tmp/phpredis
 
 ARG APP_ENV=production
 WORKDIR /app
@@ -90,7 +110,17 @@ WORKDIR /app
 
 ARG APP_ENV=production
 ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
-RUN install-php-extensions bcmath intl pcntl gd curl pdo_pgsql mbstring redis
+RUN install-php-extensions bcmath intl pcntl gd curl pdo_pgsql mbstring
+
+# phpredis compiled from GitHub (no PECL release for PHP 8.5 yet)
+RUN git clone --depth 1 --branch 6.3.0 https://github.com/phpredis/phpredis.git /tmp/phpredis \
+    && cd /tmp/phpredis \
+    && phpize \
+    && ./configure \
+    && make -j$(nproc) \
+    && make install \
+    && docker-php-ext-enable redis \
+    && rm -rf /tmp/phpredis
 
 COPY --link app/ app/
 COPY --link bootstrap/ bootstrap/
