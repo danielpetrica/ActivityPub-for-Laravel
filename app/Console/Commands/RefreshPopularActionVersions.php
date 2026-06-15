@@ -51,34 +51,17 @@ final class RefreshPopularActionVersions extends Command
         $actionNames = $service->getPopularActionNames($category);
         $this->info('  Found '.count($actionNames).' actions in config.');
 
-        $this->withProgressBar($actionNames, function (string $actionName) use ($service): void {
-            try {
-                [$owner, $repo] = explode('/', $actionName);
-                $service->fetchAction($owner, $repo);
-                $this->line("  ✓ {$actionName}");
-            } catch (\Throwable $e) {
-                $errorCode = method_exists($e, 'getErrorCode') ? $e->getErrorCode() : 'unknown';
-                Log::warning('RefreshPopularActionVersions: failed', [
-                    'action' => $actionName,
-                    'error_code' => $errorCode,
-                    'message' => $e->getMessage(),
-                ]);
-                $this->line("  ✗ {$actionName} ({$errorCode})");
-            }
-        });
-
-        // After fetching all, build and cache the popular data for this category
         try {
             $data = $service->fetchPopularActions($category, count($actionNames));
             ActionCache::putPopular($category, $data);
+            $this->info('  ✓ category refreshed with '.count($data['actions']).' actions.');
         } catch (\Throwable $e) {
             Log::warning('RefreshPopularActionVersions: failed to build popular cache', [
                 'category' => $category,
                 'message' => $e->getMessage(),
             ]);
+            $this->warn("  Could not refresh category '{$category}'.");
         }
-
-        $this->newLine();
     }
 
     private function refreshAll(GitHubActionsService $service): void

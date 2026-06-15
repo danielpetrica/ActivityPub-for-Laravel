@@ -12,24 +12,8 @@ beforeEach(function (): void {
 function fakeActionApi(string $owner, string $repo, int $stars = 100, string $description = 'A test action'): array
 {
     return [
-        "api.github.com/repos/{$owner}/{$repo}/tags?per_page=100" => Http::response([
+        "api.github.com/repos/{$owner}/{$repo}/tags?per_page=1" => Http::response([
             ['name' => 'v4.2.2', 'commit' => ['sha' => 'abc']],
-            ['name' => 'v3.6.0', 'commit' => ['sha' => 'def']],
-        ]),
-        "api.github.com/repos/{$owner}/{$repo}/releases?per_page=100" => Http::response([
-            [
-                'tag_name' => 'v4.2.2',
-                'prerelease' => false,
-                'published_at' => '2025-12-15T10:30:00Z',
-            ],
-            [
-                'tag_name' => 'v3.6.0',
-                'prerelease' => false,
-                'published_at' => '2024-07-01T08:00:00Z',
-            ],
-        ]),
-        "api.github.com/repos/{$owner}/{$repo}/readme" => Http::response([
-            'content' => base64_encode('# '.$description),
         ]),
         "api.github.com/repos/{$owner}/{$repo}" => Http::response([
             'stargazers_count' => $stars,

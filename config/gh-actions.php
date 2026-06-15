@@ -57,7 +57,7 @@ return [
             'docker/setup-buildx-action',
             'docker/setup-qemu-action',
             'docker/metadata-action',
-            'docker/ bake-action',
+            'docker/bake-action',
         ],
         'node' => [
             'pnpm/action-setup',

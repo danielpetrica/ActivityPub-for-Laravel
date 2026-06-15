@@ -85,6 +85,17 @@ final class GitHubActionsService
             };
         }
 
+        // Check for authentication failure
+        if ($results['repo']->status() === 401) {
+            throw new class('GitHub API authentication failed. Check your GITHUB_TOKEN configuration.') extends RuntimeException
+            {
+                public function getErrorCode(): string
+                {
+                    return 'unauthorized';
+                }
+            };
+        }
+
         // Check for rate limiting
         if ($results['repo']->status() === 429 || $results['repo']->status() === 403) {
             $retryAfter = (int) ($results['repo']->header('Retry-After') ?? 3600);
@@ -228,7 +239,7 @@ final class GitHubActionsService
 
     /**
      * Fetch latest versions for popular actions in a category.
-     * Fires requests in batches to avoid overwhelming the API.
+     * All API requests are fired concurrently for maximum speed.
      */
     public function fetchPopularActions(string $category, int $limit): array
     {
@@ -238,30 +249,60 @@ final class GitHubActionsService
             throw new \InvalidArgumentException("Unknown category: '{$category}'. Valid categories: ci, deployment, security, utility, docker, node, all");
         }
 
+        $targetActions = array_slice($popularList, 0, $limit);
+
+        $http = Http::withToken($this->token)
+            ->accept('application/vnd.github+json')
+            ->withUserAgent('danielpetrica-mcp/1.0');
+
+        // Fire all requests concurrently — then wait for all
+        $promises = [];
+        foreach ($targetActions as $actionName) {
+            [$owner, $repo] = explode('/', $actionName);
+            $key = str_replace('/', '_', $actionName);
+            $promises["repo_{$key}"] = $http->async()->get("{$this->baseUrl}/repos/{$owner}/{$repo}");
+            $promises["tags_{$key}"] = $http->async()->get("{$this->baseUrl}/repos/{$owner}/{$repo}/tags?per_page=1");
+        }
+
+        $responses = [];
+        foreach ($promises as $key => $promise) {
+            try {
+                $responses[$key] = $promise->wait();
+            } catch (\Throwable) {
+                $responses[$key] = null;
+            }
+        }
+
         $actions = [];
-        $count = 0;
         $errors = [];
 
-        foreach ($popularList as $actionName) {
-            if ($count >= $limit) {
-                break;
+        foreach ($targetActions as $actionName) {
+            $key = str_replace('/', '_', $actionName);
+
+            $repoResponse = $responses["repo_{$key}"] ?? null;
+            $tagsResponse = $responses["tags_{$key}"] ?? null;
+
+            if (! $repoResponse || $repoResponse->failed()) {
+                $errors[] = $actionName;
+
+                continue;
             }
 
-            try {
-                [$owner, $repo] = explode('/', $actionName);
-                $data = $this->fetchAction($owner, $repo);
-                $actions[] = [
-                    'name' => $data['name'],
-                    'category' => $category,
-                    'latest_version' => $data['latest']['version'] ?? null,
-                    'description' => $data['description'],
-                    'stars' => $data['stars'],
-                ];
-                $count++;
-            } catch (\Throwable $e) {
-                $errors[] = $actionName;
-                // Continue to next action even if one fails
+            $repoData = $repoResponse->json();
+            $tagsData = $tagsResponse?->json() ?? [];
+
+            $latestTag = null;
+            if (is_array($tagsData) && count($tagsData) > 0) {
+                $latestTag = $tagsData[0]['name'] ?? null;
             }
+
+            $actions[] = [
+                'name' => $actionName,
+                'category' => $category,
+                'latest_version' => $latestTag,
+                'description' => $repoData['description'] ?? '',
+                'stars' => $repoData['stargazers_count'] ?? 0,
+            ];
         }
 
         // Sort by stars descending

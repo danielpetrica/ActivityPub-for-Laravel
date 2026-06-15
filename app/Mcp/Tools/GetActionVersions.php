@@ -83,6 +83,11 @@ final class GetActionVersions extends Tool
                     ->withMeta(['error_code' => 'no_versions']);
             }
 
+            if ($errorCode === 'unauthorized') {
+                return Response::error($e->getMessage())
+                    ->withMeta(['error_code' => 'unauthorized']);
+            }
+
             return Response::error("Failed to fetch action data: {$e->getMessage()}")
                 ->withMeta(['error_code' => 'unknown']);
         }
