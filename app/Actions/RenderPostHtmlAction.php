@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Classes\Business\MediaUrlBusiness;
 use App\Enums\CacheTtl;
 use App\Models\Page;
 use App\Models\Post;
@@ -64,7 +65,7 @@ final class RenderPostHtmlAction
     }
 
     /**
-     * Ensure <img src> attributes use absolute asset URLs for public disk files.
+     * Ensure <img src> attributes point to the image proxy for S3-backed media.
      */
     private static function rewriteImageSrcs(string $html): string
     {
@@ -87,27 +88,33 @@ final class RenderPostHtmlAction
                 continue;
             }
 
-            // Leave absolute URLs and root-absolute paths intact.
+            // 1. Rewrite raw S3 URLs (from old imports) to the image proxy.
+            $proxied = MediaUrlBusiness::fromS3Url($src);
+            if ($proxied !== null) {
+                $img->setAttribute('src', $proxied);
+
+                continue;
+            }
+
+            // 2. Leave non-S3 absolute URLs and root-absolute paths intact.
             if (preg_match('/^https?:\/\//i', $src) === 1 || str_starts_with($src, '/')) {
                 continue;
             }
 
-            // Normalize common relative forms generated during import.
-            // - media/... -> /storage/media/...
-            // - storage/... -> /storage/...
-            $normalized = $src;
-            if (str_starts_with($normalized, 'media/')) {
-                $normalized = 'storage/'.$normalized; // point to the public storage symlink
+            // 3. Handle relative media/ paths through the image proxy.
+            if (str_starts_with($src, 'media/')) {
+                $img->setAttribute('src', MediaUrlBusiness::forMedia($src));
+
+                continue;
             }
 
-            // Ensure we have a leading slash for web path.
+            // 4. Other relative paths — ensure leading slash and use asset().
+            $normalized = $src;
             if (! str_starts_with($normalized, '/')) {
                 $normalized = '/'.$normalized;
             }
 
-            // Finally build a full URL using the asset() helper for correctness behind subdirectories/CDNs.
-            $absolute = asset($normalized);
-            $img->setAttribute('src', $absolute);
+            $img->setAttribute('src', asset($normalized));
         }
 
         $result = $dom->saveHTML();

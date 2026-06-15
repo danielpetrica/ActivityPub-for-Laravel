@@ -2,6 +2,7 @@
 
 namespace App\Classes\Business\Import\Ghost;
 
+use App\Classes\Business\MediaUrlBusiness;
 use App\Enums\PostStatus;
 use App\Models\Page;
 use App\Models\Post;
@@ -329,7 +330,7 @@ final class GhostImportBusiness
             foreach (array_unique(array: $matches[1]) as $imgUrl) {
                 $localPath = $this->ingestImage(url: $imgUrl, subfolder: 'content');
                 if ($localPath && $localPath !== $imgUrl) {
-                    $localUrl = Storage::url(path: $localPath);
+                    $localUrl = MediaUrlBusiness::forMedia(path: $localPath);
                     $html = str_replace(search: $imgUrl, replace: $localUrl, subject: $html);
                 }
             }
