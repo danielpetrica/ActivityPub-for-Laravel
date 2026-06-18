@@ -19,6 +19,9 @@ final class PurgePostCacheAction
         // 2. Purge Laravel Markdown cache
         Cache::forget(sprintf('%s.%d.markdown', $model->getTable(), $model->id));
 
+        // 3. Purge recent-created posts cache
+        Cache::forget('posts.recent-created');
+
         // 3. Purge related tag/archive caches if necessary
         // ...
 

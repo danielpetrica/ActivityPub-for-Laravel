@@ -141,6 +141,7 @@ final class GhostImportBusiness
                 $type = $postData['type']; // 'post' or 'page'
                 $slug = $postData['slug'];
                 $isPost = $type === 'post';
+                $isPage = $type === 'page';
 
                 $modelClass = $isPost ? Post::class : Page::class;
                 $record = $modelClass::query()->where('slug', '=', $slug)->first();
@@ -270,6 +271,8 @@ final class GhostImportBusiness
                 // Handle Redirects for Posts (Ghost /{slug} -> Our /posts/{slug})
                 if ($isPost) {
                     $this->createRedirect(from: "/{$slug}/", to: "/posts/{$slug}/");
+                } elseif ($isPage) {
+                    $this->createRedirect(from: "/{$slug}/", to: "/pages/{$slug}/");
                 }
             } catch (\Exception $e) {
                 $typeLabel = $postData['type'];

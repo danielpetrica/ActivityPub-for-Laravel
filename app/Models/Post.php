@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Carbon;
+use Laravel\Scout\Searchable;
 
 /**
  * @property int $id
@@ -52,6 +53,8 @@ class Post extends Model
     /** @use HasFactory<PostFactory> */
     use HasFactory;
 
+    use Searchable;
+
     protected $guarded = [];
 
     protected $casts = [
@@ -86,5 +89,17 @@ class Post extends Model
     public function pageViews(): MorphMany
     {
         return $this->morphMany(related: PageView::class, name: 'viewable');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            'title' => $this->title,
+            'excerpt' => $this->excerpt ?? '',
+            'meta_description' => $this->meta_description ?? '',
+        ];
     }
 }

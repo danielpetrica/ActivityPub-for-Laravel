@@ -78,7 +78,7 @@
             <div class="flex items-center gap-6">
 {{--                <a href="#" class="hover:text-neutral-600 focus:outline-none focus:underline">Privacy Policy</a>--}}
 {{--                <a href="" class="hover:text-neutral-600 focus:outline-none focus:underline">Terms of Service</a>--}}
-                <a href="/rss" class="hover:text-neutral-600 focus:outline-none focus:underline">RSS</a>
+                <a href="{{ route('rss.index') }}" class="hover:text-neutral-600 focus:outline-none focus:underline">RSS</a>
             </div>
             <p class="flex items-center gap-1">
                 Site built by me <i data-lucide="coffee" class="w-3 h-3" aria-hidden="true"></i> Daniel Petrica

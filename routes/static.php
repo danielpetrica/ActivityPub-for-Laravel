@@ -3,6 +3,8 @@
 use App\Classes\Business\RedirectBusiness;
 use App\Http\Controllers\LocalServiceController;
 use App\Http\Controllers\ObjectProxyController;
+use App\Http\Controllers\RssController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StaticController;
 use Illuminate\Support\Facades\Route;
@@ -30,9 +32,21 @@ Route::get('/servizi/{service:slug}/{city:slug}', [LocalServiceController::class
     ->name('services.local')
     ->withoutScopedBindings();
 
+Route::get('/mcp/github-actions', [StaticController::class, 'ghActionsMcp'])->name('mcp.gh-actions');
+
 Route::get('/demo', [StaticController::class, 'demo'])->name('demo');
 // Sitemaps
 Route::get('/talks/100-container-vps', [StaticController::class, 'vpsContainersTalk'])->name('talks.vps-containers');
+
+// Search
+Route::get('/search', [SearchController::class, 'index'])->name('search');
+
+// RSS Feeds
+Route::get('/rss.xml', [RssController::class, 'index'])->name('rss.index');
+Route::get('/rss/posts.xml', [RssController::class, 'posts'])->name('rss.posts');
+Route::get('/rss/pages.xml', [RssController::class, 'pages'])->name('rss.pages');
+Route::get('/rss/tags.xml', [RssController::class, 'tags'])->name('rss.tags');
+
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.index');
 Route::get('/sitemap-pages.xml', [SitemapController::class, 'pages'])->name('sitemap.pages');
 Route::get('/sitemap-posts.xml', [SitemapController::class, 'posts'])->name('sitemap.posts');

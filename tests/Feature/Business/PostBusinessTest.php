@@ -10,9 +10,9 @@ use Illuminate\Support\Facades\Cache;
 
 uses(RefreshDatabase::class);
 
-test('topViewed posts are ordered by created_at desc', function () {
+test('recentCreated posts are ordered by created_at desc', function () {
     // Clear cache to avoid interference
-    Cache::forget('posts.top-viewed');
+    Cache::forget('posts.recent-created');
 
     // Create three posts with different created_at times
     $post1 = Post::factory()->create([
@@ -31,7 +31,7 @@ test('topViewed posts are ordered by created_at desc', function () {
     ]);
 
     // Expected order: $post2 (newest), $post3, $post1 (oldest)
-    $topPosts = PostBusiness::getTopViewed(limit: 3);
+    $topPosts = PostBusiness::getRecentCreated(limit: 3);
 
     expect($topPosts->count())->toBe(3);
     expect($topPosts[0]->id)->toBe($post2->id);

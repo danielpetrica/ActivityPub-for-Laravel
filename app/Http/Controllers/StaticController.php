@@ -13,7 +13,7 @@ final class StaticController extends Controller
     public function welcome(): View
     {
         $featuredPost = PostBusiness::getRecentPublished(limit: 1)->first();
-        $topPosts = PostBusiness::getTopViewed(limit: 6);
+        $recentCreatedPosts = PostBusiness::getRecentCreated(limit: 6);
         // Show only the last 5 articles on the homepage, per request
         $recentPosts = PostBusiness::getRecentPublished(limit: 5);
         $popularTags = PostBusiness::getPopularTags(limit: 3);
@@ -22,7 +22,7 @@ final class StaticController extends Controller
             view: 'welcome',
             data: [
                 'featuredPost' => $featuredPost,
-                'topPosts' => $topPosts,
+                'recentCreatedPosts' => $recentCreatedPosts,
                 'recentPosts' => $recentPosts,
                 'popularTags' => $popularTags,
             ]
@@ -140,6 +140,11 @@ final class StaticController extends Controller
             view: 'tools.docker-traefik-generator',
             data: ['structuredData' => $structuredData]
         );
+    }
+
+    public function ghActionsMcp(): View
+    {
+        return view(view: 'mcp.gh-actions');
     }
 
     public function vpsContainersTalk(): View

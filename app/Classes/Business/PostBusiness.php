@@ -20,6 +20,7 @@ final class PostBusiness
     public static function findPublishedBySlugOrFail(string $slug): Post
     {
         $post = Post::query()
+            ->with(relations: ['tags', 'primaryTag'])
             ->where(column: 'slug', operator: '=', value: $slug)
             ->where(column: 'status', operator: '=', value: PostStatus::Published)
             ->first();
@@ -64,16 +65,16 @@ final class PostBusiness
     /**
      * Get top viewed published posts.
      */
-    public static function getTopViewed(int $limit = 5): Collection
+    public static function getRecentCreated(int $limit = 5): Collection
     {
         return Cache::remember(
-            key: 'posts.top-viewed',
+            key: 'posts.recent-created',
             ttl: CacheTtl::Long->value, // 1 hour
-            callback: fn () => self::topViewedCallback(limit: $limit)
+            callback: fn () => self::recentCreatedCallback(limit: $limit)
         );
     }
 
-    protected static function topViewedCallback(int $limit): Collection
+    protected static function recentCreatedCallback(int $limit): Collection
     {
         return Post::query()
             ->with(relations: 'tags')

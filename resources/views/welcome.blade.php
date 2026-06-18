@@ -28,7 +28,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid lg:grid-cols-3 gap-12">
                 <div class="lg:col-span-2">
-                    @php $mainPost = $topPosts->first(); @endphp
+                    @php $mainPost = $recentCreatedPosts->first(); @endphp
                     @if($mainPost)
                         <h2 class="text-2xl font-extrabold text-neutral-900 mb-8">Featured Article</h2>
                         <x-blog.post-card-featured

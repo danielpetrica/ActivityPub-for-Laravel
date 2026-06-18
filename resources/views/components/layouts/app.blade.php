@@ -16,6 +16,11 @@
     {{-- Canonical URL for SEO; falls back to current URL --}}
     <link rel="canonical" href="{{ $canonical ?? url()->current() }}" />
 
+    {{-- RSS Feeds --}}
+    <link rel="alternate" type="application/rss+xml" title="Daniel Petrica - All Posts" href="{{ route('rss.posts') }}">
+    <link rel="alternate" type="application/rss+xml" title="Daniel Petrica - Pages" href="{{ route('rss.pages') }}">
+    <link rel="alternate" type="application/rss+xml" title="Daniel Petrica - Tags" href="{{ route('rss.tags') }}">
+
     {{-- Open Graph --}}
     <meta property="og:type" content="{{ $ogType ?? 'website' }}" />
     <meta property="og:title" content="{{ $metaTitle ?? ($title ?? 'Daniel Petrica') }}" />

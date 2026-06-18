@@ -27,6 +27,7 @@ final class CommentBusiness
     public static function getApprovedForPost(Post $post): Collection
     {
         return $post->comments()
+            ->with(relations: 'user')
             ->where(column: 'is_approved', operator: '=', value: true)
             ->oldest()
             ->get();

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
+use Laravel\Scout\Searchable;
 
 /**
  * @property int $id
@@ -35,6 +36,8 @@ class Tag extends Model
     /** @use HasFactory<TagFactory> */
     use HasFactory;
 
+    use Searchable;
+
     protected $guarded = [];
 
     protected $casts = [
@@ -44,5 +47,16 @@ class Tag extends Model
     public function posts(): BelongsToMany
     {
         return $this->belongsToMany(related: Post::class);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            'name' => $this->name,
+            'description' => $this->description ?? '',
+        ];
     }
 }

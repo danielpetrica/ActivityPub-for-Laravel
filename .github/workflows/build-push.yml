@@ -59,8 +59,8 @@ jobs:
             - uses: docker/login-action@v4
               with:
                   registry: homebrain.tailb7c9d.ts.net:3000
-                  username: ${{ gitea.repository_owner }}
-                  password: ${{ gitea.token }}
+                  username: ${{ github.repository_owner }}
+                  password: ${{ github.token }}
 
             - name: Generate minimal .env for build
               run: |
@@ -104,7 +104,7 @@ jobs:
                       --secret id=composer_auth,env=COMPOSER_AUTH \
                       --platform ${{ matrix.platform }} \
                       --target ${{ matrix.target }} \
-                      --tag homebrain.tailb7c9d.ts.net:3000/${{ gitea.repository_owner }}/danielpetrica.com/${{ matrix.image }}:${{ gitea.ref_name }}-${{ matrix.arch }} \
+                      --tag homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/${{ matrix.image }}:${{ github.ref_name }}-${{ matrix.arch }} \
                       --push \
                       .
 
@@ -123,35 +123,35 @@ jobs:
             - uses: docker/login-action@v4
               with:
                   registry: homebrain.tailb7c9d.ts.net:3000
-                  username: ${{ gitea.repository_owner }}
-                  password: ${{ gitea.token }}
+                  username: ${{ github.repository_owner }}
+                  password: ${{ github.token }}
 
             - name: Merge web manifest
               run: |
                   docker buildx imagetools create \
-                      -t homebrain.tailb7c9d.ts.net:3000/${{ gitea.repository_owner }}/danielpetrica.com/web:${{ gitea.ref_name }} \
-                      homebrain.tailb7c9d.ts.net:3000/${{ gitea.repository_owner }}/danielpetrica.com/web:${{ gitea.ref_name }}-amd64 \
-                      homebrain.tailb7c9d.ts.net:3000/${{ gitea.repository_owner }}/danielpetrica.com/web:${{ gitea.ref_name }}-arm64
+                      -t homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/web:${{ github.ref_name }} \
+                      homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/web:${{ github.ref_name }}-amd64 \
+                      homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/web:${{ github.ref_name }}-arm64
                   docker buildx imagetools create \
-                      -t homebrain.tailb7c9d.ts.net:3000/${{ gitea.repository_owner }}/danielpetrica.com/web:latest \
-                      homebrain.tailb7c9d.ts.net:3000/${{ gitea.repository_owner }}/danielpetrica.com/web:${{ gitea.ref_name }}-amd64 \
-                      homebrain.tailb7c9d.ts.net:3000/${{ gitea.repository_owner }}/danielpetrica.com/web:${{ gitea.ref_name }}-arm64
+                      -t homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/web:latest \
+                      homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/web:${{ github.ref_name }}-amd64 \
+                      homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/web:${{ github.ref_name }}-arm64
 
             - name: Merge worker manifest
               run: |
                   docker buildx imagetools create \
-                      -t homebrain.tailb7c9d.ts.net:3000/${{ gitea.repository_owner }}/danielpetrica.com/worker:${{ gitea.ref_name }} \
-                      homebrain.tailb7c9d.ts.net:3000/${{ gitea.repository_owner }}/danielpetrica.com/worker:${{ gitea.ref_name }}-amd64 \
-                      homebrain.tailb7c9d.ts.net:3000/${{ gitea.repository_owner }}/danielpetrica.com/worker:${{ gitea.ref_name }}-arm64
+                      -t homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/worker:${{ github.ref_name }} \
+                      homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/worker:${{ github.ref_name }}-amd64 \
+                      homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/worker:${{ github.ref_name }}-arm64
                   docker buildx imagetools create \
-                      -t homebrain.tailb7c9d.ts.net:3000/${{ gitea.repository_owner }}/danielpetrica.com/worker:latest \
-                      homebrain.tailb7c9d.ts.net:3000/${{ gitea.repository_owner }}/danielpetrica.com/worker:${{ gitea.ref_name }}-amd64 \
-                      homebrain.tailb7c9d.ts.net:3000/${{ gitea.repository_owner }}/danielpetrica.com/worker:${{ gitea.ref_name }}-arm64
+                      -t homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/worker:latest \
+                      homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/worker:${{ github.ref_name }}-amd64 \
+                      homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/worker:${{ github.ref_name }}-arm64
 
     deploy:
         name: Deploy to Server
         needs: merge
-        if: startsWith(gitea.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/')
         runs-on: ubuntu-latest
         timeout-minutes: 10
         steps:

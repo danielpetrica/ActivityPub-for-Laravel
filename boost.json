@@ -22,7 +22,9 @@
         "ai-sdk-development",
         "laravel-best-practices",
         "configuring-horizon",
+        "mcp-development",
         "configure-nightwatch",
+        "scout-development",
         "livewire-development",
         "pest-testing",
         "tailwindcss-development"
