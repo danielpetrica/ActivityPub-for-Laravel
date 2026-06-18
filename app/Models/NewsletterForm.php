@@ -19,12 +19,12 @@ use Illuminate\Support\Carbon;
  * @property Carbon $created_at
  * @property Carbon $updated_at
  */
-class NewsletterForm extends Model
+final class NewsletterForm extends Model
 {
     /** @use HasFactory<NewsletterFormFactory> */
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = ['name', 'slug', 'title', 'description', 'button_text', 'success_message', 'is_active'];
 
     protected $casts = [
         'is_active' => 'boolean',

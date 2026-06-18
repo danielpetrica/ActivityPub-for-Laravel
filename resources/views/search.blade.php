@@ -4,6 +4,7 @@
     ogType="website"
 >
     <x-layouts.hero
+        :schemaType="'https://schema.org/SearchResultsPage'"
         :title="$query ? 'Search: ' . e($query) : 'Search'"
         excerpt="Search across all articles, pages, and tags."
     />

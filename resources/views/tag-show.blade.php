@@ -18,6 +18,7 @@
     :metaImage="$metaImage"
 >
     <x-layouts.hero
+        :schemaType="'https://schema.org/CollectionPage'"
         :title="'Tag: ' . $tag->name"
         :excerpt="$tag->description ?? 'Browsing all articles tagged with ' . $tag->name"
         :image="$tag->image_path ? MediaUrlBusiness::forMedia($tag->image_path) : null"

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Laravel\Scout\Searchable;
 
@@ -31,22 +32,38 @@ use Laravel\Scout\Searchable;
  * @property Carbon $updated_at
  * @property-read Collection<int, Post> $posts
  */
-class Tag extends Model
+final class Tag extends Model
 {
     /** @use HasFactory<TagFactory> */
     use HasFactory;
 
     use Searchable;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'name', 'slug', 'seo_metadata', 'image_path', 'description',
+        'meta_title', 'meta_description', 'og_title', 'og_description', 'og_image',
+        'og_image_generated_at', 'twitter_title', 'twitter_description', 'twitter_image',
+        'accent_color', 'canonical_url',
+    ];
 
     protected $casts = [
         'og_image_generated_at' => 'datetime',
+        'seo_metadata' => 'array',
     ];
 
     public function posts(): BelongsToMany
     {
         return $this->belongsToMany(related: Post::class);
+    }
+
+    public function announcements(): BelongsToMany
+    {
+        return $this->belongsToMany(related: Announcement::class);
+    }
+
+    public function primaryTagPosts(): HasMany
+    {
+        return $this->hasMany(related: Post::class, foreignKey: 'primary_tag_id');
     }
 
     /**

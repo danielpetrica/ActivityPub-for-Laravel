@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Classes\Business\OgImageBusiness;
 use App\Classes\Business\PostBusiness;
 use App\Enums\PostStatus;
 use App\Models\Tag;
@@ -17,6 +18,7 @@ final class StaticController extends Controller
         // Show only the last 5 articles on the homepage, per request
         $recentPosts = PostBusiness::getRecentPublished(limit: 5);
         $popularTags = PostBusiness::getPopularTags(limit: 3);
+        $metaImage = OgImageBusiness::generateForHomepage();
 
         return view(
             view: 'welcome',
@@ -25,6 +27,7 @@ final class StaticController extends Controller
                 'recentCreatedPosts' => $recentCreatedPosts,
                 'recentPosts' => $recentPosts,
                 'popularTags' => $popularTags,
+                'metaImage' => $metaImage,
             ]
         );
     }

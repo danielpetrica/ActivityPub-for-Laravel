@@ -19,12 +19,12 @@ use Illuminate\Support\Carbon;
  * @property Carbon $updated_at
  * @property-read Model $viewable
  */
-class PageView extends Model
+final class PageView extends Model
 {
     /** @use HasFactory<PageViewFactory> */
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = ['viewable_type', 'viewable_id', 'ip_address', 'referer', 'user_agent'];
 
     public function viewable(): MorphTo
     {

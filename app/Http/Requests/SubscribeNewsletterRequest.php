@@ -15,6 +15,7 @@ final class SubscribeNewsletterRequest extends FormRequest
     {
         return [
             'email' => ['required', 'email:rfc'],
+            'redirect_to' => ['nullable', 'string'],
             'slug' => ['nullable', 'string'],
         ];
     }

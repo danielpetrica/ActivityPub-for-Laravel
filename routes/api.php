@@ -11,9 +11,11 @@ use Illuminate\Support\Facades\Route;
 Route::get('/auth/status', [AuthController::class, 'status']);
 
 Route::get('/posts/{post}/comments', [CommentController::class, 'index']);
-Route::post('/comments', [CommentController::class, 'store']);
+Route::post('/comments', [CommentController::class, 'store'])
+    ->middleware('throttle:comments');
 
-Route::post('/posts/{post}/like', [LikeController::class, 'store']);
+Route::post('/posts/{post}/like', [LikeController::class, 'store'])
+    ->middleware('throttle:likes');
 
 Route::get('/tracker/logo.gif', [TrackerController::class, 'track'])->name('tracker');
 

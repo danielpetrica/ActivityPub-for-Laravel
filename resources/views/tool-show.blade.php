@@ -3,6 +3,7 @@
     :description="$tool->seo_metadata['description'] ?? 'Try this interactive tool.'"
 >
     <x-layouts.hero
+        :schemaType="'https://schema.org/WebPage'"
         :title="$tool->name"
         :excerpt="$tool->seo_metadata['description'] ?? 'Try this interactive tool.'"
     />

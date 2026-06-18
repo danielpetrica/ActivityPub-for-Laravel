@@ -11,6 +11,7 @@
     :metaImage="$metaImage"
 >
     <x-layouts.hero
+        :schemaType="'https://schema.org/CollectionPage'"
         title="All Posts"
         excerpt="Stay up to date with my latest articles on Laravel, DevOps, and more."
     />

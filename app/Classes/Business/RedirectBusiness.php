@@ -57,6 +57,6 @@ final class RedirectBusiness
     {
         return Redirect::query()
             ->where(column: 'is_enabled', operator: '=', value: true)
-            ->get(['path', 'destination_url']);
+            ->get(['path', 'destination_url', 'status_code']);
     }
 }

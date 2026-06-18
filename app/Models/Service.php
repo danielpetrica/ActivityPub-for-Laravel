@@ -19,12 +19,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property CarbonInterface $created_at
  * @property CarbonInterface $updated_at
  */
-class Service extends Model
+final class Service extends Model
 {
     /** @use HasFactory<ServiceFactory> */
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = ['name', 'slug', 'intro_content', 'main_content', 'seo_metadata', 'is_active'];
 
     protected $casts = [
         'seo_metadata' => 'array',

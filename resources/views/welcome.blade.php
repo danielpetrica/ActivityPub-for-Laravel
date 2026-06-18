@@ -1,8 +1,5 @@
 @php
     use App\Classes\Business\MediaUrlBusiness;
-    use App\Classes\Business\OgImageBusiness;
-
-    $metaImage = OgImageBusiness::generateForHomepage();
 @endphp
 
 <x-layouts.app
@@ -13,6 +10,7 @@
     @if($featuredPost)
         <x-layouts.hero
             featured
+            :schemaType="'https://schema.org/WebSite'"
             :title="$featuredPost->title"
             :excerpt="$featuredPost->excerpt ?? $featuredPost->meta_description ?? ''"
             :date="$featuredPost->published_at?->toDateString()"

@@ -45,6 +45,12 @@ final class NewsletterSubscriptionController
         $referer = (string) $request->headers->get('referer', '');
         $redirectTo = (string) $request->input('redirect_to', $referer !== '' ? $referer : route('welcome'));
 
+        $parsedRedirect = parse_url($redirectTo);
+        $parsedAppUrl = parse_url(config('app.url'));
+        if (isset($parsedRedirect['host']) && $parsedRedirect['host'] !== $parsedAppUrl['host']) {
+            $redirectTo = route('welcome');
+        }
+
         $url = str_contains($redirectTo, '?')
             ? $redirectTo.'&subscribed=1'
             : $redirectTo.'?subscribed=1';

@@ -23,7 +23,7 @@ final class Link extends Model
     /** @use HasFactory<LinkFactory> */
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = ['position', 'label', 'url', 'sort_order', 'is_external'];
 
     protected function casts(): array
     {

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Redirects\Schemas;
 
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
@@ -28,6 +29,14 @@ class RedirectForm
                             ->url()
                             ->placeholder('https://example.com/target')
                             ->helperText('The full URL where the user will be redirected.'),
+
+                        Select::make('status_code')
+                            ->options([
+                                301 => '301 Permanent',
+                                302 => '302 Temporary',
+                            ])
+                            ->default(302)
+                            ->required(),
 
                         Toggle::make('is_enabled')
                             ->label('Enabled')

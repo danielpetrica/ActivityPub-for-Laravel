@@ -22,5 +22,6 @@
     </sitemap>
     <sitemap>
         <loc>https://random.danielpetrica.com/sitemap.xml</loc>
+        <lastmod>{{ now()->toAtomString() }}</lastmod>
     </sitemap>
 </sitemapindex>

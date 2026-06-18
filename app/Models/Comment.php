@@ -20,12 +20,12 @@ use Illuminate\Support\Carbon;
  * @property-read Post $post
  * @property-read User|null $user
  */
-class Comment extends Model
+final class Comment extends Model
 {
     /** @use HasFactory<CommentFactory> */
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = ['post_id', 'user_id', 'author_name', 'comment', 'is_approved'];
 
     protected $casts = [
         'is_approved' => 'boolean',

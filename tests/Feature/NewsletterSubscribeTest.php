@@ -7,9 +7,7 @@ use Illuminate\Support\Facades\Http;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    // The route is now CSRF-protected via web middleware.
-    // Disable CSRF in tests since the JS layer handles it in production.
-    $this->withoutMiddleware(PreventRequestForgery::class);
+    $this->withoutMiddleware(middleware: PreventRequestForgery::class);
 });
 
 it('subscribes via form post and redirects with query flag', function () {

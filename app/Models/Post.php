@@ -48,14 +48,21 @@ use Laravel\Scout\Searchable;
  * @property-read Collection<int, Like> $likes
  * @property-read Collection<int, PageView> $pageViews
  */
-class Post extends Model
+final class Post extends Model
 {
     /** @use HasFactory<PostFactory> */
     use HasFactory;
 
     use Searchable;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'title', 'slug', 'content', 'status', 'seo_metadata', 'published_at',
+        'meta_title', 'meta_description', 'og_title', 'og_description', 'og_image',
+        'og_image_generated_at', 'twitter_title', 'twitter_description', 'twitter_image',
+        'canonical_url', 'feature_image_path', 'feature_image_alt', 'feature_image_caption',
+        'codeinjection_head', 'codeinjection_foot', 'show_title_and_feature_image',
+        'excerpt', 'ghost_uuid', 'primary_tag_id',
+    ];
 
     protected $casts = [
         'content' => 'array',

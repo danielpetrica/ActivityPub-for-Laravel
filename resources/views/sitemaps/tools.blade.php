@@ -4,6 +4,7 @@
         <loc>{{ route('tools.docker-traefik-generator') }}</loc>
         <changefreq>monthly</changefreq>
         <priority>0.7</priority>
+        <lastmod>{{ now()->toAtomString() }}</lastmod>
     </url>
     @foreach ($tools as $tool)
     <url>

@@ -105,7 +105,7 @@ return [
         OperationTerminated::class => [
             FlushOnce::class,
             FlushTemporaryContainerInstances::class,
-            // DisconnectFromDatabases::class,
+            DisconnectFromDatabases::class,
             // CollectGarbage::class,
         ],
 

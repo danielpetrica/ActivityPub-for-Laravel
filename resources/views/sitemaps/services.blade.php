@@ -6,6 +6,7 @@
             <loc>{{ route('services.local', ['service' => $service->slug, 'city' => $city->slug]) }}</loc>
             <changefreq>monthly</changefreq>
             <priority>0.6</priority>
+            <lastmod>{{ max($service->updated_at, $city->updated_at)->toAtomString() }}</lastmod>
         </url>
         @endforeach
     @endforeach

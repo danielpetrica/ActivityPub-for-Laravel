@@ -4,11 +4,13 @@
         <loc>{{ route('welcome') }}</loc>
         <changefreq>daily</changefreq>
         <priority>1.0</priority>
+        <lastmod>{{ now()->toAtomString() }}</lastmod>
     </url>
     <url>
         <loc>{{ route('posts.index') }}</loc>
         <changefreq>daily</changefreq>
         <priority>0.8</priority>
+        <lastmod>{{ now()->toAtomString() }}</lastmod>
     </url>
     @foreach ($pages as $page)
     <url>

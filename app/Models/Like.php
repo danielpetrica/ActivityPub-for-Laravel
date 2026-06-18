@@ -17,12 +17,12 @@ use Illuminate\Support\Carbon;
  * @property Carbon $updated_at
  * @property-read Post $post
  */
-class Like extends Model
+final class Like extends Model
 {
     /** @use HasFactory<LikeFactory> */
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = ['post_id', 'ip_address', 'user_agent'];
 
     public function post(): BelongsTo
     {

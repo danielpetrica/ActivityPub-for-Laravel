@@ -356,6 +356,7 @@ final class GhostImportBusiness
             attributes: ['path' => $from],
             values: [
                 'destination_url' => $to,
+                'status_code' => 301,
                 'is_enabled' => true,
                 'created_at' => now(),
                 'updated_at' => now(),

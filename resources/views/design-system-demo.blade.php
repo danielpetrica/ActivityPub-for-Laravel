@@ -1,6 +1,7 @@
 <x-layouts.app title="Design System Demo">
     <x-layouts.hero
         featured
+        :schemaType="'https://schema.org/WebPage'"
         title="Extracting a <span class='text-primary-600'>Modern</span> Design System"
         excerpt="How I turned static HTML files into a reusable Blade component library for my Laravel project."
         date="2026-01-24"

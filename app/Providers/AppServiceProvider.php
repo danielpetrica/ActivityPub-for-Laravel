@@ -37,6 +37,13 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
+        $isTesting = $this->app->environment('testing');
+
+        RateLimiter::for('contact', fn (Request $request) => Limit::perMinute($isTesting ? 10000 : 10)->by($request->ip()));
+        RateLimiter::for('subscribe', fn (Request $request) => Limit::perMinute($isTesting ? 10000 : 10)->by($request->ip()));
+        RateLimiter::for('comments', fn (Request $request) => Limit::perMinute($isTesting ? 10000 : 30)->by($request->ip()));
+        RateLimiter::for('likes', fn (Request $request) => Limit::perMinute($isTesting ? 10000 : 20)->by($request->ip()));
+
         Post::observe(PostObserver::class);
         Page::observe(PageObserver::class);
         Tag::observe(TagObserver::class);

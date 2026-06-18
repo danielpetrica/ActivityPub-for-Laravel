@@ -20,12 +20,12 @@ use Illuminate\Database\Eloquent\Model;
  * @property CarbonInterface $created_at
  * @property CarbonInterface $updated_at
  */
-class City extends Model
+final class City extends Model
 {
     /** @use HasFactory<CityFactory> */
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = ['name', 'slug', 'province', 'region', 'is_capital', 'description', 'latitude', 'longitude'];
 
     protected $casts = [
         'is_capital' => 'boolean',

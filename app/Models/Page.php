@@ -39,20 +39,28 @@ use Laravel\Scout\Searchable;
  * @property Carbon $updated_at
  * @property-read Collection<int, PageView> $pageViews
  */
-class Page extends Model
+final class Page extends Model
 {
     /** @use HasFactory<PageFactory> */
     use HasFactory;
 
     use Searchable;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'title', 'slug', 'content', 'status', 'seo_metadata',
+        'meta_title', 'meta_description', 'og_title', 'og_description', 'og_image',
+        'og_image_generated_at', 'twitter_title', 'twitter_description', 'twitter_image',
+        'canonical_url', 'feature_image_path', 'feature_image_alt', 'feature_image_caption',
+        'codeinjection_head', 'codeinjection_foot', 'show_title_and_feature_image',
+        'excerpt', 'ghost_uuid',
+    ];
 
     protected $casts = [
         'content' => 'array',
         'status' => PostStatus::class,
         'og_image_generated_at' => 'datetime',
         'show_title_and_feature_image' => 'bool',
+        'seo_metadata' => 'array',
     ];
 
     public function pageViews(): MorphMany

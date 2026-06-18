@@ -31,8 +31,7 @@ async function initLikes(postId) {
                 const response = await fetch(`/api/posts/${postId}/like`, {
                     method: 'POST',
                     headers: {
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                        'Accept': 'application/json'
                     }
                 });
                 const data = await response.json();
@@ -118,8 +117,7 @@ async function initComments(postId) {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify(data)
                 });

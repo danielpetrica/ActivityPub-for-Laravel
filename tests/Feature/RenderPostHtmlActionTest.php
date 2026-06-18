@@ -1,7 +1,6 @@
 <?php
 
 use App\Actions\RenderPostHtmlAction;
-use App\Classes\Business\MediaUrlBusiness;
 
 it('rewrites relative media/ image src to proxy URL', function () {
     $htmlInput = '<p><img src="media/content/2026/02/example.jpg" alt="Example"></p>';

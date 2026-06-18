@@ -18,12 +18,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property CarbonInterface $created_at
  * @property CarbonInterface $updated_at
  */
-class CaseStudy extends Model
+final class CaseStudy extends Model
 {
     /** @use HasFactory<CaseStudyFactory> */
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = ['title', 'slug', 'description', 'images', 'is_active'];
 
     protected $casts = [
         'images' => 'array',

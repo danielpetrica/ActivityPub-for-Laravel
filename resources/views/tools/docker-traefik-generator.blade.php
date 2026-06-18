@@ -4,6 +4,7 @@
     :structuredData="$structuredData"
 >
     <x-layouts.hero
+        :schemaType="'https://schema.org/WebPage'"
         title="Docker & Traefik Config Generator"
         excerpt="Generate production-ready Docker Compose and Traefik configurations.
         Fill in the wizard and download your stack files instantly. No data sent to any server."

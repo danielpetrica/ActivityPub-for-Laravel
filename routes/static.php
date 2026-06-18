@@ -56,5 +56,5 @@ Route::get('/sitemap-services.xml', [SitemapController::class, 'services'])->nam
 
 // Register custom redirects from cache
 foreach (RedirectBusiness::getActiveRedirects() as $redirect) {
-    Route::redirect($redirect->path, $redirect->destination_url);
+    Route::redirect($redirect->path, $redirect->destination_url, $redirect->status_code);
 }

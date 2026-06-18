@@ -19,12 +19,12 @@ use Illuminate\Support\Carbon;
  * @property Carbon $updated_at
  * @property-read Collection<int, PageView> $pageViews
  */
-class Tool extends Model
+final class Tool extends Model
 {
     /** @use HasFactory<ToolFactory> */
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = ['name', 'slug', 'html_content', 'seo_metadata'];
 
     protected $casts = [
         'seo_metadata' => 'array',

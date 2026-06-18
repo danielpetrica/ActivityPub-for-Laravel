@@ -18,15 +18,28 @@ Route::get(uri: '/admin/media-proxy', action: MediaProxyController::class)
     ->name(name: 'admin.media-proxy');
 
 Route::post(uri: '/contact', action: [ContactController::class, 'submit'])
+    ->middleware(middleware: 'throttle:contact')
     ->name(name: 'contact.submit');
 
 Route::post('/subscribe', [NewsletterSubscriptionController::class, 'store'])
+    ->middleware('throttle:subscribe')
     ->name('newsletter.subscribe');
 
 Route::get('/csrf-token', function () {
+    $referer = request()->header('Referer');
+
+    if ($referer) {
+        $refererHost = parse_url($referer, PHP_URL_HOST);
+        $appHost = parse_url(config('app.url'), PHP_URL_HOST);
+
+        if ($refererHost !== $appHost) {
+            abort(403);
+        }
+    }
+
     return response()->json(['csrf_token' => csrf_token()])
         ->header('Cache-Control', 'no-store, no-cache, must-revalidate');
-})->name('csrf-token');
+})->name('csrf-token')->middleware('throttle:60,1');
 
 Route::get('/email/verify', function () {
     return view('auth.verify-email');

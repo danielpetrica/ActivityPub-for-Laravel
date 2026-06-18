@@ -24,6 +24,10 @@ class RedirectsTable
                     ->searchable()
                     ->sortable(),
 
+                TextColumn::make('status_code')
+                    ->label('Status')
+                    ->sortable(),
+
                 IconColumn::make('is_enabled')
                     ->label('Enabled')
                     ->boolean()
