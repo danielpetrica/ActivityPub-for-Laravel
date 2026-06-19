@@ -1,9 +1,5 @@
 name: Build and Push Docker Images
 
-# Builds multi-arch images on native runners (amd64 + arm64) and merges
-# them into multi-arch manifests. Uses a local Docker registry to share
-# vendor+assets layer cache between the builds within each job.
-
 on:
     push:
         tags:
@@ -16,8 +12,8 @@ permissions:
 
 jobs:
     build:
-        name: ${{ matrix.image }} (${{ matrix.arch }})
-        runs-on: ${{ matrix.runner }}
+        name: ${{ matrix.image }}
+        runs-on: ubuntu-latest
         timeout-minutes: 30
         strategy:
             fail-fast: false
@@ -25,27 +21,8 @@ jobs:
                 include:
                     - target: frankenphp
                       image: web
-                      arch: amd64
-                      platform: linux/amd64
-                      runner: ubuntu-latest
-
-                    - target: frankenphp
-                      image: web
-                      arch: arm64
-                      platform: linux/arm64
-                      runner: ubuntu-24.04-arm
-
                     - target: worker
                       image: worker
-                      arch: amd64
-                      platform: linux/amd64
-                      runner: ubuntu-latest
-
-                    - target: worker
-                      image: worker
-                      arch: arm64
-                      platform: linux/arm64
-                      runner: ubuntu-24.04-arm
 
         steps:
             - uses: actions/checkout@v6
@@ -79,88 +56,27 @@ jobs:
                   EOF
                   cp .env .env.production
 
-            - name: Start local Docker registry
-              run: docker run -d -p 5000:5000 --name registry registry:2
-
-            - name: Build & cache vendor+assets stages
+            - name: Build ${{ matrix.image }}
               env:
                   COMPOSER_AUTH: >-
                       {"http-basic":{"packages.filamentphp.com":{"username":"andrei@danielpetrica.com","password":"${{ secrets.FILAMENT_TOKEN }}"}}}
               run: |
                   docker buildx build \
-                      --cache-to type=registry,ref=localhost:5000/danielpetrica.com/cache:vendor-${{ matrix.arch }},mode=max \
                       --secret id=composer_auth,env=COMPOSER_AUTH \
-                      --platform ${{ matrix.platform }} \
-                      --target vendor \
-                      .
-
-            - name: Build ${{ matrix.image }} (${{ matrix.arch }})
-              env:
-                  COMPOSER_AUTH: >-
-                      {"http-basic":{"packages.filamentphp.com":{"username":"andrei@danielpetrica.com","password":"${{ secrets.FILAMENT_TOKEN }}"}}}
-              run: |
-                  docker buildx build \
-                      --cache-from type=registry,ref=localhost:5000/danielpetrica.com/cache:vendor-${{ matrix.arch }} \
-                      --secret id=composer_auth,env=COMPOSER_AUTH \
-                      --platform ${{ matrix.platform }} \
                       --target ${{ matrix.target }} \
-                      --tag homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/${{ matrix.image }}:${{ github.ref_name }}-${{ matrix.arch }} \
+                      --tag homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/${{ matrix.image }}:${{ github.ref_name }} \
+                      --tag homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/${{ matrix.image }}:latest \
                       --load \
                       .
 
-            - name: Push ${{ matrix.image }} (${{ matrix.arch }})
+            - name: Push ${{ matrix.image }}
               run: |
-                  docker push homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/${{ matrix.image }}:${{ github.ref_name }}-${{ matrix.arch }}
-
-            - name: Stop local registry
-              if: always()
-              run: docker stop registry && docker rm registry
-
-    merge:
-        name: Merge Multi-Arch Manifests
-        needs: build
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        steps:
-            - uses: docker/login-action@v4
-              with:
-                  registry: homebrain.tailb7c9d.ts.net:3000
-                  username: ${{ github.repository_owner }}
-                  password: ${{ github.token }}
-
-            - name: Merge web manifest
-              run: |
-                  docker manifest create \
-                      homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/web:${{ github.ref_name }} \
-                      homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/web:${{ github.ref_name }}-amd64 \
-                      homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/web:${{ github.ref_name }}-arm64
-                  docker manifest push \
-                      homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/web:${{ github.ref_name }}
-                  docker manifest create \
-                      homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/web:latest \
-                      homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/web:${{ github.ref_name }}-amd64 \
-                      homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/web:${{ github.ref_name }}-arm64
-                  docker manifest push \
-                      homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/web:latest
-
-            - name: Merge worker manifest
-              run: |
-                  docker manifest create \
-                      homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/worker:${{ github.ref_name }} \
-                      homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/worker:${{ github.ref_name }}-amd64 \
-                      homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/worker:${{ github.ref_name }}-arm64
-                  docker manifest push \
-                      homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/worker:${{ github.ref_name }}
-                  docker manifest create \
-                      homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/worker:latest \
-                      homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/worker:${{ github.ref_name }}-amd64 \
-                      homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/worker:${{ github.ref_name }}-arm64
-                  docker manifest push \
-                      homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/worker:latest
+                  docker push homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/${{ matrix.image }}:${{ github.ref_name }}
+                  docker push homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/${{ matrix.image }}:latest
 
     deploy:
         name: Deploy to Server
-        needs: merge
+        needs: build
         if: startsWith(github.ref, 'refs/tags/')
         runs-on: ubuntu-latest
         timeout-minutes: 10
