@@ -21,11 +21,15 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Create Admin User
-        $user = User::create([
-            'name' => 'Admin',
-            'email' => 'admin@danielpetrica.com',
-            'password' => Hash::make('password'),
-        ]);
+        $user = User::updateOrCreate(
+            ['email' => 'admin@danielpetrica.com'],
+            [
+                'name' => 'Daniel Petrica',
+                'username' => 'daniel',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ],
+        );
 
         // send email verification to admin user for safety.
         $user->sendEmailVerificationNotification();

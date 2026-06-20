@@ -21,6 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->trustProxies(at: '*');
+
         $middleware->append(middleware: AnalyticsMiddleware::class);
 
         $middleware->group(
@@ -31,7 +33,11 @@ return Application::configure(basePath: dirname(__DIR__))
             ]
         );
 
-        $middleware->throttleWithRedis();
+        $useRedis = env('APP_ENV', 'production') !== 'local';
+
+        if ($useRedis) {
+            $middleware->throttleWithRedis();
+        }
 
         $middleware->group(
             group: 'mcp',
@@ -39,7 +45,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 LogMcpRequest::class,
                 ThrottleRequests::class,
             ]
-        )->throttleApi(limiter: 'mcp', redis: true);
+        )->throttleApi(limiter: 'mcp', redis: $useRedis);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

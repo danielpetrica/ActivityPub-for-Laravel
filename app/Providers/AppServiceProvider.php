@@ -51,13 +51,16 @@ class AppServiceProvider extends ServiceProvider
         Link::observe(LinkObserver::class);
 
         // Register TipTap JS extensions for the Filament RichEditor.
-        FilamentAsset::register([
-            Js::make('rich-content-plugins/figure', Vite::asset('resources/js/filament/rich-content-plugins/figure.js'))->loadedOnRequest(),
-            Js::make('rich-content-plugins/figcaption', Vite::asset('resources/js/filament/rich-content-plugins/figcaption.js'))->loadedOnRequest(),
-            Js::make('rich-content-plugins/div', Vite::asset('resources/js/filament/rich-content-plugins/div.js'))->loadedOnRequest(),
-            Js::make('rich-content-plugins/iframe', Vite::asset('resources/js/filament/rich-content-plugins/iframe.js'))->loadedOnRequest(),
-            Js::make('rich-content-plugins/image-proxy', Vite::asset('resources/js/filament/rich-content-plugins/image-proxy.js'))->loadedOnRequest(),
-        ]);
+        // Guarded: manifest doesn't exist during `composer install` before frontend build.
+        if (file_exists(public_path('build/manifest.json'))) {
+            FilamentAsset::register([
+                Js::make('rich-content-plugins/figure', Vite::asset('resources/js/filament/rich-content-plugins/figure.js'))->loadedOnRequest(),
+                Js::make('rich-content-plugins/figcaption', Vite::asset('resources/js/filament/rich-content-plugins/figcaption.js'))->loadedOnRequest(),
+                Js::make('rich-content-plugins/div', Vite::asset('resources/js/filament/rich-content-plugins/div.js'))->loadedOnRequest(),
+                Js::make('rich-content-plugins/iframe', Vite::asset('resources/js/filament/rich-content-plugins/iframe.js'))->loadedOnRequest(),
+                Js::make('rich-content-plugins/image-proxy', Vite::asset('resources/js/filament/rich-content-plugins/image-proxy.js'))->loadedOnRequest(),
+            ]);
+        }
 
         if ($this->app->environment('production')) {
             \URL::forceScheme('https');

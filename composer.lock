@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5699b020193cd894d53503c6d774d00a",
+    "content-hash": "c4726e620ecb245df28e5855b5b7b3dd",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -702,6 +702,54 @@
                 }
             ],
             "time": "2026-03-16T11:29:23+00:00"
+        },
+        {
+            "name": "danielpetrica/laravel-activitypub",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "packages/laravel-activitypub",
+                "reference": "6292fe8de5018fe073d45b372c9bdd23acfa8a12"
+            },
+            "require": {
+                "ext-json": "*",
+                "ext-openssl": "*",
+                "laravel/framework": "^13.0",
+                "php": "^8.5"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "DanielPetrica\\LaravelActivityPub\\ActivityPubServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "DanielPetrica\\LaravelActivityPub\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "DanielPetrica\\LaravelActivityPub\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "ActivityPub server implementation for Laravel applications. WebFinger, actor profiles, inbox/outbox, and federation.",
+            "keywords": [
+                "activitypub",
+                "federation",
+                "fediverse",
+                "laravel",
+                "mastodon",
+                "webfinger"
+            ],
+            "transport-options": {
+                "relative": true
+            }
         },
         {
             "name": "dflydev/dot-access-data",
@@ -13629,7 +13677,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "danielpetrica/laravel-activitypub": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

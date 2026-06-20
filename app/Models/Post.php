@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use App\Enums\PostStatus;
+use DanielPetrica\LaravelActivityPub\Contracts\ActorContract;
+use DanielPetrica\LaravelActivityPub\Contracts\FederatableContentContract;
+use DanielPetrica\LaravelActivityPub\Traits\FederatesContent;
 use Database\Factories\PostFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -48,8 +51,10 @@ use Laravel\Scout\Searchable;
  * @property-read Collection<int, Like> $likes
  * @property-read Collection<int, PageView> $pageViews
  */
-final class Post extends Model
+final class Post extends Model implements FederatableContentContract
 {
+    use FederatesContent;
+
     /** @use HasFactory<PostFactory> */
     use HasFactory;
 
@@ -108,5 +113,129 @@ final class Post extends Model
             'excerpt' => $this->excerpt ?? '',
             'meta_description' => $this->meta_description ?? '',
         ];
+    }
+
+    public function shouldFederate(): bool
+    {
+        return config('activitypub.federation.enabled', false) && $this->status === PostStatus::Published;
+    }
+
+    public function activityPubActor(): ActorContract
+    {
+        $user = User::query()->first();
+
+        if ($user === null) {
+            throw new \RuntimeException(message: 'No user found for ActivityPub actor.');
+        }
+
+        return $user;
+    }
+
+    public function getActivityPubId(): string
+    {
+        return $this->activityPubActor()->getActorId().'/posts/'.$this->slug;
+    }
+
+    public function getActivityPubType(): string
+    {
+        return 'Article';
+    }
+
+    public function getActivityPubName(): ?string
+    {
+        return $this->title;
+    }
+
+    public function getActivityPubContent(): string
+    {
+        $html = '';
+        $content = $this->content;
+
+        if (is_array($content)) {
+            foreach ($content as $node) {
+                if (isset($node['content'])) {
+                    foreach ($node['content'] as $child) {
+                        if (isset($child['text'])) {
+                            $html .= $child['text'].' ';
+                        }
+                    }
+                }
+            }
+        }
+
+        $text = trim(string: strip_tags(string: $html));
+        $text = mb_substr(string: $text, start: 0, length: 500);
+
+        if (mb_strlen(string: strip_tags(string: $html)) > 500) {
+            $text .= '...';
+        }
+
+        $url = $this->getActivityPubUrl();
+        $text .= "\n\n".'Read the full article at: '.$url;
+
+        return $text;
+    }
+
+    public function getActivityPubSummary(): ?string
+    {
+        return $this->excerpt;
+    }
+
+    public function getActivityPubUrl(): string
+    {
+        return route(name: 'static.post', parameters: ['slug' => $this->slug]);
+    }
+
+    public function getActivityPubPublishedAt(): string
+    {
+        return ($this->published_at ?? $this->created_at)->toIso8601String();
+    }
+
+    public function getActivityPubAttributedTo(): string
+    {
+        return $this->activityPubActor()->getActorId();
+    }
+
+    public function getActivityPubTo(): string
+    {
+        return 'https://www.w3.org/ns/activitystreams#Public';
+    }
+
+    public function getActivityPubCc(): ?string
+    {
+        return $this->activityPubActor()->getFollowersUrl();
+    }
+
+    public function getActivityPubAttachments(): array
+    {
+        $attachments = [];
+
+        if ($this->feature_image_path !== null) {
+            $imageUrl = $this->feature_image_path;
+
+            if (! str_starts_with(haystack: $imageUrl, needle: 'http')) {
+                $imageUrl = config('app.url').'/'.$imageUrl;
+            }
+
+            $attachments[] = [
+                'type' => 'Image',
+                'mediaType' => 'image/jpeg',
+                'url' => $imageUrl,
+                'name' => $this->feature_image_alt ?? $this->title,
+            ];
+        }
+
+        return $attachments;
+    }
+
+    public function getActivityPubTags(): array
+    {
+        return $this->tags->map(function (Tag $tag) {
+            return [
+                'type' => 'Hashtag',
+                'href' => route(name: 'static.tag', parameters: ['slug' => $tag->slug]),
+                'name' => '#'.$tag->name,
+            ];
+        })->toArray();
     }
 }
