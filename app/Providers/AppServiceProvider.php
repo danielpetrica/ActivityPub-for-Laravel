@@ -10,6 +10,8 @@ use App\Observers\LinkObserver;
 use App\Observers\PageObserver;
 use App\Observers\PostObserver;
 use App\Observers\TagObserver;
+use DanielPetrica\LaravelActivityPub\ActivityPubServiceProvider;
+use DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse\DashboardController;
 use Filament\Support\Assets\Js;
 use Filament\Support\Facades\FilamentAsset;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -29,7 +31,7 @@ class AppServiceProvider extends ServiceProvider
         // Explicitly register the ActivityPub provider to guard against
         // auto-discovery failures during deployment (stale packages.php cache).
         $this->app->register(
-            \DanielPetrica\LaravelActivityPub\ActivityPubServiceProvider::class,
+            ActivityPubServiceProvider::class,
         );
     }
 
@@ -76,7 +78,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->booted(function (): void {
             if (
                 ! Route::has(name: 'fediverse.dashboard')
-                && class_exists(\DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse\DashboardController::class)
+                && class_exists(DashboardController::class)
             ) {
                 Route::middleware(['web', 'auth'])
                     ->prefix('fediverse')

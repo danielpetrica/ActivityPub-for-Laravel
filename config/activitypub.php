@@ -1,5 +1,7 @@
 <?php
 
+use DanielPetrica\LaravelActivityPub\Models\Actor;
+
 return [
     'domain' => env('ACTIVITYPUB_DOMAIN', env('APP_URL')),
 
@@ -9,7 +11,7 @@ return [
         'middleware' => ['api'],
     ],
 
-    'actor_model' => DanielPetrica\LaravelActivityPub\Models\Actor::class,
+    'actor_model' => Actor::class,
 
     'http_signatures' => [
         'enabled' => true,

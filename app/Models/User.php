@@ -123,4 +123,13 @@ final class User extends Authenticatable implements ActorContract, FilamentUser,
     {
         return $this->getActorId().'#main-key';
     }
+
+    public function getPrivateKeyPem(): ?string
+    {
+        $actor = Actor::query()
+            ->where(column: 'username', operator: '=', value: $this->getPreferredUsername())
+            ->first();
+
+        return $actor?->private_key_pem;
+    }
 }
