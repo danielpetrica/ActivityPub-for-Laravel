@@ -183,7 +183,7 @@ final class Post extends Model implements FederatableContentContract
 
     public function getActivityPubUrl(): string
     {
-        return route(name: 'static.post', parameters: ['slug' => $this->slug]);
+        return route(name: 'posts.show', parameters: ['slug' => $this->slug]);
     }
 
     public function getActivityPubPublishedAt(): string
@@ -201,7 +201,7 @@ final class Post extends Model implements FederatableContentContract
         return 'https://www.w3.org/ns/activitystreams#Public';
     }
 
-    public function getActivityPubCc(): ?string
+    public function getActivityPubCc(): string
     {
         return $this->activityPubActor()->getFollowersUrl();
     }
@@ -233,7 +233,7 @@ final class Post extends Model implements FederatableContentContract
         return $this->tags->map(function (Tag $tag) {
             return [
                 'type' => 'Hashtag',
-                'href' => route(name: 'static.tag', parameters: ['slug' => $tag->slug]),
+                'href' => route(name: 'tags.show', parameters: ['slug' => $tag->slug]),
                 'name' => '#'.$tag->name,
             ];
         })->toArray();
