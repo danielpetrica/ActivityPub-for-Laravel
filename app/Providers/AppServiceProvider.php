@@ -15,6 +15,7 @@ use Filament\Support\Facades\FilamentAsset;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 
@@ -65,5 +66,19 @@ class AppServiceProvider extends ServiceProvider
         if ($this->app->environment('production')) {
             \URL::forceScheme('https');
         }
+
+        // Safety net: register fediverse routes if the package's ServiceProvider
+        // didn't load them (e.g., stale route cache, env issues during deploy).
+        $this->app->booted(function (): void {
+            if (
+                ! Route::has(name: 'fediverse.dashboard')
+                && class_exists(\DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse\DashboardController::class)
+            ) {
+                Route::middleware(['web', 'auth'])
+                    ->prefix('fediverse')
+                    ->name('fediverse.')
+                    ->group(base_path('vendor/danielpetrica/laravel-activitypub/routes/fediverse.php'));
+            }
+        });
     }
 }
