@@ -19,7 +19,7 @@ class PostFactory extends Factory
      */
     public function definition(): array
     {
-        $title = $this->faker->sentence();
+        $title = fake()->sentence();
 
         return [
             'title' => $title,
@@ -30,7 +30,7 @@ class PostFactory extends Factory
                     [
                         'type' => 'paragraph',
                         'content' => [
-                            ['type' => 'text', 'text' => $this->faker->paragraph()],
+                            ['type' => 'text', 'text' => fake()->paragraph()],
                         ],
                     ],
                 ],
@@ -39,8 +39,8 @@ class PostFactory extends Factory
             'published_at' => now(),
             'seo_metadata' => [
                 'title' => $title,
-                'description' => $this->faker->sentence(),
-                'keywords' => implode(',', $this->faker->words(5)),
+                'description' => fake()->sentence(),
+                'keywords' => implode(',', fake()->words(5)),
             ],
         ];
     }

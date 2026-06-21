@@ -17,12 +17,12 @@ class CaseStudyFactory extends Factory
      */
     public function definition(): array
     {
-        $title = $this->faker->unique()->sentence(3);
+        $title = fake()->unique()->sentence(3);
 
         return [
             'title' => $title,
             'slug' => str($title)->slug(),
-            'description' => $this->faker->paragraph(),
+            'description' => fake()->paragraph(),
             'is_active' => true,
         ];
     }

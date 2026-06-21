@@ -20,9 +20,9 @@ class CommentFactory extends Factory
     {
         return [
             'post_id' => Post::factory(),
-            'author_name' => $this->faker->name(),
-            'comment' => $this->faker->paragraph(),
-            'is_approved' => $this->faker->boolean(80),
+            'author_name' => fake()->name(),
+            'comment' => fake()->paragraph(),
+            'is_approved' => fake()->boolean(80),
         ];
     }
 }

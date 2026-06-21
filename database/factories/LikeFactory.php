@@ -20,8 +20,8 @@ class LikeFactory extends Factory
     {
         return [
             'post_id' => Post::factory(),
-            'ip_address' => $this->faker->ipv4(),
-            'user_agent' => $this->faker->userAgent(),
+            'ip_address' => fake()->ipv4(),
+            'user_agent' => fake()->userAgent(),
         ];
     }
 }

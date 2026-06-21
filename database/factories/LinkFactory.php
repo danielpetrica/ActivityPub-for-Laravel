@@ -20,10 +20,10 @@ class LinkFactory extends Factory
     {
         return [
             'position' => LinkPosition::Footer,
-            'label' => $this->faker->words(3, true),
-            'url' => $this->faker->url(),
-            'sort_order' => $this->faker->numberBetween(0, 100),
-            'is_external' => $this->faker->boolean(),
+            'label' => fake()->words(3, true),
+            'url' => fake()->url(),
+            'sort_order' => fake()->numberBetween(0, 100),
+            'is_external' => fake()->boolean(),
         ];
     }
 }

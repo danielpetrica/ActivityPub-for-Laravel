@@ -17,17 +17,17 @@ class CityFactory extends Factory
      */
     public function definition(): array
     {
-        $name = $this->faker->city();
+        $name = fake()->city();
 
         return [
             'name' => $name,
             'slug' => str($name)->slug(),
-            'province' => $this->faker->stateAbbr(),
-            'region' => $this->faker->word(),
+            'province' => fake()->stateAbbr(),
+            'region' => fake()->word(),
             'is_capital' => false,
-            'description' => $this->faker->sentence(),
-            'latitude' => $this->faker->latitude(),
-            'longitude' => $this->faker->longitude(),
+            'description' => fake()->sentence(),
+            'latitude' => fake()->latitude(),
+            'longitude' => fake()->longitude(),
         ];
     }
 }

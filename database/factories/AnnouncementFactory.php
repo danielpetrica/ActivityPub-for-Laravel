@@ -15,7 +15,7 @@ class AnnouncementFactory extends Factory
     public function definition(): array
     {
         return [
-            'text' => $this->faker->sentence(),
+            'text' => fake()->sentence(),
             'is_active' => true,
             'is_cross_site' => true,
         ];

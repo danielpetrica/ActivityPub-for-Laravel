@@ -17,13 +17,13 @@ class ServiceFactory extends Factory
      */
     public function definition(): array
     {
-        $name = $this->faker->words(nb: 3, asText: true);
+        $name = fake()->words(nb: 3, asText: true);
 
         return [
             'name' => $name,
             'slug' => str($name)->slug(),
-            'intro_content' => $this->faker->paragraph(),
-            'main_content' => $this->faker->paragraph(),
+            'intro_content' => fake()->paragraph(),
+            'main_content' => fake()->paragraph(),
             'seo_metadata' => null,
             'is_active' => true,
         ];

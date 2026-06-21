@@ -21,9 +21,9 @@ class PageViewFactory extends Factory
         return [
             'viewable_id' => 1,
             'viewable_type' => Post::class,
-            'ip_address' => $this->faker->ipv4(),
-            'referer' => $this->faker->url(),
-            'user_agent' => $this->faker->userAgent(),
+            'ip_address' => fake()->ipv4(),
+            'referer' => fake()->url(),
+            'user_agent' => fake()->userAgent(),
         ];
     }
 }

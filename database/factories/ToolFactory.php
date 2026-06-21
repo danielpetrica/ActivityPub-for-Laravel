@@ -18,7 +18,7 @@ class ToolFactory extends Factory
      */
     public function definition(): array
     {
-        $name = $this->faker->words(2, true);
+        $name = fake()->words(2, true);
 
         return [
             'name' => ucfirst($name),
@@ -26,8 +26,8 @@ class ToolFactory extends Factory
             'html_content' => '<div class="tool-container"><p>This is a custom tool: '.$name.'</p></div>',
             'seo_metadata' => [
                 'title' => ucfirst($name),
-                'description' => $this->faker->sentence(),
-                'keywords' => implode(',', $this->faker->words(5)),
+                'description' => fake()->sentence(),
+                'keywords' => implode(',', fake()->words(5)),
             ],
         ];
     }

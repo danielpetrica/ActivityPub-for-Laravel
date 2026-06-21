@@ -17,13 +17,13 @@ class NewsletterFormFactory extends Factory
      */
     public function definition(): array
     {
-        $name = $this->faker->unique()->words(2, asText: true);
+        $name = fake()->unique()->words(2, asText: true);
 
         return [
             'name' => $name,
             'slug' => str($name)->slug(),
-            'title' => $this->faker->sentence(),
-            'description' => $this->faker->paragraph(),
+            'title' => fake()->sentence(),
+            'description' => fake()->paragraph(),
             'button_text' => 'Subscribe',
             'success_message' => 'Thank you for subscribing!',
             'is_active' => true,
