@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6197df5d589bb4202d28545684087bdf",
+    "content-hash": "2637d0a794258102c772235f9b6b5b1c",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -704,16 +704,16 @@
         },
         {
             "name": "danielpetrica/laravel-activitypub",
-            "version": "dev-main",
+            "version": "v0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/danielpetrica/laravel-activitypub.git",
-                "reference": "29545637fdc55cc5dbfe15cc48dd5bf149f39bc8"
+                "reference": "1d7b5492abf3eb33500d123503e7ebb4f1508d0d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/danielpetrica/laravel-activitypub/zipball/29545637fdc55cc5dbfe15cc48dd5bf149f39bc8",
-                "reference": "29545637fdc55cc5dbfe15cc48dd5bf149f39bc8",
+                "url": "https://api.github.com/repos/danielpetrica/laravel-activitypub/zipball/1d7b5492abf3eb33500d123503e7ebb4f1508d0d",
+                "reference": "1d7b5492abf3eb33500d123503e7ebb4f1508d0d",
                 "shasum": ""
             },
             "require": {
@@ -722,7 +722,6 @@
                 "laravel/framework": "^13.0",
                 "php": "^8.5"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -736,28 +735,24 @@
                     "DanielPetrica\\LaravelActivityPub\\": "src/"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "DanielPetrica\\LaravelActivityPub\\Tests\\": "tests/"
-                }
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
             "description": "ActivityPub server implementation for Laravel applications. WebFinger, actor profiles, inbox/outbox, and federation.",
             "keywords": [
+                "Federation",
                 "activitypub",
-                "federation",
                 "fediverse",
                 "laravel",
                 "mastodon",
                 "webfinger"
             ],
             "support": {
-                "source": "https://github.com/danielpetrica/laravel-activitypub/tree/main",
-                "issues": "https://github.com/danielpetrica/laravel-activitypub/issues"
+                "issues": "https://github.com/danielpetrica/laravel-activitypub/issues",
+                "source": "https://github.com/danielpetrica/laravel-activitypub/tree/v0.2.0"
             },
-            "time": "2026-06-21T07:40:17+00:00"
+            "time": "2026-06-21T13:12:13+00:00"
         },
         {
             "name": "dflydev/dot-access-data",
