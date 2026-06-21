@@ -28,7 +28,7 @@ final class OutboxController extends Controller
         if ($page === 1) {
             $activities = (clone $baseQuery)
                 ->orderByDesc(column: 'created_at')
-                ->offset(offset: ($page - 1) * $perPage)
+                ->offset(($page - 1) * $perPage)
                 ->limit(value: $perPage)
                 ->get();
 

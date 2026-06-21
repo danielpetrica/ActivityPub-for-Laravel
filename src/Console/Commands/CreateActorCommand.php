@@ -3,6 +3,7 @@
 namespace DanielPetrica\LaravelActivityPub\Console\Commands;
 
 use DanielPetrica\LaravelActivityPub\Models\Actor;
+use DanielPetrica\LaravelActivityPub\Services\KeyPairService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -47,11 +48,27 @@ final class CreateActorCommand extends Command
             return self::FAILURE;
         }
 
+        // Verify a matching user exists in the application
+        $userModel = config(key: 'auth.providers.users.model');
+
+        if ($userModel !== null && class_exists(class: $userModel)) {
+            $user = $userModel::query()
+                ->where(column: 'username', operator: '=', value: $username)
+                ->orWhere(column: 'email', operator: 'like', value: $username.'@%')
+                ->first();
+
+            if ($user === null) {
+                $this->error(string: "Cannot create actor: no user found with username '{$username}'.");
+
+                return self::FAILURE;
+            }
+        }
+
         // Generate RSA key pair
         $this->info(string: 'Generating RSA 2048-bit key pair...');
 
         try {
-            $keyPair = $this->generateKeyPair();
+            $keyPair = app(KeyPairService::class)->generate();
         } catch (Throwable $e) {
             $this->error(string: 'Failed to generate RSA key pair: '.$e->getMessage());
 
@@ -80,36 +97,5 @@ final class CreateActorCommand extends Command
         $this->info(string: '  Outbox: '.$actor->outbox_url);
 
         return self::SUCCESS;
-    }
-
-    /**
-     * @return array{public: string, private: string}
-     */
-    protected function generateKeyPair(): array
-    {
-        $keyResource = openssl_pkey_new(options: [
-            'digest_alg' => 'sha256',
-            'private_key_bits' => 2048,
-            'private_key_type' => OPENSSL_KEYTYPE_RSA,
-        ]);
-
-        if ($keyResource === false) {
-            throw new \RuntimeException(message: 'Failed to generate RSA key pair.');
-        }
-
-        $privateKey = '';
-
-        $exported = openssl_pkey_export(key: $keyResource, output: $privateKey);
-
-        if ($exported === false) {
-            throw new \RuntimeException(message: 'Failed to export private key.');
-        }
-
-        $publicKey = openssl_pkey_get_details(key: $keyResource)['key'];
-
-        return [
-            'public' => $publicKey,
-            'private' => $privateKey,
-        ];
     }
 }
