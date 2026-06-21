@@ -11,6 +11,7 @@ use App\Models\Post;
 use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
@@ -34,6 +35,18 @@ class DatabaseSeeder extends Seeder
         // send email verification to admin user for safety.
         $user->sendEmailVerificationNotification();
 
+        // Seed Services
+        $this->call(ServiceSeeder::class);
+
+        // Seed Case Studies
+        $this->call(CaseStudySeeder::class);
+
+        if (App::isProduction()) {
+            $this->command->info(string: 'Production environment — skipping fake data seeding.');
+
+            return;
+        }
+
         $ghostExportPath = $this->findLatestGhostExport();
 
         if ($ghostExportPath) {
@@ -49,12 +62,6 @@ class DatabaseSeeder extends Seeder
             $this->command->info(string: 'No Ghost export found. Seeding with fake data...');
             $this->seedFakeData();
         }
-
-        // Seed Services
-        $this->call(ServiceSeeder::class);
-
-        // Seed Case Studies
-        $this->call(CaseStudySeeder::class);
     }
 
     /**
