@@ -54,11 +54,19 @@ Route::get('/sitemap-tags.xml', [SitemapController::class, 'tags'])->name('sitem
 Route::get('/sitemap-tools.xml', [SitemapController::class, 'tools'])->name('sitemap.tools');
 Route::get('/sitemap-services.xml', [SitemapController::class, 'services'])->name('sitemap.services');
 
-// Register custom redirects from cache
-try {
-    foreach (RedirectBusiness::getActiveRedirects() as $redirect) {
-        Route::redirect($redirect->path, $redirect->destination_url, $redirect->status_code);
+// Deferred redirect resolution: database is unavailable during build, so
+// resolve redirects lazily at request time instead of registering them eagerly.
+Route::fallback(function () {
+    $path = '/'.ltrim(string: request()->path(), characters: '/');
+    $redirect = RedirectBusiness::getActiveRedirects()
+        ->firstWhere(key: 'path', operator: '=', value: $path);
+
+    if ($redirect) {
+        return redirect(
+            to: $redirect->destination_url,
+            status: $redirect->status_code
+        );
     }
-} catch (Throwable $e) {
-    // Silently skip if database is not available (e.g., SQLite file missing during build).
-}
+
+    abort(404);
+});
