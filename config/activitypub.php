@@ -24,7 +24,7 @@ return [
     ],
 
     'fediverse' => [
-        'enabled' => env('ACTIVITYPUB_FEDIVERSE_ENABLED', true),
+        'enabled' => true,
         'prefix' => 'fediverse',
         'middleware' => ['web', 'auth'],
     ],
