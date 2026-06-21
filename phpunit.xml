@@ -10,6 +10,7 @@
         </testsuite>
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
+            <directory>packages/laravel-activitypub/tests/Feature</directory>
         </testsuite>
     </testsuites>
     <source>

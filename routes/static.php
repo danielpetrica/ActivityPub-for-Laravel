@@ -55,6 +55,10 @@ Route::get('/sitemap-tools.xml', [SitemapController::class, 'tools'])->name('sit
 Route::get('/sitemap-services.xml', [SitemapController::class, 'services'])->name('sitemap.services');
 
 // Register custom redirects from cache
-foreach (RedirectBusiness::getActiveRedirects() as $redirect) {
-    Route::redirect($redirect->path, $redirect->destination_url, $redirect->status_code);
+try {
+    foreach (RedirectBusiness::getActiveRedirects() as $redirect) {
+        Route::redirect($redirect->path, $redirect->destination_url, $redirect->status_code);
+    }
+} catch (Throwable $e) {
+    // Silently skip if database is not available (e.g., SQLite file missing during build).
 }
