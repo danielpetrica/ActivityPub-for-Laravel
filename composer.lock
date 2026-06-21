@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3c6576a16eac6cfba21b7253ae96fd74",
+    "content-hash": "6197df5d589bb4202d28545684087bdf",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -736,22 +736,26 @@
                     "DanielPetrica\\LaravelActivityPub\\": "src/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "DanielPetrica\\LaravelActivityPub\\Tests\\": "tests/"
+                }
+            },
             "license": [
                 "MIT"
             ],
             "description": "ActivityPub server implementation for Laravel applications. WebFinger, actor profiles, inbox/outbox, and federation.",
             "keywords": [
-                "Federation",
                 "activitypub",
+                "federation",
                 "fediverse",
                 "laravel",
                 "mastodon",
                 "webfinger"
             ],
             "support": {
-                "issues": "https://github.com/danielpetrica/laravel-activitypub/issues",
-                "source": "https://github.com/danielpetrica/laravel-activitypub/tree/main"
+                "source": "https://github.com/danielpetrica/laravel-activitypub/tree/main",
+                "issues": "https://github.com/danielpetrica/laravel-activitypub/issues"
             },
             "time": "2026-06-21T07:40:17+00:00"
         },
