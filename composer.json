@@ -105,15 +105,7 @@
     },
     "minimum-stability": "stable",
     "prefer-stable": true,
-    "repositories": [
-        {
-            "type": "path",
-            "url": "packages/laravel-activitypub",
-            "options": {
-                "symlink": true
-            }
-        }
-    ],
+    "repositories": [],
     "repositories-dev": [
         {
             "name": "filament",
