@@ -708,12 +708,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/danielpetrica/laravel-activitypub.git",
-                "reference": "69f55244611dbbdde00f4ada04d16fdc0b9b1b21"
+                "reference": "29545637fdc55cc5dbfe15cc48dd5bf149f39bc8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/danielpetrica/laravel-activitypub/zipball/69f55244611dbbdde00f4ada04d16fdc0b9b1b21",
-                "reference": "69f55244611dbbdde00f4ada04d16fdc0b9b1b21",
+                "url": "https://api.github.com/repos/danielpetrica/laravel-activitypub/zipball/29545637fdc55cc5dbfe15cc48dd5bf149f39bc8",
+                "reference": "29545637fdc55cc5dbfe15cc48dd5bf149f39bc8",
                 "shasum": ""
             },
             "require": {
@@ -753,7 +753,7 @@
                 "issues": "https://github.com/danielpetrica/laravel-activitypub/issues",
                 "source": "https://github.com/danielpetrica/laravel-activitypub/tree/main"
             },
-            "time": "2026-06-21T01:19:46+00:00"
+            "time": "2026-06-21T07:40:17+00:00"
         },
         {
             "name": "dflydev/dot-access-data",
