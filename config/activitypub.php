@@ -84,7 +84,7 @@ return [
     |
     */
     'fediverse' => [
-        'enabled' => env('ACTIVITYPUB_FEDERIVERSE_ENABLED', true),
+        'enabled' => env('ACTIVITYPUB_FEDIVERSE_ENABLED', true),
         'prefix' => 'fediverse',
         'middleware' => ['web', 'auth'],
     ],
