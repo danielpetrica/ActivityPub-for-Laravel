@@ -1,0 +1,9 @@
+/vendor/
+/node_modules/
+/.idea/
+/.vscode/
+.DS_Store
+*.log
+.env
+.phpunit.result.cache
+session-*.md

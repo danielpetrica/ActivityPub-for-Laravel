@@ -17,11 +17,13 @@ it('creates an actor with valid options', function (): void {
 });
 
 it('fails when username is already taken', function (): void {
+    $keys = generateTestKeyPair();
+
     Actor::query()->create(attributes: [
         'username' => 'existing',
         'name' => 'Existing',
-        'public_key_pem' => 'pk',
-        'private_key_pem' => 'sk',
+        'public_key_pem' => $keys['public'],
+        'private_key_pem' => $keys['private'],
     ]);
 
     $this->artisan(command: 'activitypub:create-actor', parameters: [
@@ -37,12 +39,18 @@ it('fails when username contains invalid characters', function (): void {
     ])->assertFailed();
 });
 
+it('can prune with default days', function (): void {
+    $this->artisan('activitypub:prune-activities')->assertSuccessful();
+});
+
 it('can prune old delivered activities', function (): void {
+    $keys = generateTestKeyPair();
+
     Actor::query()->create(attributes: [
         'username' => 'pruner',
         'name' => 'Pruner',
-        'public_key_pem' => 'pk',
-        'private_key_pem' => 'sk',
+        'public_key_pem' => $keys['public'],
+        'private_key_pem' => $keys['private'],
     ]);
 
     $this->artisan(command: 'activitypub:prune-activities', parameters: [

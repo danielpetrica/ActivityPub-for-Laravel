@@ -26,13 +26,8 @@ final class OrderedCollection
             $collection['orderedItems'] = $items;
         }
 
-        if ($first !== null) {
-            $collection['first'] = $first;
-        }
-
-        if ($last !== null) {
-            $collection['last'] = $last;
-        }
+        $collection['first'] = $first ?? $id.'?page=1';
+        $collection['last'] = $last ?? $id.'?page=1';
 
         return $collection;
     }

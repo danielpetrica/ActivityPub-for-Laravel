@@ -63,15 +63,13 @@ it('returns valid JRD for an existing actor', function (): void {
         $domain .= ':'.$parsedUrl['port'];
     }
 
+    $keys = generateTestKeyPair();
+
     $actor = Actor::query()->create(attributes: [
         'username' => 'testuser',
         'name' => 'Test User',
-        'public_key_pem' => '-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5jDP0FXxYWCP8uFU
------END PUBLIC KEY-----',
-        'private_key_pem' => '-----BEGIN RSA PRIVATE KEY-----
-MIIEpAIBAAKCAQEA5jDP0FXxYWCP8uFU
------END RSA PRIVATE KEY-----',
+        'public_key_pem' => $keys['public'],
+        'private_key_pem' => $keys['private'],
     ]);
 
     $response = $this->getJson(
@@ -97,4 +95,6 @@ MIIEpAIBAAKCAQEA5jDP0FXxYWCP8uFU
             ],
         ],
     ]);
+
+    $response->assertHeader('Content-Type', 'application/jrd+json');
 });

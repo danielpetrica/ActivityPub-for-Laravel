@@ -17,7 +17,7 @@ final class InboxController extends Controller
         $localActor = $this->resolveLocalActor();
 
         $activities = Activity::query()
-            ->with(relations: 'remoteActor')
+            ->with(['remoteActor', 'actor'])
             ->where(column: 'actor_id', operator: '=', value: $localActor->id)
             ->where(column: 'is_incoming', operator: '=', value: true)
             ->latest()

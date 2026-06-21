@@ -22,19 +22,26 @@ final class ActorResource extends JsonResource
             '@context' => [
                 'https://www.w3.org/ns/activitystreams',
                 'https://w3id.org/security/v1',
+                'https://w3id.org/security/v2',
             ],
             'id' => $url,
             'type' => 'Person',
             'preferredUsername' => $this->resource->username,
             'name' => $this->resource->name ?? $this->resource->username,
+            'url' => $url,
             'inbox' => $this->resource->inbox_url,
             'outbox' => $this->resource->outbox_url,
             'followers' => $this->resource->followers_url,
             'following' => $this->resource->following_url,
+            'manuallyApprovesFollowers' => $this->resource->manually_approves_followers,
             'publicKey' => [
                 'id' => $this->resource->key_id,
+                'type' => 'Key',
                 'owner' => $url,
                 'publicKeyPem' => $this->resource->public_key_pem,
+            ],
+            'endpoints' => [
+                'sharedInbox' => rtrim(string: config(key: 'activitypub.domain'), characters: '/').'/inbox',
             ],
         ];
 

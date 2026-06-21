@@ -4,14 +4,13 @@ namespace DanielPetrica\LaravelActivityPub\Jobs;
 
 use DanielPetrica\LaravelActivityPub\Models\Activity;
 use DanielPetrica\LaravelActivityPub\Models\Actor;
-use DanielPetrica\LaravelActivityPub\Services\HttpSignatureService;
+use DanielPetrica\LaravelActivityPub\Services\DeliveryClient;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 final class DeliverActivity implements ShouldBeUnique, ShouldQueue
@@ -20,7 +19,11 @@ final class DeliverActivity implements ShouldBeUnique, ShouldQueue
 
     public int $uniqueFor = 3600;
 
+    public array $backoff = [30, 120, 600];
+
     public int $tries = 3;
+
+    public int $maxExceptions = 3;
 
     /**
      * @param  array<string, mixed>  $activity
@@ -34,14 +37,18 @@ final class DeliverActivity implements ShouldBeUnique, ShouldQueue
 
     public function uniqueId(): string
     {
-        return md5(string: $this->inboxUrl.'|'.($this->activity['id'] ?? ''));
+        return sha1($this->inboxUrl.'|'.($this->activityId ?? $this->activity['id'] ?? ''));
     }
 
-    public function handle(): void
+    public function handle(DeliveryClient $deliveryClient): void
     {
-        $body = json_encode(value: $this->activity);
+        $responseCode = $deliveryClient->deliver(
+            inboxUrl: $this->inboxUrl,
+            activity: $this->activity,
+            actor: $this->actor,
+        );
 
-        if ($body === false) {
+        if ($responseCode === null) {
             Log::debug('DeliverActivity: failed to encode activity JSON', [
                 'inboxUrl' => $this->inboxUrl,
             ]);
@@ -49,35 +56,7 @@ final class DeliverActivity implements ShouldBeUnique, ShouldQueue
             return;
         }
 
-        $date = gmdate(format: 'D, d M Y H:i:s T');
-
-        $digest = 'SHA-256='.base64_encode(string: hash(
-            algo: 'sha256',
-            data: $body,
-            binary: true,
-        ));
-
-        $headers = [
-            'Content-Type' => 'application/activity+json',
-            'Date' => $date,
-            'Host' => parse_url(url: $this->inboxUrl, component: PHP_URL_HOST),
-            'Digest' => $digest,
-        ];
-
-        $signatureService = app(HttpSignatureService::class);
-        $signedHeaders = $signatureService->sign(
-            method: 'POST',
-            url: $this->inboxUrl,
-            headers: $headers,
-            actor: $this->actor,
-        );
-
-        $response = Http::withHeaders(headers: $signedHeaders)
-            ->timeout(seconds: config('activitypub.federation.delivery_timeout', 10))
-            ->withBody(content: $body, contentType: 'application/activity+json')
-            ->post(url: $this->inboxUrl);
-
-        if ($response->successful()) {
+        if ($responseCode >= 200 && $responseCode < 300) {
             if ($this->activityId !== null) {
                 Activity::query()
                     ->where(column: 'id', operator: '=', value: $this->activityId)
@@ -93,10 +72,25 @@ final class DeliverActivity implements ShouldBeUnique, ShouldQueue
         } else {
             Log::debug('DeliverActivity: delivery failed', [
                 'inboxUrl' => $this->inboxUrl,
-                'status' => $response->status(),
+                'status' => $responseCode,
             ]);
 
             $this->release(delay: 60);
         }
+    }
+
+    public function failed(\Throwable $e): void
+    {
+        if ($this->activityId !== null) {
+            Activity::query()
+                ->where('id', '=', $this->activityId)
+                ->update(['status' => 'failed']);
+        }
+
+        Log::warning('DeliverActivity: permanently failed', [
+            'inboxUrl' => $this->inboxUrl,
+            'activityId' => $this->activityId,
+            'error' => $e->getMessage(),
+        ]);
     }
 }

@@ -6,6 +6,7 @@ use Closure;
 use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
 use DanielPetrica\LaravelActivityPub\Services\RemoteActorResolver;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -39,30 +40,63 @@ final class VerifyHttpSignature
 
         $dateHeader = $request->header(key: 'date');
 
-        if ($dateHeader !== null) {
-            $requestTime = strtotime(datetime: $dateHeader);
+        if ($dateHeader === null) {
+            return response()->json(
+                data: ['error' => 'Date header is required.'],
+                status: 401,
+            );
+        }
 
-            if ($requestTime === false || abs(num: $requestTime - now()->timestamp) > config('activitypub.http_signatures.max_clock_skew', 300)) {
+        $requestTime = strtotime(datetime: $dateHeader);
+
+        if ($requestTime === false || abs(num: $requestTime - now()->timestamp) > config('activitypub.http_signatures.max_clock_skew', 120)) {
+            return response()->json(
+                data: ['error' => 'Request date is outside the allowed clock skew.'],
+                status: 401,
+            );
+        }
+
+        $cacheKey = 'sig-replay:'.md5($keyId.'|'.$signatureHeader.'|'.$dateHeader);
+
+        if (! Cache::add(key: $cacheKey, value: true, ttl: 120)) {
+            return response()->json(
+                data: ['error' => 'Duplicate request detected.'],
+                status: 401,
+            );
+        }
+
+        $method = strtolower($request->method());
+
+        if ($method === 'post' && $request->getContent() !== '') {
+            $digestHeader = $request->header(key: 'digest');
+
+            if ($digestHeader === null) {
                 return response()->json(
-                    data: ['error' => 'Request date is outside the allowed clock skew.'],
+                    data: ['error' => 'Digest header is required for POST requests.'],
                     status: 401,
                 );
             }
+        } else {
+            $digestHeader = $request->header(key: 'digest');
         }
-
-        $digestHeader = $request->header(key: 'digest');
 
         if ($digestHeader !== null) {
             $bodyContent = $request->getContent();
 
-            if ($bodyContent !== '' && $bodyContent !== '0') {
+            if ($bodyContent !== '') {
                 $computedDigest = 'SHA-256='.base64_encode(string: hash(
                     algo: 'sha256',
                     data: $bodyContent,
                     binary: true,
                 ));
 
-                if (! hash_equals(known_string: strtolower($digestHeader), user_string: strtolower($computedDigest))) {
+                $normalizedDigest = preg_replace_callback(
+                    pattern: '/^([a-z][a-z0-9]*)=/i',
+                    callback: fn (array $m): string => strtoupper($m[1]).'=',
+                    subject: $digestHeader,
+                );
+
+                if (! hash_equals(known_string: $normalizedDigest, user_string: $computedDigest)) {
                     return response()->json(
                         data: ['error' => 'Digest header does not match body.'],
                         status: 401,
@@ -72,6 +106,13 @@ final class VerifyHttpSignature
         }
 
         $actorUrl = str_replace(search: '#main-key', replace: '', subject: $keyId);
+
+        if (parse_url($actorUrl, PHP_URL_SCHEME) !== 'https') {
+            return response()->json(
+                data: ['error' => 'keyId must use HTTPS.'],
+                status: 401,
+            );
+        }
 
         $remoteActor = RemoteActor::query()
             ->where(column: 'actor_url', operator: '=', value: $actorUrl)
@@ -142,10 +183,12 @@ final class VerifyHttpSignature
             return false;
         }
 
+        $configHost = parse_url(url: config('activitypub.domain'), component: PHP_URL_HOST) ?? $request->getHost();
+
         $signingString = $this->buildSigningString(
             request: $request,
             parsed: $parsed,
-            host: $request->getHost(),
+            host: $configHost,
         );
 
         $result = $this->verifyWithString(
@@ -160,13 +203,13 @@ final class VerifyHttpSignature
 
         $opensslError = openssl_error_string();
 
-        $appUrlHost = parse_url(url: config('app.url'), component: PHP_URL_HOST);
+        $configHost = parse_url(url: config('activitypub.domain'), component: PHP_URL_HOST);
 
-        if ($appUrlHost !== null && $appUrlHost !== $request->getHost()) {
+        if ($configHost !== null && $configHost !== $request->getHost()) {
             $altSigningString = $this->buildSigningString(
                 request: $request,
                 parsed: $parsed,
-                host: $appUrlHost,
+                host: $configHost,
             );
 
             $result = $this->verifyWithString(
@@ -183,7 +226,7 @@ final class VerifyHttpSignature
         Log::debug('VerifyHttpSignature: verification failed', [
             'actorUrl' => $remoteActor->actor_url,
             'requestHost' => $request->getHost(),
-            'appUrlHost' => $appUrlHost,
+            'configHost' => $configHost,
             'opensslError' => $opensslError,
             'signedHeaders' => $parsed['headers'],
             'signingString' => $signingString,

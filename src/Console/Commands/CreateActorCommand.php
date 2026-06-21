@@ -18,6 +18,12 @@ final class CreateActorCommand extends Command
 
     public function handle(): int
     {
+        $version = config('activitypub.version');
+
+        if ($version) {
+            $this->info(string: 'ActivityPub version: '.$version);
+        }
+
         $username = $this->option(key: 'username')
             ?? $this->ask(question: 'Enter the actor username (e.g., "daniel")');
 

@@ -2,8 +2,8 @@
 
 namespace DanielPetrica\LaravelActivityPub\Traits;
 
-use DanielPetrica\LaravelActivityPub\ActivityPub;
 use DanielPetrica\LaravelActivityPub\Contracts\FederatableContentContract;
+use DanielPetrica\LaravelActivityPub\Services\ActivityPubService;
 use Illuminate\Database\Eloquent\Model;
 
 trait FederatesContent
@@ -19,10 +19,12 @@ trait FederatesContent
                 return;
             }
 
+            $service = app(ActivityPubService::class);
+
             if ($model->wasRecentlyCreated) {
-                ActivityPub::sendCreate(content: $model);
+                $service->sendCreate(content: $model);
             } else {
-                ActivityPub::sendUpdate(content: $model);
+                $service->sendUpdate(content: $model);
             }
         });
 
@@ -31,7 +33,7 @@ trait FederatesContent
                 return;
             }
 
-            ActivityPub::sendDelete(
+            app(ActivityPubService::class)->sendDelete(
                 objectId: $model->getActivityPubId(),
                 actor: $model->activityPubActor(),
             );

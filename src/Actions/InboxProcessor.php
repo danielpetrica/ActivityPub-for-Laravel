@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Log;
 
 final class InboxProcessor
 {
+    private array $localActorCache = [];
+
     public function __construct(
         private ActivityPubService $activityPubService,
     ) {}
@@ -42,6 +44,8 @@ final class InboxProcessor
             'Create' => $this->handleCreate(actor: $actor, payload: $payload),
             'Delete' => $this->handleDelete(actor: $actor, payload: $payload),
             'Update' => $this->handleUpdate(actor: $actor, payload: $payload),
+            'Block' => $this->handleBlock(actor: $actor, payload: $payload),
+            'Reject' => $this->handleReject(actor: $actor, payload: $payload),
             default => Log::debug(
                 message: 'InboxProcessor: Unknown activity type',
                 context: ['type' => $type],
@@ -53,50 +57,46 @@ final class InboxProcessor
     {
         $object = $payload['object'] ?? null;
 
-        if (is_string($object)) {
-            $found = Actor::query()
-                ->where(column: 'username', operator: '=', value: basename($object))
-                ->first();
+        $candidates = [];
 
-            if ($found !== null) {
-                return $found;
-            }
+        if (is_string($object)) {
+            $candidates[] = basename($object);
         }
 
         if (is_array($object)) {
-            $candidates = array_filter([
-                $object['object'] ?? null,
-                $object['id'] ?? null,
-            ]);
-
-            foreach ($candidates as $candidate) {
-                if (is_string($candidate)) {
-                    $actor = Actor::query()
-                        ->where(column: 'username', operator: '=', value: basename($candidate))
-                        ->first();
-
-                    if ($actor !== null) {
-                        return $actor;
-                    }
-                }
-            }
+            $candidates = array_merge($candidates, array_filter([
+                is_string($object['object'] ?? null) ? basename($object['object']) : null,
+                is_string($object['id'] ?? null) ? basename($object['id']) : null,
+            ]));
         }
 
-        $all = array_merge(
+        $urls = array_merge(
             (array) ($payload['to'] ?? []),
             (array) ($payload['cc'] ?? []),
         );
 
-        foreach ($all as $url) {
+        foreach ($urls as $url) {
             if (is_string($url)) {
-                $actor = Actor::query()
-                    ->where(column: 'username', operator: '=', value: basename($url))
-                    ->first();
-
-                if ($actor !== null) {
-                    return $actor;
-                }
+                $candidates[] = basename($url);
             }
+        }
+
+        $candidates = array_unique(array_filter($candidates));
+
+        foreach ($candidates as $basename) {
+            if (isset($this->localActorCache[$basename])) {
+                return $this->localActorCache[$basename];
+            }
+        }
+
+        $actor = Actor::query()
+            ->whereIn(column: 'username', values: $candidates)
+            ->first();
+
+        if ($actor !== null) {
+            $this->localActorCache[$actor->username] = $actor;
+
+            return $actor;
         }
 
         return null;
@@ -183,20 +183,16 @@ final class InboxProcessor
 
     protected function handleUndo(Actor $actor, array $payload): void
     {
+        $remoteActor = $this->resolveRemoteActorFromPayload(payload: $payload);
+
         $object = $payload['object'] ?? [];
 
-        if (is_array($object) && ($object['type'] ?? null) === 'Follow') {
-            $remoteActor = $this->resolveRemoteActorFromPayload(payload: $payload);
-
-            if ($remoteActor !== null) {
-                Follower::query()
-                    ->where(column: 'actor_id', operator: '=', value: $actor->id)
-                    ->where(column: 'remote_actor_id', operator: '=', value: $remoteActor->id)
-                    ->delete();
-            }
+        if ($remoteActor !== null && is_array($object) && ($object['type'] ?? null) === 'Follow') {
+            Follower::query()
+                ->where(column: 'actor_id', operator: '=', value: $actor->id)
+                ->where(column: 'remote_actor_id', operator: '=', value: $remoteActor->id)
+                ->delete();
         }
-
-        $remoteActor = $this->resolveRemoteActorFromPayload(payload: $payload);
 
         $this->activityPubService->recordActivity(
             localActor: $actor,
@@ -240,6 +236,54 @@ final class InboxProcessor
         $this->activityPubService->recordActivity(
             localActor: $actor,
             type: ActivityType::Update,
+            remoteActor: $remoteActor,
+            payload: $payload,
+            isIncoming: true,
+        );
+    }
+
+    protected function handleBlock(Actor $actor, array $payload): void
+    {
+        $remoteActor = $this->resolveRemoteActorFromPayload(payload: $payload);
+
+        if ($remoteActor === null) {
+            return;
+        }
+
+        Follower::query()
+            ->where(column: 'actor_id', operator: '=', value: $actor->id)
+            ->where(column: 'remote_actor_id', operator: '=', value: $remoteActor->id)
+            ->delete();
+
+        $this->activityPubService->recordActivity(
+            localActor: $actor,
+            type: ActivityType::Undo,
+            remoteActor: $remoteActor,
+            payload: $payload,
+            isIncoming: true,
+        );
+    }
+
+    protected function handleReject(Actor $actor, array $payload): void
+    {
+        $object = $payload['object'] ?? [];
+
+        if (is_array($object) && ($object['type'] ?? null) === 'Follow') {
+            $remoteActor = $this->resolveRemoteActorFromPayload(payload: $payload);
+
+            if ($remoteActor !== null) {
+                Follower::query()
+                    ->where(column: 'actor_id', operator: '=', value: $actor->id)
+                    ->where(column: 'remote_actor_id', operator: '=', value: $remoteActor->id)
+                    ->delete();
+            }
+        }
+
+        $remoteActor = $this->resolveRemoteActorFromPayload(payload: $payload);
+
+        $this->activityPubService->recordActivity(
+            localActor: $actor,
+            type: ActivityType::Undo,
             remoteActor: $remoteActor,
             payload: $payload,
             isIncoming: true,

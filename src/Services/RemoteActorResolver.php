@@ -2,12 +2,15 @@
 
 namespace DanielPetrica\LaravelActivityPub\Services;
 
+use DanielPetrica\LaravelActivityPub\Jobs\FetchRemoteActor;
 use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 final class RemoteActorResolver
 {
+    private array $cache = [];
+
     public function resolve(string $actorUri, ?array $preFetchedData = null): ?RemoteActor
     {
         $data = $preFetchedData;
@@ -31,18 +34,36 @@ final class RemoteActorResolver
             return null;
         }
 
-        return RemoteActor::query()->firstOrCreate(
+        if (isset($this->cache[$actorUrl])) {
+            return $this->cache[$actorUrl];
+        }
+
+        $inboxUrl = $this->fetchInboxUrl(actorUrl: $actorUrl) ?? $actorUrl.'/inbox';
+
+        $remoteActor = RemoteActor::query()->firstOrCreate(
             attributes: ['actor_url' => $actorUrl],
             values: [
-                'inbox_url' => $actorUrl.'/inbox',
+                'inbox_url' => $inboxUrl,
                 'username' => basename($actorUrl),
-                'domain' => parse_url(url: $actorUrl, component: PHP_URL_HOST) ?? 'unknown',
+                'domain' => parse_url(url: $actorUrl, component: PHP_URL_HOST) ?: 'unknown',
             ],
         );
+
+        if ($remoteActor->wasRecentlyCreated) {
+            FetchRemoteActor::dispatch(actorUri: $actorUrl);
+        }
+
+        $this->cache[$actorUrl] = $remoteActor;
+
+        return $remoteActor;
     }
 
     public function fetchActorData(string $actorUri): ?array
     {
+        if ($this->isPrivateDomain(url: $actorUri)) {
+            return null;
+        }
+
         try {
             $response = Http::timeout(
                 seconds: config('activitypub.federation.delivery_timeout', 10),
@@ -87,5 +108,65 @@ final class RemoteActorResolver
                 'icon_url' => $data['icon']['url'] ?? null,
             ],
         );
+    }
+
+    protected function fetchInboxUrl(string $actorUrl): ?string
+    {
+        $data = $this->fetchActorData(actorUri: $actorUrl);
+
+        if ($data === null) {
+            return null;
+        }
+
+        return $data['inbox'] ?? null;
+    }
+
+    protected function isPrivateDomain(string $url): bool
+    {
+        $host = parse_url(url: $url, component: PHP_URL_HOST);
+
+        if ($host === null) {
+            return true;
+        }
+
+        $ip = gethostbyname(hostname: $host);
+
+        if ($ip === $host) {
+            return false;
+        }
+
+        if (filter_var(value: $ip, filter: FILTER_VALIDATE_IP, options: FILTER_FLAG_IPV6)) {
+            if ($ip === '::1') {
+                Log::debug('RemoteActorResolver: private IP blocked', ['url' => $url, 'ip' => $ip]);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        $parts = explode(separator: '.', string: $ip);
+
+        if (count($parts) !== 4) {
+            return false;
+        }
+
+        $first = (int) $parts[0];
+        $second = (int) $parts[1];
+
+        $isPrivate = (
+            $first === 127
+            || $first === 10
+            || ($first === 172 && $second >= 16 && $second <= 31)
+            || ($first === 192 && $second === 168)
+        );
+
+        if ($isPrivate) {
+            Log::debug('RemoteActorResolver: private IP blocked', ['url' => $url, 'ip' => $ip]);
+
+            return true;
+        }
+
+        return false;
     }
 }

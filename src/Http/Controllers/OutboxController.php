@@ -23,35 +23,41 @@ final class OutboxController extends Controller
             ->where(column: 'is_incoming', operator: '=', value: false);
 
         $totalItems = (clone $baseQuery)->count();
-
-        $activities = (clone $baseQuery)
-            ->orderByDesc(column: 'created_at')
-            ->offset(offset: ($page - 1) * $perPage)
-            ->limit(value: $perPage)
-            ->get();
-
-        $items = $activities->map(function (Activity $activity) use ($request) {
-            return ActivityResource::make(
-                activity: $activity,
-                request: $request,
-            );
-        })->toArray();
-
         $totalPages = (int) ceil(num: $totalItems / $perPage);
 
+        if ($page === 1) {
+            $activities = (clone $baseQuery)
+                ->orderByDesc(column: 'created_at')
+                ->offset(offset: ($page - 1) * $perPage)
+                ->limit(value: $perPage)
+                ->get();
+
+            $items = $activities->map(function (Activity $activity) use ($request) {
+                return ActivityResource::make(
+                    activity: $activity,
+                    request: $request,
+                );
+            })->toArray();
+        } else {
+            $items = [];
+        }
+
         if ($totalPages > 1) {
-            $collection = OrderedCollection::make(
-                id: $actor->outbox_url,
-                items: [],
+            $collection = OrderedCollection::makePage(
+                id: $actor->outbox_url.'?page='.$page,
+                partOf: $actor->outbox_url,
+                items: $items,
                 totalItems: $totalItems,
-                first: $actor->outbox_url.'?page=1',
-                last: $actor->outbox_url.'?page='.$totalPages,
+                next: $page < $totalPages ? $actor->outbox_url.'?page='.($page + 1) : null,
+                prev: $page > 1 ? $actor->outbox_url.'?page='.($page - 1) : null,
             );
         } else {
             $collection = OrderedCollection::make(
                 id: $actor->outbox_url,
                 items: $items,
                 totalItems: $totalItems,
+                first: $actor->outbox_url.'?page=1',
+                last: $actor->outbox_url.'?page=1',
             );
         }
 

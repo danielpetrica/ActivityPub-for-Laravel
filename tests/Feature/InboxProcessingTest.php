@@ -6,15 +6,13 @@ use DanielPetrica\LaravelActivityPub\Models\Follower;
 use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
 
 beforeEach(function (): void {
+    $keys = generateTestKeyPair();
+
     $this->actor = Actor::query()->create(attributes: [
         'username' => 'testuser',
         'name' => 'Test User',
-        'public_key_pem' => '-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5jDP0FXxYWCP8uFU
------END PUBLIC KEY-----',
-        'private_key_pem' => '-----BEGIN RSA PRIVATE KEY-----
-MIIEpAIBAAKCAQEA5jDP0FXxYWCP8uFU
------END RSA PRIVATE KEY-----',
+        'public_key_pem' => $keys['public'],
+        'private_key_pem' => $keys['private'],
     ]);
 });
 
@@ -167,4 +165,47 @@ it('processes incoming Undo Follow and removes follower', function (): void {
         'actor_id' => $this->actor->id,
         'remote_actor_id' => $remoteActor->id,
     ]);
+});
+
+it('processes incoming Block activity', function (): void {
+    config()->set('activitypub.http_signatures.enabled', false);
+    config()->set('activitypub.federation.enabled', false);
+
+    RemoteActor::query()->create([
+        'actor_url' => 'https://example.com/users/remote',
+        'inbox_url' => 'https://example.com/users/remote/inbox',
+        'username' => 'remote',
+        'domain' => 'example.com',
+    ]);
+
+    $response = $this->postJson(
+        uri: route('activitypub.actor.inbox.store', ['actor' => $this->actor->username]),
+        data: [
+            '@context' => 'https://www.w3.org/ns/activitystreams',
+            'type' => 'Block',
+            'actor' => 'https://example.com/users/remote',
+            'object' => $this->actor->actor_id,
+        ],
+    );
+
+    $response->assertStatus(202);
+});
+
+it('processes incoming Delete activity', function (): void {
+    config()->set('activitypub.http_signatures.enabled', false);
+
+    $response = $this->postJson(
+        uri: route('activitypub.actor.inbox.store', ['actor' => $this->actor->username]),
+        data: [
+            '@context' => 'https://www.w3.org/ns/activitystreams',
+            'type' => 'Delete',
+            'actor' => 'https://example.com/users/remote',
+            'object' => [
+                'id' => 'https://example.com/notes/123',
+                'type' => 'Tombstone',
+            ],
+        ],
+    );
+
+    $response->assertStatus(202);
 });

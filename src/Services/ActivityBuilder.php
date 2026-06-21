@@ -3,6 +3,7 @@
 namespace DanielPetrica\LaravelActivityPub\Services;
 
 use DanielPetrica\LaravelActivityPub\Contracts\ActorContract;
+use Illuminate\Support\Str;
 
 final class ActivityBuilder
 {
@@ -13,7 +14,7 @@ final class ActivityBuilder
     {
         return [
             '@context' => 'https://www.w3.org/ns/activitystreams',
-            'id' => $actor->getActorId().'#follow/'.time(),
+            'id' => $actor->getActorId().'#follow/'.Str::uuid(),
             'type' => 'Follow',
             'actor' => $actor->getActorId(),
             'object' => $objectUrl,
@@ -31,6 +32,7 @@ final class ActivityBuilder
             'type' => 'Undo',
             'actor' => $actor->getActorId(),
             'object' => [
+                'id' => $objectUrl.'#follow',
                 'type' => 'Follow',
                 'actor' => $actor->getActorId(),
                 'object' => $objectUrl,
@@ -45,7 +47,7 @@ final class ActivityBuilder
     {
         return [
             '@context' => 'https://www.w3.org/ns/activitystreams',
-            'id' => $actor->getActorId().'#accepts/'.time(),
+            'id' => $actor->getActorId().'#accepts/'.Str::uuid(),
             'type' => 'Accept',
             'actor' => $actor->getActorId(),
             'object' => $originalPayload,
@@ -59,7 +61,7 @@ final class ActivityBuilder
     {
         return [
             '@context' => 'https://www.w3.org/ns/activitystreams',
-            'id' => $actor->getActorId().'#like/'.time(),
+            'id' => $actor->getActorId().'#like/'.Str::uuid(),
             'type' => 'Like',
             'actor' => $actor->getActorId(),
             'object' => $objectUrl,
@@ -78,6 +80,7 @@ final class ActivityBuilder
             'actor' => $actor->getActorId(),
             'object' => $objectUrl,
             'to' => ['https://www.w3.org/ns/activitystreams#Public'],
+            'cc' => [$actor->getFollowersUrl()],
         ];
     }
 
@@ -88,7 +91,7 @@ final class ActivityBuilder
     {
         return [
             '@context' => 'https://www.w3.org/ns/activitystreams',
-            'id' => $actor->getActorId().'#delete/'.time(),
+            'id' => $actor->getActorId().'#delete/'.Str::uuid(),
             'type' => 'Delete',
             'actor' => $actor->getActorId(),
             'object' => [
@@ -102,9 +105,9 @@ final class ActivityBuilder
     /**
      * @return array<string, mixed>
      */
-    public static function createNote(ActorContract $actor, string $content, string $inReplyToUrl, array $to): array
+    public static function createNote(ActorContract $actor, string $content, string $inReplyToUrl, array $to, array $cc = []): array
     {
-        $noteId = $actor->getActorId().'/note/'.time();
+        $noteId = $actor->getActorId().'/note/'.Str::uuid();
 
         $note = [
             '@context' => 'https://www.w3.org/ns/activitystreams',
@@ -114,16 +117,19 @@ final class ActivityBuilder
             'inReplyTo' => $inReplyToUrl,
             'attributedTo' => $actor->getActorId(),
             'to' => $to,
+            'cc' => $cc,
+            'url' => $noteId,
             'published' => now()->toIso8601String(),
         ];
 
         return [
             '@context' => 'https://www.w3.org/ns/activitystreams',
-            'id' => $actor->getActorId().'#create/'.time(),
+            'id' => $actor->getActorId().'#create/'.Str::uuid(),
             'type' => 'Create',
             'actor' => $actor->getActorId(),
             'object' => $note,
             'to' => $to,
+            'cc' => $cc,
         ];
     }
 }

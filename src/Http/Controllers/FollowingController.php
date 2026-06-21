@@ -10,6 +10,9 @@ use Illuminate\Routing\Controller;
 
 final class FollowingController extends Controller
 {
+    // @todo A Following model/table needs to be implemented for full ActivityPub compliance.
+    //       Currently returns an empty collection.
+
     public function __invoke(Request $request, Actor $actor): JsonResponse
     {
         $collection = OrderedCollection::make(

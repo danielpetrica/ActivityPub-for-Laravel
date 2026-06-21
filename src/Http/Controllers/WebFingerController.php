@@ -66,6 +66,6 @@ final class WebFingerController extends Controller
 
         $jrd = (new WebFingerResource(resource: $actor))->toArray(request: $request);
 
-        return response()->json(data: $jrd);
+        return response()->json(data: $jrd, headers: ['Content-Type' => 'application/jrd+json']);
     }
 }

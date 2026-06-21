@@ -109,6 +109,11 @@ final class Actor extends Model implements ActorContract
         return $this->key_id;
     }
 
+    public function getPrivateKeyPem(): ?string
+    {
+        return $this->private_key_pem;
+    }
+
     public function getInboxUrlAttribute(?string $value): string
     {
         return $value ?? $this->buildUrl(suffix: '/inbox');

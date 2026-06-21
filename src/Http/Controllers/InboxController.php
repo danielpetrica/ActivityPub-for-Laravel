@@ -7,6 +7,7 @@ use DanielPetrica\LaravelActivityPub\Http\Resources\ActivityResource;
 use DanielPetrica\LaravelActivityPub\Http\Resources\OrderedCollection;
 use DanielPetrica\LaravelActivityPub\Models\Activity;
 use DanielPetrica\LaravelActivityPub\Models\Actor;
+use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -28,35 +29,41 @@ final class InboxController extends Controller
             ->where(column: 'is_incoming', operator: '=', value: true);
 
         $totalItems = (clone $baseQuery)->count();
-
-        $activities = (clone $baseQuery)
-            ->orderByDesc(column: 'created_at')
-            ->offset(offset: ($page - 1) * $perPage)
-            ->limit(value: $perPage)
-            ->get();
-
-        $items = $activities->map(function (Activity $activity) use ($request) {
-            return ActivityResource::make(
-                activity: $activity,
-                request: $request,
-            );
-        })->toArray();
-
         $totalPages = (int) ceil(num: $totalItems / $perPage);
 
+        if ($page === 1) {
+            $activities = (clone $baseQuery)
+                ->orderByDesc(column: 'created_at')
+                ->offset(offset: ($page - 1) * $perPage)
+                ->limit(value: $perPage)
+                ->get();
+
+            $items = $activities->map(function (Activity $activity) use ($request) {
+                return ActivityResource::make(
+                    activity: $activity,
+                    request: $request,
+                );
+            })->toArray();
+        } else {
+            $items = [];
+        }
+
         if ($totalPages > 1) {
-            $collection = OrderedCollection::make(
-                id: $actor->inbox_url,
-                items: [],
+            $collection = OrderedCollection::makePage(
+                id: $actor->inbox_url.'?page='.$page,
+                partOf: $actor->inbox_url,
+                items: $items,
                 totalItems: $totalItems,
-                first: $actor->inbox_url.'?page=1',
-                last: $actor->inbox_url.'?page='.$totalPages,
+                next: $page < $totalPages ? $actor->inbox_url.'?page='.($page + 1) : null,
+                prev: $page > 1 ? $actor->inbox_url.'?page='.($page - 1) : null,
             );
         } else {
             $collection = OrderedCollection::make(
                 id: $actor->inbox_url,
                 items: $items,
                 totalItems: $totalItems,
+                first: $actor->inbox_url.'?page=1',
+                last: $actor->inbox_url.'?page=1',
             );
         }
 
@@ -68,6 +75,10 @@ final class InboxController extends Controller
 
     public function __invoke(Request $request, Actor $actor): JsonResponse
     {
+        if ($request->header('Content-Length') && (int) $request->header('Content-Length') > 1048576) {
+            return response()->json(['error' => 'Payload too large.'], 413);
+        }
+
         $payload = $request->all();
 
         if (! isset($payload['type']) || ! is_string($payload['type'])) {
@@ -81,6 +92,16 @@ final class InboxController extends Controller
             return response()->json(
                 data: ['error' => 'Invalid payload: missing or invalid "actor" field.'],
                 status: 400,
+            );
+        }
+
+        $actorUrl = $payload['actor'];
+        $remoteActor = $request->attributes->get(key: 'remote_actor');
+
+        if ($remoteActor instanceof RemoteActor && $actorUrl !== $remoteActor->actor_url) {
+            return response()->json(
+                data: ['error' => 'Actor in payload does not match signature.'],
+                status: 401,
             );
         }
 
@@ -94,6 +115,10 @@ final class InboxController extends Controller
 
     public function sharedInbox(Request $request): JsonResponse
     {
+        if ($request->header('Content-Length') && (int) $request->header('Content-Length') > 1048576) {
+            return response()->json(['error' => 'Payload too large.'], 413);
+        }
+
         $payload = $request->all();
 
         if (! isset($payload['type']) || ! is_string($payload['type'])) {
@@ -107,6 +132,16 @@ final class InboxController extends Controller
             return response()->json(
                 data: ['error' => 'Invalid payload: missing or invalid "actor" field.'],
                 status: 400,
+            );
+        }
+
+        $actorUrl = $payload['actor'];
+        $remoteActor = $request->attributes->get(key: 'remote_actor');
+
+        if ($remoteActor instanceof RemoteActor && $actorUrl !== $remoteActor->actor_url) {
+            return response()->json(
+                data: ['error' => 'Actor in payload does not match signature.'],
+                status: 401,
             );
         }
 
@@ -132,8 +167,6 @@ final class InboxController extends Controller
         $all = array_merge(
             (array) ($payload['to'] ?? []),
             (array) ($payload['cc'] ?? []),
-            (array) ($payload['bto'] ?? []),
-            (array) ($payload['bcc'] ?? []),
         );
 
         $domain = parse_url(url: config('activitypub.domain'), component: PHP_URL_HOST);

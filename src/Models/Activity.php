@@ -3,6 +3,7 @@
 namespace DanielPetrica\LaravelActivityPub\Models;
 
 use Carbon\CarbonInterface;
+use DanielPetrica\LaravelActivityPub\Enums\ActivityStatus;
 use DanielPetrica\LaravelActivityPub\Enums\ActivityType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -37,12 +38,16 @@ final class Activity extends Model
         'is_incoming',
     ];
 
-    protected $casts = [
-        'type' => ActivityType::class,
-        'payload' => 'array',
-        'delivered_at' => 'datetime',
-        'is_incoming' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'type' => ActivityType::class,
+            'payload' => 'array',
+            'delivered_at' => 'datetime',
+            'is_incoming' => 'boolean',
+            'status' => ActivityStatus::class,
+        ];
+    }
 
     public function actor(): BelongsTo
     {

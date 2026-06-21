@@ -42,7 +42,7 @@
                         @endphp
 
                         @if ($objContent)
-                            <div class="text-sm text-gray-600 mt-1 line-clamp-3">{!! Str::limit(strip_tags($objContent), 300) !!}</div>
+                            <div class="text-sm text-gray-600 mt-1 line-clamp-3">{{ Str::limit(strip_tags($objContent), 300) }}</div>
                         @elseif ($objName)
                             <p class="text-sm text-gray-600 mt-1">"{{ Str::limit($objName, 100) }}"</p>
                         @endif

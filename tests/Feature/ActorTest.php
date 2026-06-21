@@ -12,6 +12,7 @@ it('returns 404 for a non-existent actor', function (): void {
 });
 
 it('returns actor JSON-LD with Accept header', function (): void {
+    $keys = generateTestKeyPair();
     $domain = parse_url(url: config('app.url'), component: PHP_URL_HOST);
 
     $actor = Actor::query()->create(attributes: [
@@ -20,12 +21,8 @@ it('returns actor JSON-LD with Accept header', function (): void {
         'summary' => '<p>A test actor.</p>',
         'icon_url' => 'https://example.com/avatar.jpg',
         'image_url' => 'https://example.com/banner.jpg',
-        'public_key_pem' => '-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5jDP0FXxYWCP8uFU
------END PUBLIC KEY-----',
-        'private_key_pem' => '-----BEGIN RSA PRIVATE KEY-----
-MIIEpAIBAAKCAQEA5jDP0FXxYWCP8uFU
------END RSA PRIVATE KEY-----',
+        'public_key_pem' => $keys['public'],
+        'private_key_pem' => $keys['private'],
     ]);
 
     $response = $this->getJson(
@@ -40,10 +37,15 @@ MIIEpAIBAAKCAQEA5jDP0FXxYWCP8uFU
         'type',
         'preferredUsername',
         'name',
+        'url',
         'inbox',
         'outbox',
         'followers',
         'following',
+        'manuallyApprovesFollowers',
+        'endpoints' => [
+            'sharedInbox',
+        ],
         'publicKey' => [
             'id',
             'owner',
@@ -59,6 +61,7 @@ MIIEpAIBAAKCAQEA5jDP0FXxYWCP8uFU
         'name' => 'Jane Doe',
         'summary' => '<p>A test actor.</p>',
         'id' => $baseUrl.'/users/jane',
+        'url' => $baseUrl.'/users/jane',
     ]);
 
     // Verify URL structure
@@ -75,15 +78,12 @@ MIIEpAIBAAKCAQEA5jDP0FXxYWCP8uFU
 });
 
 it('returns actor JSON-LD without explicit Accept header', function (): void {
+    $keys = generateTestKeyPair();
     $actor = Actor::query()->create(attributes: [
         'username' => 'bob',
         'name' => 'Bob',
-        'public_key_pem' => '-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5jDP0FXxYWCP8uFU
------END PUBLIC KEY-----',
-        'private_key_pem' => '-----BEGIN RSA PRIVATE KEY-----
-MIIEpAIBAAKCAQEA5jDP0FXxYWCP8uFU
------END RSA PRIVATE KEY-----',
+        'public_key_pem' => $keys['public'],
+        'private_key_pem' => $keys['private'],
     ]);
 
     $response = $this->getJson(
@@ -98,15 +98,12 @@ MIIEpAIBAAKCAQEA5jDP0FXxYWCP8uFU
 });
 
 it('returns actor JSON-LD without Accept header returns correct Content-Type', function (): void {
+    $keys = generateTestKeyPair();
     Actor::query()->create(attributes: [
         'username' => 'carol',
         'name' => 'Carol',
-        'public_key_pem' => '-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5jDP0FXxYWCP8uFU
------END PUBLIC KEY-----',
-        'private_key_pem' => '-----BEGIN RSA PRIVATE KEY-----
-MIIEpAIBAAKCAQEA5jDP0FXxYWCP8uFU
------END RSA PRIVATE KEY-----',
+        'public_key_pem' => $keys['public'],
+        'private_key_pem' => $keys['private'],
     ]);
 
     $response = $this->getJson(
@@ -118,15 +115,12 @@ MIIEpAIBAAKCAQEA5jDP0FXxYWCP8uFU
 });
 
 it('omits optional fields when not set', function (): void {
+    $keys = generateTestKeyPair();
     $actor = Actor::query()->create(attributes: [
         'username' => 'minimal',
         'name' => 'Minimal',
-        'public_key_pem' => '-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5jDP0FXxYWCP8uFU
------END PUBLIC KEY-----',
-        'private_key_pem' => '-----BEGIN RSA PRIVATE KEY-----
-MIIEpAIBAAKCAQEA5jDP0FXxYWCP8uFU
------END RSA PRIVATE KEY-----',
+        'public_key_pem' => $keys['public'],
+        'private_key_pem' => $keys['private'],
     ]);
 
     $response = $this->getJson(

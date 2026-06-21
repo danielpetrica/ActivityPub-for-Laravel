@@ -18,7 +18,11 @@ final class ActivityResource extends JsonResource
     {
         $instance = new self(resource: $activity);
 
-        return $instance->toArray(request: $request);
+        $result = $instance->toArray(request: $request);
+
+        $result['@context'] ??= 'https://www.w3.org/ns/activitystreams';
+
+        return $result;
     }
 
     /**
@@ -30,6 +34,7 @@ final class ActivityResource extends JsonResource
 
         if ($payload === null || $payload === []) {
             return [
+                '@context' => 'https://www.w3.org/ns/activitystreams',
                 'id' => $this->resource->actor->actor_id.'#'.$this->resource->type->value.'/'.$this->resource->id,
                 'type' => $this->resource->type->value,
                 'actor' => $this->resource->actor->actor_id,

@@ -48,7 +48,7 @@
 
                     @if (isset($remoteActor['summary']))
                         <div class="mt-3 text-sm text-gray-600 prose prose-sm max-w-none">
-                            {!! $remoteActor['summary'] !!}
+                            {{ $remoteActor['summary'] }}
                         </div>
                     @endif
 

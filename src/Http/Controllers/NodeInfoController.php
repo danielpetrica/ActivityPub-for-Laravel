@@ -26,7 +26,7 @@ final class NodeInfoController extends Controller
             'version' => '2.0',
             'software' => [
                 'name' => 'laravel-activitypub',
-                'version' => '1.0.0',
+                'version' => config('activitypub.version', '1.0.0'),
             ],
             'protocols' => ['activitypub'],
             'services' => [
@@ -38,7 +38,7 @@ final class NodeInfoController extends Controller
                     'total' => Actor::query()->count(),
                 ],
             ],
-            'openRegistrations' => false,
+            'openRegistrations' => config('activitypub.open_registrations', false),
             'metadata' => [],
         ]);
     }

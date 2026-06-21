@@ -56,7 +56,7 @@
                     @endif
 
                     @if ($objContent)
-                        <div class="text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none">{!! $objContent !!}</div>
+                        <div class="text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none">{{ $objContent }}</div>
                     @endif
 
                     @if (!empty($mediaAttachments))

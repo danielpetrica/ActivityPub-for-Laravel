@@ -27,4 +27,6 @@ interface ActorContract
     public function getPublicKey(): string;
 
     public function getKeyId(): string;
+
+    public function getPrivateKeyPem(): ?string;
 }

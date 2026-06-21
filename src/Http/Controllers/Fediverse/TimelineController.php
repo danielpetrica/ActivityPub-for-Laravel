@@ -19,13 +19,13 @@ final class TimelineController extends Controller
         $localActor = $this->resolveLocalActor();
 
         $followedActorIds = Follower::query()
-            ->where(column: 'actor_id', operator: '=', value: $localActor->id)
-            ->where(column: 'status', operator: '=', value: FollowerStatus::Accepted)
-            ->pluck(column: 'remote_actor_id');
+            ->select('remote_actor_id')
+            ->where('actor_id', '=', $localActor->id)
+            ->where('status', '=', FollowerStatus::Accepted);
 
         $activities = Activity::query()
-            ->with(relations: 'remoteActor')
-            ->whereIn(column: 'remote_actor_id', values: $followedActorIds)
+            ->with(['remoteActor', 'actor'])
+            ->whereIn('remote_actor_id', $followedActorIds)
             ->where(column: 'is_incoming', operator: '=', value: true)
             ->where(column: 'type', operator: '=', value: 'Create')
             ->latest()

@@ -54,7 +54,7 @@ return [
     */
     'http_signatures' => [
         'enabled' => true,
-        'max_clock_skew' => 300,
+        'max_clock_skew' => 120,
     ],
 
     /*
@@ -75,6 +75,26 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Version
+    |--------------------------------------------------------------------------
+    |
+    | The software version reported in NodeInfo responses.
+    |
+    */
+    'version' => '1.0.0',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Open Registrations
+    |--------------------------------------------------------------------------
+    |
+    | Whether the instance allows open registration, reported in NodeInfo.
+    |
+    */
+    'open_registrations' => false,
+
+    /*
+    |--------------------------------------------------------------------------
     | Fediverse Admin Dashboard
     |--------------------------------------------------------------------------
     |
@@ -84,7 +104,7 @@ return [
     |
     */
     'fediverse' => [
-        'enabled' => env('ACTIVITYPUB_FEDIVERSE_ENABLED', true),
+        'enabled' => env('ACTIVITYPUB_FEDERIVERSE_ENABLED', true),
         'prefix' => 'fediverse',
         'middleware' => ['web', 'auth'],
     ],

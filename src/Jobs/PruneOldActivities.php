@@ -22,6 +22,7 @@ final class PruneOldActivities implements ShouldQueue
         Activity::query()
             ->where(column: 'created_at', operator: '<', value: now()->subDays(days: $this->daysOld))
             ->where(column: 'status', operator: '=', value: 'delivered')
-            ->delete();
+            ->orderBy('id')
+            ->chunkById(1000, fn ($activities) => (new Activity)->newQuery()->whereIn('id', $activities->pluck('id'))->delete());
     }
 }

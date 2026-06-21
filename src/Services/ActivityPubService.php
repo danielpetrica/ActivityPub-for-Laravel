@@ -13,13 +13,17 @@ use DanielPetrica\LaravelActivityPub\Models\Activity;
 use DanielPetrica\LaravelActivityPub\Models\Actor;
 use DanielPetrica\LaravelActivityPub\Models\Follower;
 use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
+use Illuminate\Support\Facades\Log;
 
 final class ActivityPubService
 {
+    private array $localActorCache = [];
+
     public function __construct(
         private HttpSignatureService $httpSignatureService,
         private WebFingerService $webFingerService,
         private RemoteActorResolver $remoteActorResolver,
+        private DeliveryClient $deliveryClient,
     ) {}
 
     public function sendCreate(FederatableContentContract $content): void
@@ -78,6 +82,115 @@ final class ActivityPubService
 
             $this->deliverToFollowers(actor: $actor, activity: $activity, activityId: $record->id);
         }
+    }
+
+    public function sendCreateForActor(FederatableContentContract $content, Actor $actor): Activity
+    {
+        $object = $this->buildObject(content: $content);
+        $activity = $this->buildActivity(type: 'Create', actor: $actor, object: $object);
+
+        $record = $this->recordActivity(
+            localActor: $actor,
+            type: ActivityType::Create,
+            remoteActor: null,
+            payload: $activity,
+        );
+
+        $this->deliverToFollowers(actor: $actor, activity: $activity, activityId: $record->id);
+
+        return $record;
+    }
+
+    /**
+     * @return array{record: Activity, results: list<array{actor_url: string, inbox_url: string, response_code: int|null}>}
+     */
+    public function sendCreateForActorSync(FederatableContentContract $content, Actor $actor): array
+    {
+        $object = $this->buildObject(content: $content);
+        $activity = $this->buildActivity(type: 'Create', actor: $actor, object: $object);
+
+        $record = $this->recordActivity(
+            localActor: $actor,
+            type: ActivityType::Create,
+            remoteActor: null,
+            payload: $activity,
+        );
+
+        $results = $this->deliverSync(actor: $actor, activity: $activity, activityId: $record->id);
+
+        return [
+            'record' => $record,
+            'results' => $results,
+        ];
+    }
+
+    /**
+     * @return list<array{actor_url: string, inbox_url: string, response_code: int|null}>
+     */
+    protected function deliverSync(ActorContract $actor, array $activity, ?int $activityId = null): array
+    {
+        $results = [];
+
+        if (! config('activitypub.federation.enabled')) {
+            return $results;
+        }
+
+        $localActor = $this->resolveLocalActor(actor: $actor);
+
+        if ($localActor === null) {
+            return $results;
+        }
+
+        Follower::query()
+            ->with(relations: 'remoteActor')
+            ->where(column: 'actor_id', operator: '=', value: $localActor->id)
+            ->where(column: 'status', operator: '=', value: FollowerStatus::Accepted)
+            ->chunk(200, function ($followers) use ($activity, $localActor, $activityId, &$results) {
+                foreach ($followers as $follower) {
+                    $responseCode = $this->deliverSingleSync(
+                        inboxUrl: $follower->remoteActor->inbox_url,
+                        activity: $activity,
+                        actor: $localActor,
+                        activityId: $activityId,
+                    );
+
+                    $results[] = [
+                        'actor_url' => $follower->remoteActor->actor_url,
+                        'inbox_url' => $follower->remoteActor->inbox_url,
+                        'response_code' => $responseCode,
+                    ];
+                }
+            });
+
+        return $results;
+    }
+
+    protected function deliverSingleSync(string $inboxUrl, array $activity, Actor $actor, ?int $activityId = null): ?int
+    {
+        $responseCode = $this->deliveryClient->deliver(
+            inboxUrl: $inboxUrl,
+            activity: $activity,
+            actor: $actor,
+        );
+
+        if ($responseCode === null) {
+            Log::debug('deliverSingleSync: failed to encode activity JSON', [
+                'inboxUrl' => $inboxUrl,
+            ]);
+
+            return null;
+        }
+
+        if ($responseCode >= 200 && $responseCode < 300 && $activityId !== null) {
+            Activity::query()
+                ->where(column: 'id', operator: '=', value: $activityId)
+                ->update(values: [
+                    'status' => 'delivered',
+                    'delivered_at' => now(),
+                ]);
+        }
+
+        return $responseCode;
     }
 
     public function handleInbox(array $payload): void
@@ -178,20 +291,20 @@ final class ActivityPubService
             return;
         }
 
-        $followers = Follower::query()
+        Follower::query()
             ->with(relations: 'remoteActor')
             ->where(column: 'actor_id', operator: '=', value: $localActor->id)
             ->where(column: 'status', operator: '=', value: FollowerStatus::Accepted)
-            ->get();
-
-        foreach ($followers as $follower) {
-            DeliverActivity::dispatch(
-                inboxUrl: $follower->remoteActor->inbox_url,
-                activity: $activity,
-                actor: $localActor,
-                activityId: $activityId,
-            );
-        }
+            ->chunk(200, function ($followers) use ($activity, $localActor, $activityId) {
+                foreach ($followers as $follower) {
+                    DeliverActivity::dispatch(
+                        inboxUrl: $follower->remoteActor->inbox_url,
+                        activity: $activity,
+                        actor: $localActor,
+                        activityId: $activityId,
+                    );
+                }
+            });
     }
 
     public function recordActivity(
@@ -357,6 +470,7 @@ final class ActivityPubService
 
         $remoteActor = RemoteActor::query()
             ->where(column: 'domain', operator: '=', value: $objectDomain)
+            ->where(column: 'actor_url', operator: 'LIKE', value: $objectDomain.'%')
             ->first();
 
         if ($remoteActor === null) {
@@ -373,8 +487,20 @@ final class ActivityPubService
 
     protected function resolveLocalActor(ActorContract $actor): ?Actor
     {
-        return Actor::query()
-            ->where(column: 'username', operator: '=', value: $actor->getPreferredUsername())
+        $username = $actor->getPreferredUsername();
+
+        if (isset($this->localActorCache[$username])) {
+            return $this->localActorCache[$username];
+        }
+
+        $found = Actor::query()
+            ->where(column: 'username', operator: '=', value: $username)
             ->first();
+
+        if ($found !== null) {
+            $this->localActorCache[$username] = $found;
+        }
+
+        return $found;
     }
 }

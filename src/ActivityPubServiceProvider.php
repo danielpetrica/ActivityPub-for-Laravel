@@ -3,6 +3,7 @@
 namespace DanielPetrica\LaravelActivityPub;
 
 use DanielPetrica\LaravelActivityPub\Console\Commands\CreateActorCommand;
+use DanielPetrica\LaravelActivityPub\Console\Commands\DeliverContentCommand;
 use DanielPetrica\LaravelActivityPub\Console\Commands\PruneActivitiesCommand;
 use DanielPetrica\LaravelActivityPub\Contracts\ActorContract;
 use DanielPetrica\LaravelActivityPub\Http\Middleware\VerifyHttpSignature;
@@ -35,9 +36,11 @@ final class ActivityPubServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        RateLimiter::for(name: 'activitypub-inbox', callback: fn () => Limit::perMinute(
+        RateLimiter::for(name: 'activitypub-inbox', callback: fn ($request) => Limit::perMinute(
             maxAttempts: 60,
-        ));
+        )->by($request->ip() ?? 'global'));
+
+        RateLimiter::for(name: 'fediverse-interact', callback: fn () => Limit::perMinute(maxAttempts: 30));
 
         $this->publishes(
             paths: [
@@ -75,6 +78,7 @@ final class ActivityPubServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands(commands: [
                 CreateActorCommand::class,
+                DeliverContentCommand::class,
                 PruneActivitiesCommand::class,
             ]);
         }
