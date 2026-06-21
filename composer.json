@@ -1,5 +1,5 @@
 {
-    "name": "danielpetrica/laravel-activitypub",
+    "name": "danielpetrica/activitypub-for-laravel",
     "type": "library",
     "description": "ActivityPub server implementation for Laravel applications. WebFinger, actor profiles, inbox/outbox, and federation.",
     "keywords": ["laravel", "activitypub", "webfinger", "federation", "fediverse", "mastodon"],

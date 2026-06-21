@@ -59,7 +59,7 @@ A self-hosted ActivityPub server for Laravel 13 that enables federation with the
 ## Installation
 
 ```bash
-composer require danielpetrica/laravel-activitypub
+composer require danielpetrica/activitypub-for-laravel
 ```
 
 Publish the configuration, migrations, and views:

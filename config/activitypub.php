@@ -82,7 +82,7 @@ return [
         'enabled' => env('ACTIVITYPUB_FEDERATION_ENABLED', false),
         'max_delivery_attempts' => 3,
         'delivery_timeout' => 10,
-        'user_agent' => 'danielpetrica/laravel-activitypub (+https://danielpetrica.com)',
+        'user_agent' => 'danielpetrica/activitypub-for-laravel (+https://danielpetrica.com)',
     ],
 
     /*
