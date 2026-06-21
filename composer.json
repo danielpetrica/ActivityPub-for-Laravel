@@ -105,12 +105,6 @@
     },
     "minimum-stability": "stable",
     "prefer-stable": true,
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/danielpetrica/laravel-activitypub.git"
-        }
-    ],
     "repositories-dev": [
         {
             "name": "filament",

@@ -26,7 +26,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Explicitly register the ActivityPub provider to guard against
+        // auto-discovery failures during deployment (stale packages.php cache).
+        $this->app->register(
+            \DanielPetrica\LaravelActivityPub\ActivityPubServiceProvider::class,
+        );
     }
 
     /**
