@@ -51,8 +51,12 @@ cd "${APP_DIR}" || exit
 mkdir -p .storage/{logs,app,framework}
 chown -R 82:82 .storage/ 2>/dev/null || true
 
-# CI handles docker login before this script. For manual runs, allow GHCR_TOKEN.
+# CI handles docker login before this script. For manual runs, allow tokens.
 echo -e "${GREEN}[2/7] Pulling images...${NC}"
+if [ -n "${FORGEJO_REGISTRY_TOKEN}" ]; then
+    printf '%s\n' "${FORGEJO_REGISTRY_TOKEN}" | docker login homebrain.tailb7c9d.ts.net:3000 -u danielpetrica --password-stdin
+fi
+# Keep GHCR fallback for backward compat (supports old compose.yml versions).
 if [ -n "${GHCR_TOKEN}" ]; then
     printf '%s\n' "${GHCR_TOKEN}" | docker login ghcr.io -u danielpetrica --password-stdin
 fi
