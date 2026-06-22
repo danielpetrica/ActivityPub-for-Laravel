@@ -36,8 +36,8 @@ jobs:
             - uses: docker/login-action@v4
               with:
                   registry: forgejo.tailb7c9d.ts.net
-                  username: ${{ github.repository_owner }}
-                  password: ${{ github.token }}
+                  username: danielpetrica
+                  password: ${{ secrets.FORGEJO_REGISTRY_TOKEN }}
 
             - name: Generate minimal .env for build
               run: |
