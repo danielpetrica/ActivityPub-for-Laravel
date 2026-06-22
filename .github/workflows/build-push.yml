@@ -35,7 +35,7 @@ jobs:
 
             - uses: docker/login-action@v4
               with:
-                  registry: homebrain.tailb7c9d.ts.net:3000
+                  registry: forgejo.tailb7c9d.ts.net
                   username: ${{ github.repository_owner }}
                   password: ${{ github.token }}
 
@@ -64,15 +64,15 @@ jobs:
                   docker buildx build \
                       --secret id=composer_auth,env=COMPOSER_AUTH \
                       --target ${{ matrix.target }} \
-                      --tag homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/${{ matrix.image }}:${{ github.ref_name }} \
-                      --tag homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/${{ matrix.image }}:latest \
+                      --tag forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com/${{ matrix.image }}:${{ github.ref_name }} \
+                      --tag forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com/${{ matrix.image }}:latest \
                       --load \
                       .
 
             - name: Push ${{ matrix.image }}
               run: |
-                  docker push homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/${{ matrix.image }}:${{ github.ref_name }}
-                  docker push homebrain.tailb7c9d.ts.net:3000/${{ github.repository_owner }}/danielpetrica.com/${{ matrix.image }}:latest
+                  docker push forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com/${{ matrix.image }}:${{ github.ref_name }}
+                  docker push forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com/${{ matrix.image }}:latest
 
     deploy:
         name: Deploy to Server

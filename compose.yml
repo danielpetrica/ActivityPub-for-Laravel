@@ -30,7 +30,7 @@ name: danielpetrica_com_${APP_ENV}
 services:
   danielpetrica_com:
     container_name: danielpetrica_com_web_${APP_ENV}
-    image: homebrain.tailb7c9d.ts.net:3000/danielpetrica/danielpetrica.com/web:latest
+    image: forgejo.tailb7c9d.ts.net/danielpetrica/danielpetrica.com/web:latest
     pull_policy: always
     <<: [*common, *deploy-resources]
     shm_size: '256M'
@@ -67,7 +67,7 @@ services:
 
   worker:
     container_name: danielpetrica_com_worker_${APP_ENV}
-    image: homebrain.tailb7c9d.ts.net:3000/danielpetrica/danielpetrica.com/worker:latest
+    image: forgejo.tailb7c9d.ts.net/danielpetrica/danielpetrica.com/worker:latest
     pull_policy: always
     <<: *common
     command: ["php", "artisan", "horizon"]
@@ -94,7 +94,7 @@ services:
 
   scheduler:
     container_name: danielpetrica_com_scheduler_${APP_ENV}
-    image: homebrain.tailb7c9d.ts.net:3000/danielpetrica/danielpetrica.com/worker:latest
+    image: forgejo.tailb7c9d.ts.net/danielpetrica/danielpetrica.com/worker:latest
     pull_policy: always
     <<: *common
     command: ["php", "artisan", "schedule:work"]

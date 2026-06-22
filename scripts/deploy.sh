@@ -54,7 +54,7 @@ chown -R 82:82 .storage/ 2>/dev/null || true
 # CI handles docker login before this script. For manual runs, allow tokens.
 echo -e "${GREEN}[2/7] Pulling images...${NC}"
 if [ -n "${FORGEJO_REGISTRY_TOKEN}" ]; then
-    printf '%s\n' "${FORGEJO_REGISTRY_TOKEN}" | docker login homebrain.tailb7c9d.ts.net:3000 -u danielpetrica --password-stdin
+    printf '%s\n' "${FORGEJO_REGISTRY_TOKEN}" | docker login forgejo.tailb7c9d.ts.net -u danielpetrica --password-stdin
 fi
 # Keep GHCR fallback for backward compat (supports old compose.yml versions).
 if [ -n "${GHCR_TOKEN}" ]; then
