@@ -32,17 +32,7 @@ jobs:
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v4
               with:
-                  buildkitd-flags: --debug
                   driver-opts: network=host
-
-
-            - name: Cache dependencies
-              uses: actions/cache@v4
-              with:
-                path: ~/.npm
-                key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-                restore-keys: |
-                  ${{ runner.os }}-node-
 
             - uses: docker/login-action@v4
               with:
@@ -67,24 +57,23 @@ jobs:
                   EOF
                   cp .env .env.production
 
-            - name: Build ${{ matrix.image }}
+            - name: Build and push ${{ matrix.image }}
               env:
                   COMPOSER_AUTH: >-
                       {"http-basic":{"packages.filamentphp.com":{"username":"andrei@danielpetrica.com","password":"${{ secrets.FILAMENT_TOKEN }}"}}}
               run: |
                   docker buildx build \
                       --secret id=composer_auth,env=COMPOSER_AUTH \
+                      --pull \
                       --target ${{ matrix.target }} \
                       --label "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
+                      --cache-from type=registry,ref=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:${{ matrix.image }} \
+                      --cache-from type=registry,ref=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:${{ matrix.image }}-buildcache \
+                      --cache-to type=registry,ref=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:${{ matrix.image }}-buildcache,mode=max \
                       --tag forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:${{ matrix.image }} \
                       --tag forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:${{ matrix.image }}-${{ github.ref_name }} \
-                      --load \
+                      --push \
                       .
-
-            - name: Push ${{ matrix.image }}
-              run: |
-                  docker push forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:${{ matrix.image }}
-                  docker push forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:${{ matrix.image }}-${{ github.ref_name }}
 
     deploy:
         name: Deploy to Server
