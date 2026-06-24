@@ -66,11 +66,14 @@ jobs:
               with:
                   driver-opts: network=host
 
-            - uses: docker/login-action@v4
-              with:
-                  registry: forgejo.tailb7c9d.ts.net
-                  username: ${{ secrets.ORG_USERNAME_DOCKER }}
-                  password: ${{ secrets.ORG_TOKEN_DOCKER }}
+            - name: Login to registry
+              run: |
+                  for i in 1 2 3; do
+                      echo "${{ secrets.ORG_TOKEN_DOCKER }}" | docker login forgejo.tailb7c9d.ts.net \
+                          --username "${{ secrets.ORG_USERNAME_DOCKER }}" \
+                          --password-stdin && break
+                      sleep 5
+                  done
 
             - name: Generate minimal .env for build
               run: |
@@ -131,11 +134,14 @@ jobs:
               with:
                   driver-opts: network=host
 
-            - uses: docker/login-action@v4
-              with:
-                  registry: forgejo.tailb7c9d.ts.net
-                  username: ${{ secrets.ORG_USERNAME_DOCKER }}
-                  password: ${{ secrets.ORG_TOKEN_DOCKER }}
+            - name: Login to registry
+              run: |
+                  for i in 1 2 3; do
+                      echo "${{ secrets.ORG_TOKEN_DOCKER }}" | docker login forgejo.tailb7c9d.ts.net \
+                          --username "${{ secrets.ORG_USERNAME_DOCKER }}" \
+                          --password-stdin && break
+                      sleep 5
+                  done
 
             - name: Generate minimal .env for build
               run: |
@@ -193,11 +199,14 @@ jobs:
               with:
                   driver-opts: network=host
 
-            - uses: docker/login-action@v4
-              with:
-                  registry: forgejo.tailb7c9d.ts.net
-                  username: ${{ secrets.ORG_USERNAME_DOCKER }}
-                  password: ${{ secrets.ORG_TOKEN_DOCKER }}
+            - name: Login to registry
+              run: |
+                  for i in 1 2 3; do
+                      echo "${{ secrets.ORG_TOKEN_DOCKER }}" | docker login forgejo.tailb7c9d.ts.net \
+                          --username "${{ secrets.ORG_USERNAME_DOCKER }}" \
+                          --password-stdin && break
+                      sleep 5
+                  done
 
             - name: Generate minimal .env for build
               run: |
@@ -258,11 +267,14 @@ jobs:
               with:
                   driver-opts: network=host
 
-            - uses: docker/login-action@v4
-              with:
-                  registry: forgejo.tailb7c9d.ts.net
-                  username: ${{ secrets.ORG_USERNAME_DOCKER }}
-                  password: ${{ secrets.ORG_TOKEN_DOCKER }}
+            - name: Login to registry
+              run: |
+                  for i in 1 2 3; do
+                      echo "${{ secrets.ORG_TOKEN_DOCKER }}" | docker login forgejo.tailb7c9d.ts.net \
+                          --username "${{ secrets.ORG_USERNAME_DOCKER }}" \
+                          --password-stdin && break
+                      sleep 5
+                  done
 
             - name: Generate minimal .env for build
               run: |
@@ -307,11 +319,14 @@ jobs:
         runs-on: light
         timeout-minutes: 10
         steps:
-            - uses: docker/login-action@v4
-              with:
-                  registry: forgejo.tailb7c9d.ts.net
-                  username: ${{ secrets.ORG_USERNAME_DOCKER }}
-                  password: ${{ secrets.ORG_TOKEN_DOCKER }}
+            - name: Login to registry
+              run: |
+                  for i in 1 2 3; do
+                      echo "${{ secrets.ORG_TOKEN_DOCKER }}" | docker login forgejo.tailb7c9d.ts.net \
+                          --username "${{ secrets.ORG_USERNAME_DOCKER }}" \
+                          --password-stdin && break
+                      sleep 5
+                  done
 
             - name: Create and push multi-arch manifests
               run: |
