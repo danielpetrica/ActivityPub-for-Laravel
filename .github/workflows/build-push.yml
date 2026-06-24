@@ -75,15 +75,16 @@ jobs:
                   docker buildx build \
                       --secret id=composer_auth,env=COMPOSER_AUTH \
                       --target ${{ matrix.target }} \
-                      --tag forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com/${{ matrix.image }}:${{ github.ref_name }} \
-                      --tag forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com/${{ matrix.image }}:latest \
+                      --label "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
+                      --tag forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:${{ matrix.image }} \
+                      --tag forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:${{ matrix.image }}-${{ github.ref_name }} \
                       --load \
                       .
 
             - name: Push ${{ matrix.image }}
               run: |
-                  docker push forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com/${{ matrix.image }}:${{ github.ref_name }}
-                  docker push forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com/${{ matrix.image }}:latest
+                  docker push forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:${{ matrix.image }}
+                  docker push forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:${{ matrix.image }}-${{ github.ref_name }}
 
     deploy:
         name: Deploy to Server
