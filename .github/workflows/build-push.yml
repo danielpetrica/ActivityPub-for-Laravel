@@ -11,23 +11,55 @@ permissions:
     packages: write
 
 jobs:
-    build:
-        name: ${{ matrix.image }}
+    prepare-assets:
+        name: Prepare frontend assets
         runs-on: heavy
-        timeout-minutes: 30
-        strategy:
-            fail-fast: false
-            matrix:
-                include:
-                    - target: frankenphp
-                      image: web
-                    - target: worker
-                      image: worker
-
         steps:
             - uses: actions/checkout@v6
 
+            - name: Set up Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 22
 
+            - name: Enable corepack
+              run: corepack enable && corepack prepare yarn@1.22.22 --activate
+
+            - name: Cache node_modules
+              uses: actions/cache@v4
+              with:
+                  path: ~/.npm
+                  key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-node-
+
+            - name: Install dependencies
+              run: yarn install --frozen-lockfile
+
+            - name: Build assets
+              run: yarn build
+              env:
+                  NODE_ENV: production
+
+            - name: Upload built assets
+              uses: actions/upload-artifact@v4
+              with:
+                  name: assets
+                  path: public/build/
+
+    build-web-amd64:
+        name: web (amd64)
+        needs: prepare-assets
+        runs-on: heavy
+        timeout-minutes: 30
+        steps:
+            - uses: actions/checkout@v6
+
+            - name: Download built assets
+              uses: actions/download-artifact@v4
+              with:
+                  name: assets
+                  path: public/build/
 
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v4
@@ -57,27 +89,251 @@ jobs:
                   EOF
                   cp .env .env.production
 
-            - name: Build and push ${{ matrix.image }}
+            - name: Build and push web (amd64)
               env:
                   COMPOSER_AUTH: >-
                       {"http-basic":{"packages.filamentphp.com":{"username":"andrei@danielpetrica.com","password":"${{ secrets.FILAMENT_TOKEN }}"}}}
               run: |
+                  IMAGE_BASE=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com
                   docker buildx build \
                       --secret id=composer_auth,env=COMPOSER_AUTH \
                       --pull \
-                      --target ${{ matrix.target }} \
+                      --target frankenphp \
+                      --platform linux/amd64 \
                       --label "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
-                      --cache-from type=registry,ref=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:${{ matrix.image }},image-manifest=true \
-                      --cache-from type=registry,ref=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:${{ matrix.image }}-buildcache,image-manifest=true \
-                      --cache-to type=registry,ref=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:${{ matrix.image }}-buildcache,mode=min \
-                      --tag forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:${{ matrix.image }} \
-                      --tag forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:${{ matrix.image }}-${{ github.ref_name }} \
+                      --cache-from type=registry,ref=${IMAGE_BASE}:web-amd64,image-manifest=true \
+                      --cache-from type=registry,ref=${IMAGE_BASE}:web-amd64-buildcache,image-manifest=true \
+                      --cache-to type=registry,ref=${IMAGE_BASE}:web-amd64-buildcache,mode=min \
+                      --tag ${IMAGE_BASE}:web-amd64 \
+                      --tag ${IMAGE_BASE}:web-amd64-${{ github.ref_name }} \
                       --push \
                       .
 
+    build-web-arm64:
+        name: web (arm64)
+        needs: prepare-assets
+        runs-on: heavy
+        timeout-minutes: 30
+        steps:
+            - uses: actions/checkout@v6
+
+            - name: Download built assets
+              uses: actions/download-artifact@v4
+              with:
+                  name: assets
+                  path: public/build/
+
+            - name: Set up QEMU
+              uses: docker/setup-qemu-action@v3
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v4
+              with:
+                  driver-opts: network=host
+
+            - uses: docker/login-action@v4
+              with:
+                  registry: forgejo.tailb7c9d.ts.net
+                  username: ${{ secrets.ORG_USERNAME_DOCKER }}
+                  password: ${{ secrets.ORG_TOKEN_DOCKER }}
+
+            - name: Generate minimal .env for build
+              run: |
+                  cat > .env << 'EOF'
+                  APP_ENV=production
+                  APP_KEY=base64:dummykeyforbuildpurposesonly
+                  APP_DEBUG=false
+                  APP_URL=http://localhost
+                  DB_CONNECTION=sqlite
+                  SESSION_DRIVER=database
+                  CACHE_STORE=database
+                  QUEUE_CONNECTION=database
+                  REDIS_CLIENT=predis
+                  LOG_CHANNEL=stack
+                  LOG_LEVEL=error
+                  EOF
+                  cp .env .env.production
+
+            - name: Build and push web (arm64)
+              env:
+                  COMPOSER_AUTH: >-
+                      {"http-basic":{"packages.filamentphp.com":{"username":"andrei@danielpetrica.com","password":"${{ secrets.FILAMENT_TOKEN }}"}}}
+              run: |
+                  IMAGE_BASE=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com
+                  docker buildx build \
+                      --secret id=composer_auth,env=COMPOSER_AUTH \
+                      --pull \
+                      --target frankenphp \
+                      --platform linux/arm64 \
+                      --label "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
+                      --cache-from type=registry,ref=${IMAGE_BASE}:web-arm64,image-manifest=true \
+                      --cache-from type=registry,ref=${IMAGE_BASE}:web-arm64-buildcache,image-manifest=true \
+                      --cache-to type=registry,ref=${IMAGE_BASE}:web-arm64-buildcache,mode=min \
+                      --tag ${IMAGE_BASE}:web-arm64 \
+                      --tag ${IMAGE_BASE}:web-arm64-${{ github.ref_name }} \
+                      --push \
+                      .
+
+    build-worker-amd64:
+        name: worker (amd64)
+        needs: prepare-assets
+        runs-on: heavy
+        timeout-minutes: 30
+        steps:
+            - uses: actions/checkout@v6
+
+            - name: Download built assets
+              uses: actions/download-artifact@v4
+              with:
+                  name: assets
+                  path: public/build/
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v4
+              with:
+                  driver-opts: network=host
+
+            - uses: docker/login-action@v4
+              with:
+                  registry: forgejo.tailb7c9d.ts.net
+                  username: ${{ secrets.ORG_USERNAME_DOCKER }}
+                  password: ${{ secrets.ORG_TOKEN_DOCKER }}
+
+            - name: Generate minimal .env for build
+              run: |
+                  cat > .env << 'EOF'
+                  APP_ENV=production
+                  APP_KEY=base64:dummykeyforbuildpurposesonly
+                  APP_DEBUG=false
+                  APP_URL=http://localhost
+                  DB_CONNECTION=sqlite
+                  SESSION_DRIVER=database
+                  CACHE_STORE=database
+                  QUEUE_CONNECTION=database
+                  REDIS_CLIENT=predis
+                  LOG_CHANNEL=stack
+                  LOG_LEVEL=error
+                  EOF
+                  cp .env .env.production
+
+            - name: Build and push worker (amd64)
+              env:
+                  COMPOSER_AUTH: >-
+                      {"http-basic":{"packages.filamentphp.com":{"username":"andrei@danielpetrica.com","password":"${{ secrets.FILAMENT_TOKEN }}"}}}
+              run: |
+                  IMAGE_BASE=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com
+                  docker buildx build \
+                      --secret id=composer_auth,env=COMPOSER_AUTH \
+                      --pull \
+                      --target worker \
+                      --platform linux/amd64 \
+                      --label "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
+                      --cache-from type=registry,ref=${IMAGE_BASE}:worker-amd64,image-manifest=true \
+                      --cache-from type=registry,ref=${IMAGE_BASE}:worker-amd64-buildcache,image-manifest=true \
+                      --cache-to type=registry,ref=${IMAGE_BASE}:worker-amd64-buildcache,mode=min \
+                      --tag ${IMAGE_BASE}:worker-amd64 \
+                      --tag ${IMAGE_BASE}:worker-amd64-${{ github.ref_name }} \
+                      --push \
+                      .
+
+    build-worker-arm64:
+        name: worker (arm64)
+        needs: prepare-assets
+        runs-on: heavy
+        timeout-minutes: 30
+        steps:
+            - uses: actions/checkout@v6
+
+            - name: Download built assets
+              uses: actions/download-artifact@v4
+              with:
+                  name: assets
+                  path: public/build/
+
+            - name: Set up QEMU
+              uses: docker/setup-qemu-action@v3
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v4
+              with:
+                  driver-opts: network=host
+
+            - uses: docker/login-action@v4
+              with:
+                  registry: forgejo.tailb7c9d.ts.net
+                  username: ${{ secrets.ORG_USERNAME_DOCKER }}
+                  password: ${{ secrets.ORG_TOKEN_DOCKER }}
+
+            - name: Generate minimal .env for build
+              run: |
+                  cat > .env << 'EOF'
+                  APP_ENV=production
+                  APP_KEY=base64:dummykeyforbuildpurposesonly
+                  APP_DEBUG=false
+                  APP_URL=http://localhost
+                  DB_CONNECTION=sqlite
+                  SESSION_DRIVER=database
+                  CACHE_STORE=database
+                  QUEUE_CONNECTION=database
+                  REDIS_CLIENT=predis
+                  LOG_CHANNEL=stack
+                  LOG_LEVEL=error
+                  EOF
+                  cp .env .env.production
+
+            - name: Build and push worker (arm64)
+              env:
+                  COMPOSER_AUTH: >-
+                      {"http-basic":{"packages.filamentphp.com":{"username":"andrei@danielpetrica.com","password":"${{ secrets.FILAMENT_TOKEN }}"}}}
+              run: |
+                  IMAGE_BASE=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com
+                  docker buildx build \
+                      --secret id=composer_auth,env=COMPOSER_AUTH \
+                      --pull \
+                      --target worker \
+                      --platform linux/arm64 \
+                      --label "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
+                      --cache-from type=registry,ref=${IMAGE_BASE}:worker-arm64,image-manifest=true \
+                      --cache-from type=registry,ref=${IMAGE_BASE}:worker-arm64-buildcache,image-manifest=true \
+                      --cache-to type=registry,ref=${IMAGE_BASE}:worker-arm64-buildcache,mode=min \
+                      --tag ${IMAGE_BASE}:worker-arm64 \
+                      --tag ${IMAGE_BASE}:worker-arm64-${{ github.ref_name }} \
+                      --push \
+                      .
+
+    manifest:
+        name: Create multi-arch manifests
+        needs: [build-web-amd64, build-web-arm64, build-worker-amd64, build-worker-arm64]
+        runs-on: light
+        timeout-minutes: 10
+        steps:
+            - uses: docker/login-action@v4
+              with:
+                  registry: forgejo.tailb7c9d.ts.net
+                  username: ${{ secrets.ORG_USERNAME_DOCKER }}
+                  password: ${{ secrets.ORG_TOKEN_DOCKER }}
+
+            - name: Create and push multi-arch manifests
+              run: |
+                  REGISTRY=forgejo.tailb7c9d.ts.net
+                  REPO=${{ github.repository_owner }}/danielpetrica.com
+                  TAG=${{ github.ref_name }}
+
+                  for IMAGE in web worker; do
+                      docker buildx imagetools create \
+                          --tag ${REGISTRY}/${REPO}:${IMAGE} \
+                          ${REGISTRY}/${REPO}:${IMAGE}-amd64 \
+                          ${REGISTRY}/${REPO}:${IMAGE}-arm64
+
+                      docker buildx imagetools create \
+                          --tag ${REGISTRY}/${REPO}:${IMAGE}-${TAG} \
+                          ${REGISTRY}/${REPO}:${IMAGE}-amd64-${TAG} \
+                          ${REGISTRY}/${REPO}:${IMAGE}-arm64-${TAG}
+                  done
+
     deploy:
         name: Deploy to Server
-        needs: build
+        needs: manifest
         if: startsWith(github.ref, 'refs/tags/')
         runs-on: light
         timeout-minutes: 10

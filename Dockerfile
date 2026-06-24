@@ -1,18 +1,4 @@
-# Stage 1: Assets (frontend build)
-FROM node:22-alpine AS assets
-WORKDIR /app
-
-COPY package.json yarn.lock ./
-RUN corepack enable && corepack prepare yarn@1.22.22 --activate && yarn install --frozen-lockfile
-
-COPY vite.config.js ./
-COPY resources ./resources
-COPY public ./public
-
-ENV NODE_ENV=production
-RUN yarn build
-
-# Stage 2: Vendor (PHP dependencies)
+# Stage 1: Vendor (PHP dependencies)
 FROM composer:2 AS vendor
 WORKDIR /app
 
@@ -45,7 +31,7 @@ RUN mkdir -p storage/bootstrap/cache \
 
 RUN mkdir -p database && touch database/database.sqlite
 
-COPY --from=assets /app/public/build/ /app/public/build/
+COPY public/build/ /app/public/build/
 
 ENV COMPOSER_CACHE_DIR=/tmp/cache
 RUN --mount=type=cache,target=/tmp/cache \
@@ -78,8 +64,7 @@ COPY .env .env
 COPY --link composer.json .
 COPY --link resources/ resources/
 COPY --from=vendor /app/vendor /app/vendor
-
-COPY --from=assets /app/public/build /app/public/build
+COPY --from=vendor /app/public/build /app/public/build
 
 RUN mkdir -p storage bootstrap/cache
 RUN chown -R 82:82 /app
@@ -109,8 +94,7 @@ COPY --link resources/ resources/
 
 COPY .env .env
 COPY --from=vendor /app/vendor /app/vendor
-
-COPY --from=assets /app/public/build /app/public/build
+COPY --from=vendor /app/public/build /app/public/build
 
 COPY --from=vendor /usr/local/bin/install-php-extensions /usr/local/bin/install-php-extensions
 COPY --from=vendor /usr/bin/composer /usr/bin/composer
