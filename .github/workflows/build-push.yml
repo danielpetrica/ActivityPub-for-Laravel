@@ -67,9 +67,9 @@ jobs:
                       --pull \
                       --target ${{ matrix.target }} \
                       --label "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
-                      --cache-from type=registry,ref=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:${{ matrix.image }} \
-                      --cache-from type=registry,ref=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:${{ matrix.image }}-buildcache \
-                      --cache-to type=registry,ref=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:${{ matrix.image }}-buildcache,mode=max \
+                      --cache-from type=registry,ref=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:${{ matrix.image }},image-manifest=true \
+                      --cache-from type=registry,ref=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:${{ matrix.image }}-buildcache,image-manifest=true \
+                      --cache-to type=registry,ref=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:${{ matrix.image }}-buildcache,mode=min \
                       --tag forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:${{ matrix.image }} \
                       --tag forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:${{ matrix.image }}-${{ github.ref_name }} \
                       --push \
