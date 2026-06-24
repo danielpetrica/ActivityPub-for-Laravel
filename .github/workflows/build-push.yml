@@ -51,7 +51,7 @@ jobs:
         name: web (amd64)
         needs: prepare-assets
         runs-on: heavy
-        timeout-minutes: 30
+        timeout-minutes: 45
         steps:
             - uses: actions/checkout@v6
 
@@ -96,27 +96,29 @@ jobs:
               env:
                   COMPOSER_AUTH: >-
                       {"http-basic":{"packages.filamentphp.com":{"username":"andrei@danielpetrica.com","password":"${{ secrets.FILAMENT_TOKEN }}"}}}
-              run: |
-                  IMAGE_BASE=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com
-                  docker buildx build \
-                      --secret id=composer_auth,env=COMPOSER_AUTH \
-                      --pull \
-                      --target frankenphp \
-                      --platform linux/amd64 \
-                      --label "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
-                      --cache-from type=registry,ref=${IMAGE_BASE}:web-amd64,image-manifest=true \
-                      --cache-from type=registry,ref=${IMAGE_BASE}:web-amd64-buildcache,image-manifest=true \
-                      --cache-to type=registry,ref=${IMAGE_BASE}:web-amd64-buildcache,mode=min \
-                      --tag ${IMAGE_BASE}:web-amd64 \
-                      --tag ${IMAGE_BASE}:web-amd64-${{ github.ref_name }} \
-                      --push \
-                      .
+              uses: docker/build-push-action@v6
+              with:
+                  secrets: |
+                      composer_auth=${{ env.COMPOSER_AUTH }}
+                  pull: true
+                  target: frankenphp
+                  platforms: linux/amd64
+                  labels: |
+                      org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+                  cache-from: |
+                      type=registry,ref=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:web-amd64,image-manifest=true
+                      type=registry,ref=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:web-amd64-buildcache,image-manifest=true
+                  cache-to: type=registry,ref=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:web-amd64-buildcache,mode=min
+                  tags: |
+                      forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:web-amd64
+                      forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:web-amd64-${{ github.ref_name }}
+                  push: true
 
     build-web-arm64:
         name: web (arm64)
         needs: prepare-assets
         runs-on: heavy
-        timeout-minutes: 30
+        timeout-minutes: 45
         steps:
             - uses: actions/checkout@v6
 
@@ -164,27 +166,29 @@ jobs:
               env:
                   COMPOSER_AUTH: >-
                       {"http-basic":{"packages.filamentphp.com":{"username":"andrei@danielpetrica.com","password":"${{ secrets.FILAMENT_TOKEN }}"}}}
-              run: |
-                  IMAGE_BASE=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com
-                  docker buildx build \
-                      --secret id=composer_auth,env=COMPOSER_AUTH \
-                      --pull \
-                      --target frankenphp \
-                      --platform linux/arm64 \
-                      --label "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
-                      --cache-from type=registry,ref=${IMAGE_BASE}:web-arm64,image-manifest=true \
-                      --cache-from type=registry,ref=${IMAGE_BASE}:web-arm64-buildcache,image-manifest=true \
-                      --cache-to type=registry,ref=${IMAGE_BASE}:web-arm64-buildcache,mode=min \
-                      --tag ${IMAGE_BASE}:web-arm64 \
-                      --tag ${IMAGE_BASE}:web-arm64-${{ github.ref_name }} \
-                      --push \
-                      .
+              uses: docker/build-push-action@v6
+              with:
+                  secrets: |
+                      composer_auth=${{ env.COMPOSER_AUTH }}
+                  pull: true
+                  target: frankenphp
+                  platforms: linux/arm64
+                  labels: |
+                      org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+                  cache-from: |
+                      type=registry,ref=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:web-arm64,image-manifest=true
+                      type=registry,ref=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:web-arm64-buildcache,image-manifest=true
+                  cache-to: type=registry,ref=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:web-arm64-buildcache,mode=min
+                  tags: |
+                      forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:web-arm64
+                      forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:web-arm64-${{ github.ref_name }}
+                  push: true
 
     build-worker-amd64:
         name: worker (amd64)
         needs: prepare-assets
         runs-on: heavy
-        timeout-minutes: 30
+        timeout-minutes: 45
         steps:
             - uses: actions/checkout@v6
 
@@ -229,27 +233,29 @@ jobs:
               env:
                   COMPOSER_AUTH: >-
                       {"http-basic":{"packages.filamentphp.com":{"username":"andrei@danielpetrica.com","password":"${{ secrets.FILAMENT_TOKEN }}"}}}
-              run: |
-                  IMAGE_BASE=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com
-                  docker buildx build \
-                      --secret id=composer_auth,env=COMPOSER_AUTH \
-                      --pull \
-                      --target worker \
-                      --platform linux/amd64 \
-                      --label "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
-                      --cache-from type=registry,ref=${IMAGE_BASE}:worker-amd64,image-manifest=true \
-                      --cache-from type=registry,ref=${IMAGE_BASE}:worker-amd64-buildcache,image-manifest=true \
-                      --cache-to type=registry,ref=${IMAGE_BASE}:worker-amd64-buildcache,mode=min \
-                      --tag ${IMAGE_BASE}:worker-amd64 \
-                      --tag ${IMAGE_BASE}:worker-amd64-${{ github.ref_name }} \
-                      --push \
-                      .
+              uses: docker/build-push-action@v6
+              with:
+                  secrets: |
+                      composer_auth=${{ env.COMPOSER_AUTH }}
+                  pull: true
+                  target: worker
+                  platforms: linux/amd64
+                  labels: |
+                      org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+                  cache-from: |
+                      type=registry,ref=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:worker-amd64,image-manifest=true
+                      type=registry,ref=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:worker-amd64-buildcache,image-manifest=true
+                  cache-to: type=registry,ref=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:worker-amd64-buildcache,mode=min
+                  tags: |
+                      forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:worker-amd64
+                      forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:worker-amd64-${{ github.ref_name }}
+                  push: true
 
     build-worker-arm64:
         name: worker (arm64)
         needs: prepare-assets
         runs-on: heavy
-        timeout-minutes: 30
+        timeout-minutes: 45
         steps:
             - uses: actions/checkout@v6
 
@@ -297,21 +303,23 @@ jobs:
               env:
                   COMPOSER_AUTH: >-
                       {"http-basic":{"packages.filamentphp.com":{"username":"andrei@danielpetrica.com","password":"${{ secrets.FILAMENT_TOKEN }}"}}}
-              run: |
-                  IMAGE_BASE=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com
-                  docker buildx build \
-                      --secret id=composer_auth,env=COMPOSER_AUTH \
-                      --pull \
-                      --target worker \
-                      --platform linux/arm64 \
-                      --label "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
-                      --cache-from type=registry,ref=${IMAGE_BASE}:worker-arm64,image-manifest=true \
-                      --cache-from type=registry,ref=${IMAGE_BASE}:worker-arm64-buildcache,image-manifest=true \
-                      --cache-to type=registry,ref=${IMAGE_BASE}:worker-arm64-buildcache,mode=min \
-                      --tag ${IMAGE_BASE}:worker-arm64 \
-                      --tag ${IMAGE_BASE}:worker-arm64-${{ github.ref_name }} \
-                      --push \
-                      .
+              uses: docker/build-push-action@v6
+              with:
+                  secrets: |
+                      composer_auth=${{ env.COMPOSER_AUTH }}
+                  pull: true
+                  target: worker
+                  platforms: linux/arm64
+                  labels: |
+                      org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+                  cache-from: |
+                      type=registry,ref=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:worker-arm64,image-manifest=true
+                      type=registry,ref=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:worker-arm64-buildcache,image-manifest=true
+                  cache-to: type=registry,ref=forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:worker-arm64-buildcache,mode=min
+                  tags: |
+                      forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:worker-arm64
+                      forgejo.tailb7c9d.ts.net/${{ github.repository_owner }}/danielpetrica.com:worker-arm64-${{ github.ref_name }}
+                  push: true
 
     manifest:
         name: Create multi-arch manifests
