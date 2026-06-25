@@ -41,9 +41,7 @@ COPY --link database/ database/
 COPY --link storage/ storage/
 
 # Stage 3: Worker image (CLI — runs Horizon / schedule:work)
-FROM php:8.5-cli-alpine AS worker
-COPY --from=vendor /usr/local/bin/install-php-extensions /usr/local/bin/
-RUN install-php-extensions bcmath intl pcntl gd curl pdo_pgsql mbstring
+FROM forgejo.tailb7c9d.ts.net/daniel_org/php-base:8.5-extensions AS worker
 
 # Redis via predis Composer package (no C extension required)
 
@@ -91,7 +89,6 @@ COPY .env .env
 COPY --from=vendor /app/vendor /app/vendor
 COPY --from=vendor /app/public/build /app/public/build
 
-COPY --from=vendor /usr/local/bin/install-php-extensions /usr/local/bin/install-php-extensions
 COPY --from=vendor /usr/bin/composer /usr/bin/composer
 
 COPY php-prod.ini /usr/local/etc/php/php.ini
