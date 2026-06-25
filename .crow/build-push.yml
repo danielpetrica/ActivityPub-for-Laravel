@@ -11,12 +11,8 @@ steps:
     environment:
       NODE_ENV: production
     commands:
-      - corepack enable
-      - corepack prepare yarn@1.22.22 --activate
-      - yarn install --frozen-lockfile
-      - ls -la node_modules/.bin/vite* 2>&1 || echo "vite not in .bin"
-      - node -e "console.log(require.resolve('vite'))" 2>&1 || echo "vite not resolvable"
-      - node node_modules/vite/bin/vite.js build
+      - npm install --include=dev
+      - npx vite build
 
   - name: build-web-amd64
     image: docker:28
