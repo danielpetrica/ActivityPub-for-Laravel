@@ -3,12 +3,8 @@ labels:
 
 when:
   - event: tag
-    ref: refs/tags/v*
+    ref: 'refs/tags/v*'
   - event: manual
-
-variables:
-  REGISTRY: forgejo.tailb7c9d.ts.net
-  REPO: daniel_org/danielpetrica.com
 
 steps:
   - name: prepare-assets
@@ -34,9 +30,11 @@ steps:
       FILAMENT_TOKEN:
         from_secret: FILAMENT_TOKEN
     commands:
-      - echo "$ORG_TOKEN_DOCKER" | docker login "${REGISTRY}" --username "$ORG_USERNAME_DOCKER" --password-stdin
-      - docker buildx create --use --driver-opt network=host || true
       - |
+        REGISTRY=forgejo.tailb7c9d.ts.net
+        REPO=daniel_org/danielpetrica.com
+        echo "$ORG_TOKEN_DOCKER" | docker login $REGISTRY --username "$ORG_USERNAME_DOCKER" --password-stdin
+        docker buildx create --use --driver-opt network=host || true
         cat > .env << 'EOF'
         APP_ENV=production
         APP_KEY=base64:dummykeyforbuildpurposesonly
@@ -50,23 +48,21 @@ steps:
         LOG_CHANNEL=stack
         LOG_LEVEL=error
         EOF
-      - cp .env .env.production
-      - |
+        cp .env .env.production
         COMPOSER_AUTH=$(printf '{"http-basic":{"packages.filamentphp.com":{"username":"andrei@danielpetrica.com","password":"%s"}}}' "$FILAMENT_TOKEN")
         export COMPOSER_AUTH
-      - |
         TAGS=()
-        TAGS+=(-t "${REGISTRY}/${REPO}:web-amd64")
+        TAGS+=(-t "$REGISTRY/$REPO:web-amd64")
         if [ -n "$CI_COMMIT_TAG" ]; then
-          TAGS+=(-t "${REGISTRY}/${REPO}:web-amd64-${CI_COMMIT_TAG}")
+          TAGS+=(-t "$REGISTRY/$REPO:web-amd64-$CI_COMMIT_TAG")
         fi
         docker buildx build \
           --platform linux/amd64 \
           --target frankenphp \
           --secret id=composer_auth,env=COMPOSER_AUTH \
-          --cache-from type=registry,ref="${REGISTRY}/${REPO}:web-amd64",image-manifest=true \
-          --cache-from type=registry,ref="${REGISTRY}/${REPO}:web-amd64-buildcache",image-manifest=true \
-          --cache-to type=registry,ref="${REGISTRY}/${REPO}:web-amd64-buildcache",mode=min \
+          --cache-from type=registry,ref="$REGISTRY/$REPO:web-amd64",image-manifest=true \
+          --cache-from type=registry,ref="$REGISTRY/$REPO:web-amd64-buildcache",image-manifest=true \
+          --cache-to type=registry,ref="$REGISTRY/$REPO:web-amd64-buildcache",mode=min \
           "${TAGS[@]}" \
           --push \
           .
@@ -86,9 +82,11 @@ steps:
       FILAMENT_TOKEN:
         from_secret: FILAMENT_TOKEN
     commands:
-      - echo "$ORG_TOKEN_DOCKER" | docker login "${REGISTRY}" --username "$ORG_USERNAME_DOCKER" --password-stdin
-      - docker buildx create --use --driver-opt network=host || true
       - |
+        REGISTRY=forgejo.tailb7c9d.ts.net
+        REPO=daniel_org/danielpetrica.com
+        echo "$ORG_TOKEN_DOCKER" | docker login $REGISTRY --username "$ORG_USERNAME_DOCKER" --password-stdin
+        docker buildx create --use --driver-opt network=host || true
         cat > .env << 'EOF'
         APP_ENV=production
         APP_KEY=base64:dummykeyforbuildpurposesonly
@@ -102,23 +100,21 @@ steps:
         LOG_CHANNEL=stack
         LOG_LEVEL=error
         EOF
-      - cp .env .env.production
-      - |
+        cp .env .env.production
         COMPOSER_AUTH=$(printf '{"http-basic":{"packages.filamentphp.com":{"username":"andrei@danielpetrica.com","password":"%s"}}}' "$FILAMENT_TOKEN")
         export COMPOSER_AUTH
-      - |
         TAGS=()
-        TAGS+=(-t "${REGISTRY}/${REPO}:web-arm64")
+        TAGS+=(-t "$REGISTRY/$REPO:web-arm64")
         if [ -n "$CI_COMMIT_TAG" ]; then
-          TAGS+=(-t "${REGISTRY}/${REPO}:web-arm64-${CI_COMMIT_TAG}")
+          TAGS+=(-t "$REGISTRY/$REPO:web-arm64-$CI_COMMIT_TAG")
         fi
         docker buildx build \
           --platform linux/arm64 \
           --target frankenphp \
           --secret id=composer_auth,env=COMPOSER_AUTH \
-          --cache-from type=registry,ref="${REGISTRY}/${REPO}:web-arm64",image-manifest=true \
-          --cache-from type=registry,ref="${REGISTRY}/${REPO}:web-arm64-buildcache",image-manifest=true \
-          --cache-to type=registry,ref="${REGISTRY}/${REPO}:web-arm64-buildcache",mode=min \
+          --cache-from type=registry,ref="$REGISTRY/$REPO:web-arm64",image-manifest=true \
+          --cache-from type=registry,ref="$REGISTRY/$REPO:web-arm64-buildcache",image-manifest=true \
+          --cache-to type=registry,ref="$REGISTRY/$REPO:web-arm64-buildcache",mode=min \
           "${TAGS[@]}" \
           --push \
           .
@@ -138,9 +134,11 @@ steps:
       FILAMENT_TOKEN:
         from_secret: FILAMENT_TOKEN
     commands:
-      - echo "$ORG_TOKEN_DOCKER" | docker login "${REGISTRY}" --username "$ORG_USERNAME_DOCKER" --password-stdin
-      - docker buildx create --use --driver-opt network=host || true
       - |
+        REGISTRY=forgejo.tailb7c9d.ts.net
+        REPO=daniel_org/danielpetrica.com
+        echo "$ORG_TOKEN_DOCKER" | docker login $REGISTRY --username "$ORG_USERNAME_DOCKER" --password-stdin
+        docker buildx create --use --driver-opt network=host || true
         cat > .env << 'EOF'
         APP_ENV=production
         APP_KEY=base64:dummykeyforbuildpurposesonly
@@ -154,23 +152,21 @@ steps:
         LOG_CHANNEL=stack
         LOG_LEVEL=error
         EOF
-      - cp .env .env.production
-      - |
+        cp .env .env.production
         COMPOSER_AUTH=$(printf '{"http-basic":{"packages.filamentphp.com":{"username":"andrei@danielpetrica.com","password":"%s"}}}' "$FILAMENT_TOKEN")
         export COMPOSER_AUTH
-      - |
         TAGS=()
-        TAGS+=(-t "${REGISTRY}/${REPO}:worker-amd64")
+        TAGS+=(-t "$REGISTRY/$REPO:worker-amd64")
         if [ -n "$CI_COMMIT_TAG" ]; then
-          TAGS+=(-t "${REGISTRY}/${REPO}:worker-amd64-${CI_COMMIT_TAG}")
+          TAGS+=(-t "$REGISTRY/$REPO:worker-amd64-$CI_COMMIT_TAG")
         fi
         docker buildx build \
           --platform linux/amd64 \
           --target worker \
           --secret id=composer_auth,env=COMPOSER_AUTH \
-          --cache-from type=registry,ref="${REGISTRY}/${REPO}:worker-amd64",image-manifest=true \
-          --cache-from type=registry,ref="${REGISTRY}/${REPO}:worker-amd64-buildcache",image-manifest=true \
-          --cache-to type=registry,ref="${REGISTRY}/${REPO}:worker-amd64-buildcache",mode=min \
+          --cache-from type=registry,ref="$REGISTRY/$REPO:worker-amd64",image-manifest=true \
+          --cache-from type=registry,ref="$REGISTRY/$REPO:worker-amd64-buildcache",image-manifest=true \
+          --cache-to type=registry,ref="$REGISTRY/$REPO:worker-amd64-buildcache",mode=min \
           "${TAGS[@]}" \
           --push \
           .
@@ -190,9 +186,11 @@ steps:
       FILAMENT_TOKEN:
         from_secret: FILAMENT_TOKEN
     commands:
-      - echo "$ORG_TOKEN_DOCKER" | docker login "${REGISTRY}" --username "$ORG_USERNAME_DOCKER" --password-stdin
-      - docker buildx create --use --driver-opt network=host || true
       - |
+        REGISTRY=forgejo.tailb7c9d.ts.net
+        REPO=daniel_org/danielpetrica.com
+        echo "$ORG_TOKEN_DOCKER" | docker login $REGISTRY --username "$ORG_USERNAME_DOCKER" --password-stdin
+        docker buildx create --use --driver-opt network=host || true
         cat > .env << 'EOF'
         APP_ENV=production
         APP_KEY=base64:dummykeyforbuildpurposesonly
@@ -206,23 +204,21 @@ steps:
         LOG_CHANNEL=stack
         LOG_LEVEL=error
         EOF
-      - cp .env .env.production
-      - |
+        cp .env .env.production
         COMPOSER_AUTH=$(printf '{"http-basic":{"packages.filamentphp.com":{"username":"andrei@danielpetrica.com","password":"%s"}}}' "$FILAMENT_TOKEN")
         export COMPOSER_AUTH
-      - |
         TAGS=()
-        TAGS+=(-t "${REGISTRY}/${REPO}:worker-arm64")
+        TAGS+=(-t "$REGISTRY/$REPO:worker-arm64")
         if [ -n "$CI_COMMIT_TAG" ]; then
-          TAGS+=(-t "${REGISTRY}/${REPO}:worker-arm64-${CI_COMMIT_TAG}")
+          TAGS+=(-t "$REGISTRY/$REPO:worker-arm64-$CI_COMMIT_TAG")
         fi
         docker buildx build \
           --platform linux/arm64 \
           --target worker \
           --secret id=composer_auth,env=COMPOSER_AUTH \
-          --cache-from type=registry,ref="${REGISTRY}/${REPO}:worker-arm64",image-manifest=true \
-          --cache-from type=registry,ref="${REGISTRY}/${REPO}:worker-arm64-buildcache",image-manifest=true \
-          --cache-to type=registry,ref="${REGISTRY}/${REPO}:worker-arm64-buildcache",mode=min \
+          --cache-from type=registry,ref="$REGISTRY/$REPO:worker-arm64",image-manifest=true \
+          --cache-from type=registry,ref="$REGISTRY/$REPO:worker-arm64-buildcache",image-manifest=true \
+          --cache-to type=registry,ref="$REGISTRY/$REPO:worker-arm64-buildcache",mode=min \
           "${TAGS[@]}" \
           --push \
           .
@@ -239,19 +235,21 @@ steps:
       ORG_TOKEN_DOCKER:
         from_secret: org_token_docker
     commands:
-      - echo "$ORG_TOKEN_DOCKER" | docker login "${REGISTRY}" --username "$ORG_USERNAME_DOCKER" --password-stdin
       - |
+        REGISTRY=forgejo.tailb7c9d.ts.net
+        REPO=daniel_org/danielpetrica.com
+        echo "$ORG_TOKEN_DOCKER" | docker login $REGISTRY --username "$ORG_USERNAME_DOCKER" --password-stdin
         for IMAGE in web worker; do
           docker buildx imagetools create \
-            --tag "${REGISTRY}/${REPO}:${IMAGE}" \
-            "${REGISTRY}/${REPO}:${IMAGE}-amd64" \
-            "${REGISTRY}/${REPO}:${IMAGE}-arm64"
+            --tag "$REGISTRY/$REPO:$IMAGE" \
+            "$REGISTRY/$REPO:$IMAGE-amd64" \
+            "$REGISTRY/$REPO:$IMAGE-arm64"
 
           if [ -n "$CI_COMMIT_TAG" ]; then
             docker buildx imagetools create \
-              --tag "${REGISTRY}/${REPO}:${IMAGE}-${CI_COMMIT_TAG}" \
-              "${REGISTRY}/${REPO}:${IMAGE}-amd64-${CI_COMMIT_TAG}" \
-              "${REGISTRY}/${REPO}:${IMAGE}-arm64-${CI_COMMIT_TAG}"
+              --tag "$REGISTRY/$REPO:$IMAGE-$CI_COMMIT_TAG" \
+              "$REGISTRY/$REPO:$IMAGE-amd64-$CI_COMMIT_TAG" \
+              "$REGISTRY/$REPO:$IMAGE-arm64-$CI_COMMIT_TAG"
           fi
         done
     depends_on:
@@ -264,7 +262,7 @@ steps:
     image: alpine
     when:
       - event: tag
-        ref: refs/tags/v*
+        ref: 'refs/tags/v*'
     environment:
       DEPLOY_HOST:
         from_secret: DEPLOY_HOST
@@ -275,6 +273,6 @@ steps:
       - mkdir -p ~/.ssh
       - echo "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
       - chmod 600 ~/.ssh/deploy_key
-      - ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key "ubuntu@${DEPLOY_HOST}" "cd /home/ubuntu/traefik/danielpetrica/prod && ./deploy.sh"
+      - ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key "ubuntu@$DEPLOY_HOST" "cd /home/ubuntu/traefik/danielpetrica/prod && ./deploy.sh"
     depends_on:
       - manifest
