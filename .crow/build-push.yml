@@ -14,7 +14,7 @@ steps:
       - corepack enable
       - corepack prepare yarn@1.22.22 --activate
       - yarn install --frozen-lockfile
-      - yarn build
+      - ./node_modules/.bin/vite build
 
   - name: build-web-amd64
     image: docker:28
