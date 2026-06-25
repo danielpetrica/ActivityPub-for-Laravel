@@ -7,7 +7,7 @@ when:
 
 steps:
   - name: prepare-assets
-    image: node:22-alpine
+    image: node:24-alpine
     environment:
       NODE_ENV: production
     commands:
