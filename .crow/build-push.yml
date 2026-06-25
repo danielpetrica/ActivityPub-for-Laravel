@@ -4,7 +4,6 @@ labels:
 when:
   - event: tag
     ref: 'refs/tags/v*'
-  - event: manual
 
 steps:
   - name: prepare-assets
