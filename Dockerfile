@@ -1,11 +1,6 @@
-# Stage 1: Vendor (PHP dependencies)
-FROM composer:2 AS vendor
+# Stage 1: Vendor (PHP dependencies + pre-installed extensions)
+FROM forgejo.tailb7c9d.ts.net/daniel_org/php-base:8.5-extensions AS vendor
 WORKDIR /app
-
-ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
-RUN install-php-extensions gd bcmath intl pcntl pdo_pgsql curl mbstring
-
-# Redis via predis Composer package (no C extension required)
 
 COPY composer.json composer.lock ./
 
