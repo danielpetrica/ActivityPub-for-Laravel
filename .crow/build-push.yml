@@ -32,7 +32,7 @@ steps:
         from_secret: FILAMENT_TOKEN
     commands:
       - echo "$ORG_TOKEN_DOCKER" | docker login forgejo.tailb7c9d.ts.net --username "$ORG_USERNAME_DOCKER" --password-stdin
-      - docker buildx create --use --driver-opt network=host || true
+      - docker buildx create --use --name crow-builder --driver-opt network=host tcp://172.17.0.1:2375 || true
       - |
         cat > .env << 'EOF'
         APP_ENV=production
@@ -83,7 +83,7 @@ steps:
         from_secret: FILAMENT_TOKEN
     commands:
       - echo "$ORG_TOKEN_DOCKER" | docker login forgejo.tailb7c9d.ts.net --username "$ORG_USERNAME_DOCKER" --password-stdin
-      - docker buildx create --use --driver-opt network=host || true
+      - docker buildx create --use --name crow-builder --driver-opt network=host tcp://172.17.0.1:2375 || true
       - |
         cat > .env << 'EOF'
         APP_ENV=production
@@ -134,7 +134,7 @@ steps:
         from_secret: FILAMENT_TOKEN
     commands:
       - echo "$ORG_TOKEN_DOCKER" | docker login forgejo.tailb7c9d.ts.net --username "$ORG_USERNAME_DOCKER" --password-stdin
-      - docker buildx create --use --driver-opt network=host || true
+      - docker buildx create --use --name crow-builder --driver-opt network=host tcp://172.17.0.1:2375 || true
       - |
         cat > .env << 'EOF'
         APP_ENV=production
@@ -185,7 +185,7 @@ steps:
         from_secret: FILAMENT_TOKEN
     commands:
       - echo "$ORG_TOKEN_DOCKER" | docker login forgejo.tailb7c9d.ts.net --username "$ORG_USERNAME_DOCKER" --password-stdin
-      - docker buildx create --use --driver-opt network=host || true
+      - docker buildx create --use --name crow-builder --driver-opt network=host tcp://172.17.0.1:2375 || true
       - |
         cat > .env << 'EOF'
         APP_ENV=production
