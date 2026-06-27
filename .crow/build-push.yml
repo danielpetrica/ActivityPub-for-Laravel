@@ -18,8 +18,7 @@ steps:
   - name: build-web-amd64
     image: docker:28
     privileged: true
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+
     environment:
       ORG_USERNAME_DOCKER:
         from_secret: org_username_docker
@@ -68,8 +67,7 @@ steps:
   - name: build-web-arm64
     image: docker:28
     privileged: true
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+
     environment:
       ORG_USERNAME_DOCKER:
         from_secret: org_username_docker
@@ -118,8 +116,7 @@ steps:
   - name: build-worker-amd64
     image: docker:28
     privileged: true
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+    
     environment:
       ORG_USERNAME_DOCKER:
         from_secret: org_username_docker
@@ -168,8 +165,7 @@ steps:
   - name: build-worker-arm64
     image: docker:28
     privileged: true
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+
     environment:
       ORG_USERNAME_DOCKER:
         from_secret: org_username_docker
@@ -217,8 +213,7 @@ steps:
 
   - name: manifest
     image: docker:28
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+
     environment:
       ORG_USERNAME_DOCKER:
         from_secret: org_username_docker
