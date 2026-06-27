@@ -11,7 +11,7 @@ steps:
     image: node:24-alpine
     environment:
       # 2. ADDED DOCKER_HOST to route commands to your DinD service over TCP
-      DOCKER_HOST: tcp://docker-in-docker:2375
+      DOCKER_HOST: tcp://172.17.0.1:2375
       NODE_ENV: production
     commands:
       - npm install --include=dev
@@ -23,7 +23,7 @@ steps:
 
     environment:
       # 2. ADDED DOCKER_HOST to route commands to your DinD service over TCP
-      DOCKER_HOST: tcp://docker-in-docker:2375
+      DOCKER_HOST: tcp://172.17.0.1:2375
       ORG_USERNAME_DOCKER:
         from_secret: org_username_docker
       ORG_TOKEN_DOCKER:
@@ -74,7 +74,7 @@ steps:
 
     environment:
       # 2. ADDED DOCKER_HOST to route commands to your DinD service over TCP
-      DOCKER_HOST: tcp://docker-in-docker:2375
+      DOCKER_HOST: tcp://172.17.0.1:2375
       ORG_USERNAME_DOCKER:
         from_secret: org_username_docker
       ORG_TOKEN_DOCKER:
@@ -125,7 +125,7 @@ steps:
 
     environment:
       # 2. ADDED DOCKER_HOST to route commands to your DinD service over TCP
-      DOCKER_HOST: tcp://docker-in-docker:2375
+      DOCKER_HOST: tcp://172.17.0.1:2375
       ORG_USERNAME_DOCKER:
         from_secret: org_username_docker
       ORG_TOKEN_DOCKER:
@@ -176,7 +176,7 @@ steps:
 
     environment:
       # 2. ADDED DOCKER_HOST to route commands to your DinD service over TCP
-      DOCKER_HOST: tcp://docker-in-docker:2375
+      DOCKER_HOST: tcp://172.17.0.1:2375
       ORG_USERNAME_DOCKER:
         from_secret: org_username_docker
       ORG_TOKEN_DOCKER:
@@ -226,7 +226,7 @@ steps:
 
     environment:
       # 2. ADDED DOCKER_HOST to route commands to your DinD service over TCP
-      DOCKER_HOST: tcp://docker-in-docker:2375
+      DOCKER_HOST: tcp://172.17.0.1:2375
       ORG_USERNAME_DOCKER:
         from_secret: org_username_docker
       ORG_TOKEN_DOCKER:
@@ -260,7 +260,7 @@ steps:
         ref: 'refs/tags/v*'
     environment:
       # 2. ADDED DOCKER_HOST to route commands to your DinD service over TCP
-      DOCKER_HOST: tcp://docker-in-docker:2375
+      DOCKER_HOST: tcp://172.17.0.1:2375
       DEPLOY_HOST:
         from_secret: DEPLOY_HOST
       DEPLOY_SSH_KEY:
