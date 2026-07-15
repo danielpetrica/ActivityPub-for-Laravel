@@ -49,13 +49,19 @@ final class LocalServiceController extends Controller
 
         $placeholders = [
             'city_name' => $city->name,
+            'city_name_slug' => $city->slug,
             'city_description' => $city->description ?? '',
             'same_province_list' => $this->generateCityLinks($sameProvinceCities, $service),
             'same_region_big_cities' => $this->generateCityLinks($sameRegionCapitals, $service),
         ];
 
         foreach ($placeholders as $key => $value) {
-            $content = str_replace('{'.$key.'}', $value, $content);
+            // Replace both {city_name} and bare city_name for backwards compatibility
+            $content = str_replace(
+                search: ['{'.$key.'}', $key],
+                replace: $value,
+                subject: $content,
+            );
         }
 
         return $content;

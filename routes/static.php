@@ -28,7 +28,7 @@ Route::get('/allposts/{page?}', [StaticController::class, 'postIndex'])
 Route::get('/tools/docker-traefik-generator', [StaticController::class, 'dockerTraefikGenerator'])->name('tools.docker-traefik-generator');
 Route::get('/tools/{slug}', [StaticController::class, 'showTool'])->name('tools.show');
 
-Route::get('/servizi/{service:slug}/{city:slug}', [LocalServiceController::class, 'show'])
+Route::get('/services/{service:slug}/{city:slug}', [LocalServiceController::class, 'show'])
     ->name('services.local')
     ->withoutScopedBindings();
 

@@ -31,10 +31,10 @@ class ServiceForm
                                     ->unique(ignoreRecord: true),
                             ]),
                         RichEditor::make('intro_content')
-                            ->helperText('Placeholders: city_name, city_description, same_province_list, same_region_big_cities')
+                            ->helperText('Placeholders: {city_name}, {city_name_slug}, {city_description}, {same_province_list}, {same_region_big_cities}')
                             ->columnSpanFull(),
                         RichEditor::make('main_content')
-                            ->helperText('Placeholders: city_name, city_description, same_province_list, same_region_big_cities')
+                            ->helperText('Placeholders: {city_name}, {city_name_slug}, {city_description}, {same_province_list}, {same_region_big_cities}')
                             ->columnSpanFull(),
                     ]),
 

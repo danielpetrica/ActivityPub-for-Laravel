@@ -26,7 +26,7 @@ test('replaces placeholders in service content correctly', function () {
     $service = Service::create([
         'name' => 'Sviluppo Laravel',
         'slug' => 'sviluppo-laravel',
-        'intro_content' => 'Lavoro a {city_name}. {city_description}',
+        'intro_content' => 'Lavoro a {city_name} ({city_name_slug}). {city_description}',
         'main_content' => 'Altre città: {same_province_list}',
         'is_active' => true,
     ]);
@@ -34,7 +34,7 @@ test('replaces placeholders in service content correctly', function () {
     $response = $this->get(route('services.local', ['service' => $service->slug, 'city' => $city->slug]));
 
     $response->assertStatus(200);
-    $response->assertSee('Lavoro a Modena');
+    $response->assertSee('Lavoro a Modena (modena)');
     $response->assertSee('Città dei motori');
     $response->assertSee('Carpi'); // Dovrebbe essere nella list della stessa provincia
 });
