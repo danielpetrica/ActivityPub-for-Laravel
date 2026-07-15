@@ -11,27 +11,12 @@ steps:
     image: node:24-alpine
     environment:
       NODE_ENV: production
+      FILAMENT_TOKEN:
+        from_secret: FILAMENT_TOKEN
     commands:
       - npm install --include=dev
       - npx vite build
-
-  - name: build-and-push-web
-    image: codefloe.com/crow-plugins/docker-buildx
-    privileged: true
-    settings:
-      registry: forgejo.tailb7c9d.ts.net
-      repo: forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com
-      target: frankenphp
-      platforms: linux/amd64,linux/arm64
-      auto_tag: true # Automatically tags 'web' and 'web-vX.X.X' on tags
-      username:
-        from_secret: org_username_docker
-      password:
-        from_secret: org_token_docker
-      secrets:
-        - id=composer_auth,src=/tmp/composer_auth.json
-    commands:
-      # Build the local .env files & composer auth before the plugin executes the build
+      # Build local env files & composer auth for downstream build steps
       - |
         cat > .env << 'EOF'
         APP_ENV=production
@@ -47,10 +32,23 @@ steps:
         LOG_LEVEL=error
         EOF
       - cp .env .env.production
-      - printf '{"http-basic":{"packages.filamentphp.com":{"username":"andrei@danielpetrica.com","password":"%s"}}}' "$FILAMENT_TOKEN" > /tmp/composer_auth.json
-    environment:
-      FILAMENT_TOKEN:
-        from_secret: FILAMENT_TOKEN
+      - printf '{"http-basic":{"packages.filamentphp.com":{"username":"andrei@danielpetrica.com","password":"%s"}}}' "$FILAMENT_TOKEN" > composer_auth.json
+
+  - name: build-and-push-web
+    image: codefloe.com/crow-plugins/docker-buildx
+    privileged: true
+    settings:
+      registry: forgejo.tailb7c9d.ts.net
+      repo: forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com
+      target: frankenphp
+      platforms: linux/amd64,linux/arm64
+      auto_tag: true
+      username:
+        from_secret: org_username_docker
+      password:
+        from_secret: org_token_docker
+      secrets:
+        - id=composer_auth,src=composer_auth.json
     depends_on:
       - prepare-assets
 
@@ -68,27 +66,7 @@ steps:
       password:
         from_secret: org_token_docker
       secrets:
-        - id=composer_auth,src=/tmp/composer_auth.json
-    commands:
-      - |
-        cat > .env << 'EOF'
-        APP_ENV=production
-        APP_KEY=base64:dummykeyforbuildpurposesonly
-        APP_DEBUG=false
-        APP_URL=http://localhost
-        DB_CONNECTION=sqlite
-        SESSION_DRIVER=database
-        CACHE_STORE=database
-        QUEUE_CONNECTION=database
-        REDIS_CLIENT=predis
-        LOG_CHANNEL=stack
-        LOG_LEVEL=error
-        EOF
-      - cp .env .env.production
-      - printf '{"http-basic":{"packages.filamentphp.com":{"username":"andrei@danielpetrica.com","password":"%s"}}}' "$FILAMENT_TOKEN" > /tmp/composer_auth.json
-    environment:
-      FILAMENT_TOKEN:
-        from_secret: FILAMENT_TOKEN
+        - id=composer_auth,src=composer_auth.json
     depends_on:
       - prepare-assets
 

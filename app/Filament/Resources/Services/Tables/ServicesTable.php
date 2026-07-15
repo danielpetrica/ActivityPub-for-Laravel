@@ -2,9 +2,10 @@
 
 namespace App\Filament\Resources\Services\Tables;
 
+use App\Filament\Resources\Services\Pages\ViewService;
+use App\Models\Service;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -33,9 +34,7 @@ class ServicesTable
             ->filters([
                 //
             ])
-            ->recordActions([
-                EditAction::make(),
-            ])
+            ->recordUrl(fn (Service $record): string => ViewService::getUrl(['record' => $record]))
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
