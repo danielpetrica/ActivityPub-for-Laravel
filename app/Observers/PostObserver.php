@@ -17,7 +17,14 @@ final class PostObserver
             || $post->wasChanged(['title', 'excerpt', 'og_title', 'og_description', 'meta_description']);
 
         if ($needsGeneration) {
-            OgImageBusiness::generateForPost(post: $post);
+            try {
+                OgImageBusiness::generateForPost(post: $post);
+            } catch (\Throwable $e) {
+                Log::error('PostObserver: failed to generate OG image', [
+                    'post_id' => $post->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
     }
 

@@ -207,43 +207,59 @@ final class OgImageBusiness
     {
         $cacheKey = 'og-image.homepage';
 
-        return Cache::remember(
-            key: $cacheKey,
-            ttl: now()->addDay(),
-            callback: function () {
-                $title = config(key: 'app.name');
-                $description = 'Documenting my journey through Laravel, Docker, and the freelance world. Helping you build better software.';
-                $url = url(path: '/');
+        $cached = Cache::get(key: $cacheKey);
 
-                return self::tryGenerate(
-                    title: $title,
-                    description: $description,
-                    url: $url,
-                    path: self::HOMEPAGE_PATH,
-                );
-            },
+        if ($cached !== null) {
+            return $cached === '__OG_FAILED__' ? null : $cached;
+        }
+
+        $title = config(key: 'app.name');
+        $description = 'Documenting my journey through Laravel, Docker, and the freelance world. Helping you build better software.';
+        $url = url(path: '/');
+
+        $result = self::tryGenerate(
+            title: $title,
+            description: $description,
+            url: $url,
+            path: self::HOMEPAGE_PATH,
         );
+
+        Cache::put(
+            key: $cacheKey,
+            value: $result ?? '__OG_FAILED__',
+            ttl: now()->addDay(),
+        );
+
+        return $result;
     }
 
     public static function generateForAllPosts(): ?string
     {
         $cacheKey = 'og-image.all-posts';
 
-        return Cache::remember(
-            key: $cacheKey,
-            ttl: now()->addDay(),
-            callback: function () {
-                $title = 'All Posts';
-                $description = 'Browse all articles on Laravel, DevOps, and more';
-                $url = route(name: 'posts.index');
+        $cached = Cache::get(key: $cacheKey);
 
-                return self::tryGenerate(
-                    title: $title,
-                    description: $description,
-                    url: $url,
-                    path: self::ALL_POSTS_PATH,
-                );
-            },
+        if ($cached !== null) {
+            return $cached === '__OG_FAILED__' ? null : $cached;
+        }
+
+        $title = 'All Posts';
+        $description = 'Browse all articles on Laravel, DevOps, and more';
+        $url = route(name: 'posts.index');
+
+        $result = self::tryGenerate(
+            title: $title,
+            description: $description,
+            url: $url,
+            path: self::ALL_POSTS_PATH,
         );
+
+        Cache::put(
+            key: $cacheKey,
+            value: $result ?? '__OG_FAILED__',
+            ttl: now()->addDay(),
+        );
+
+        return $result;
     }
 }

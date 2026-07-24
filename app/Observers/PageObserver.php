@@ -17,7 +17,14 @@ final class PageObserver
             || $page->wasChanged(['title', 'excerpt', 'og_title', 'og_description', 'meta_description']);
 
         if ($needsGeneration) {
-            OgImageBusiness::generateForPage(page: $page);
+            try {
+                OgImageBusiness::generateForPage(page: $page);
+            } catch (\Throwable $e) {
+                Log::error('PageObserver: failed to generate OG image', [
+                    'page_id' => $page->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
     }
 

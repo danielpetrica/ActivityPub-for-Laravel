@@ -17,7 +17,14 @@ final class TagObserver
             || $tag->wasChanged(['name', 'description', 'og_title', 'og_description', 'meta_description']);
 
         if ($needsGeneration) {
-            OgImageBusiness::generateForTag(tag: $tag);
+            try {
+                OgImageBusiness::generateForTag(tag: $tag);
+            } catch (\Throwable $e) {
+                Log::error('TagObserver: failed to generate OG image', [
+                    'tag_id' => $tag->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
     }
 
