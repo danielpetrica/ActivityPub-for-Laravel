@@ -168,7 +168,7 @@ services:
     image: redis:alpine
     container_name: danielpetrica_com_redis_${APP_ENV}
     volumes:
-      - redis-data:/data
+      - ./.redis-data/:/data
     networks:
       - internal
     healthcheck:
@@ -204,9 +204,6 @@ services:
       - internal
     restart: always
     logging: *default-logging
-
-volumes:
-  redis-data:
 
 networks:
   internal:
