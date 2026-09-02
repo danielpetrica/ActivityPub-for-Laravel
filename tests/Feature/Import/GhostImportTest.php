@@ -7,6 +7,7 @@ use App\Enums\PostStatus;
 use App\Models\Page;
 use App\Models\Post;
 use App\Models\Tag;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -14,6 +15,13 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    // ActivityPub federation is enabled in .env and published post saves fire
+    // the federation event, which resolves the actor user. Create one so the
+    // importer can create published posts in tests.
+    User::factory()->create();
+});
 
 it('imports ghost data correctly', function () {
     Storage::fake('public');

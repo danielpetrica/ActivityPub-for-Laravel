@@ -1,11 +1,11 @@
 <x-layouts.app
-    :title="($service->seo_metadata['title'] ?? $service->name) . ' ' . $city->name"
-    :description="$service->seo_metadata['description'] ?? ''"
+    :title="$metaTitle"
+    :description="$metaDescription"
     :structuredData="$structuredData"
 >
     <x-layouts.hero
         :schemaType="'https://schema.org/WebPage'"
-        :title="$service->name . ' a ' . $city->name"
+        :title="$heroTitle"
         :excerpt="Str::limit(strip_tags($introContent), 160)"
         image="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=2069"
     />

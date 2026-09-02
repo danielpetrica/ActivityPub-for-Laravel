@@ -1,0 +1,4 @@
+Contact: mailto:daniel@danielpetrica.com
+Expires: 2027-09-02
+Preferred-Languages: en, it
+Canonical: https://danielpetrica.com/.well-known/security.txt

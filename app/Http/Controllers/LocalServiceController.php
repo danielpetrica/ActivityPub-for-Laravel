@@ -31,11 +31,20 @@ final class LocalServiceController extends Controller
         $introContent = $this->replacePlaceholders($service->intro_content, $city, $sameProvinceCities, $sameRegionCapitals, $service);
         $mainContent = $this->replacePlaceholders($service->main_content, $city, $sameProvinceCities, $sameRegionCapitals, $service);
 
+        // I metadati SEO contengono il segnaposto city_name (es. "Consulente Laravel a city_name"),
+        // quindi li elaboriamo per ottenere titolo e descrizione unici per ogni città.
+        $heroTitle = $this->replacePlaceholders($service->name, $city, $sameProvinceCities, $sameRegionCapitals, $service);
+        $metaTitle = $this->replacePlaceholders($service->seo_metadata['title'] ?? $service->name, $city, $sameProvinceCities, $sameRegionCapitals, $service);
+        $metaDescription = $this->replacePlaceholders($service->seo_metadata['description'] ?? '', $city, $sameProvinceCities, $sameRegionCapitals, $service);
+
         return view('services.local-show', [
             'service' => $service,
             'city' => $city,
             'introContent' => $introContent,
             'mainContent' => $mainContent,
+            'heroTitle' => $heroTitle,
+            'metaTitle' => $metaTitle,
+            'metaDescription' => $metaDescription,
             'caseStudies' => $service->caseStudies->where('is_active', true),
             'structuredData' => StructuredData::getProfessionalService($city),
         ]);
@@ -48,8 +57,10 @@ final class LocalServiceController extends Controller
         }
 
         $placeholders = [
-            'city_name' => $city->name,
+            // city_name_slug va prima di city_name, altrimenti la sostituzione di
+            // city_name corromperebbe il prefisso di city_name_slug (es. "Modena_slug").
             'city_name_slug' => $city->slug,
+            'city_name' => $city->name,
             'city_description' => $city->description ?? '',
             'same_province_list' => $this->generateCityLinks($sameProvinceCities, $service),
             'same_region_big_cities' => $this->generateCityLinks($sameRegionCapitals, $service),

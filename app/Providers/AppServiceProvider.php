@@ -83,7 +83,7 @@ class AppServiceProvider extends ServiceProvider
                 Route::middleware(['web', 'auth'])
                     ->prefix('fediverse')
                     ->name('fediverse.')
-                    ->group(base_path('vendor/danielpetrica/laravel-activitypub/routes/fediverse.php'));
+                    ->group(base_path('vendor/danielpetrica/activitypub-for-laravel/routes/fediverse.php'));
             }
         });
     }

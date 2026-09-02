@@ -2,6 +2,7 @@
 
 use App\Classes\Business\RedirectBusiness;
 use App\Http\Controllers\LocalServiceController;
+use App\Models\Redirect;
 use App\Http\Controllers\ObjectProxyController;
 use App\Http\Controllers\RssController;
 use App\Http\Controllers\SearchController;
@@ -58,8 +59,12 @@ Route::get('/sitemap-services.xml', [SitemapController::class, 'services'])->nam
 // resolve redirects lazily at request time instead of registering them eagerly.
 Route::fallback(function () {
     $path = '/'.ltrim(string: request()->path(), characters: '/');
+
+    // Stored paths may carry a trailing slash (Ghost import stores '/{slug}/'),
+    // while request()->path() strips trailing slashes. Compare slash-normalized
+    // values so both '/{slug}' and '/{slug}/' hit the same redirect.
     $redirect = RedirectBusiness::getActiveRedirects()
-        ->firstWhere(key: 'path', operator: '=', value: $path);
+        ->first(fn (Redirect $redirect) => rtrim($redirect->path, '/') === rtrim($path, '/'));
 
     if ($redirect) {
         return redirect(

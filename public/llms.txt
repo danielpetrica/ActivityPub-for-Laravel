@@ -1,0 +1,21 @@
+# Daniel Petrica
+
+> Personal tech blog by Daniel Petrica: articles and tutorials on Laravel, PHP, DevOps, Docker, Traefik, self-hosting and automation.
+
+## Articles
+- Posts: https://danielpetrica.com/allposts
+- RSS: https://danielpetrica.com/rss/posts.xml
+
+## Pages
+- About: https://danielpetrica.com/pages/about
+- Now: https://danielpetrica.com/pages/now
+
+## Tools
+- Tools: https://danielpetrica.com/tools
+- Docker Traefik Generator: https://danielpetrica.com/tools/docker-traefik-generator
+
+## Community
+- Links: https://danielpetrica.com/office/links
+
+## Laravel Packages
+- LaraPlugins: https://laraplugins.io

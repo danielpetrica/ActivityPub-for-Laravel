@@ -1,5 +1,6 @@
 @php
     use App\Classes\Business\MediaUrlBusiness;
+    use Illuminate\Support\Str;
 
     if ($tag->image_path) {
         $metaImage = MediaUrlBusiness::forMedia($tag->image_path);
@@ -10,12 +11,72 @@
     } else {
         $metaImage = null;
     }
+
+    $tagUrl = route('tags.show', $tag->slug);
+
+    $metaTitle = $tag->meta_title ?? 'Posts tagged with ' . $tag->name . ' - Daniel Petrica';
+
+    // Meta description fallback chain: explicit meta first, then a cleaned-up
+    // tag description, then an enriched generic fallback unique per tag.
+    if ($tag->meta_description) {
+        $metaDescription = $tag->meta_description;
+    } elseif ($tag->description) {
+        $metaDescription = Str::of($tag->description)
+            ->stripTags()
+            ->squish()
+            ->limit(limit: 150)
+            ->toString();
+    } else {
+        $metaDescription = 'All articles tagged with ' . $tag->name . ' — tutorials and practical guides on Laravel, DevOps, Docker, self-hosting and automation from Daniel Petrica.';
+    }
+
+    // JSON-LD structured data: CollectionPage with an ItemList of the posts
+    // shown on the current page, plus a BreadcrumbList for navigation context.
+    $structuredData = [
+        '@context' => 'https://schema.org',
+        '@type' => 'CollectionPage',
+        '@id' => $tagUrl,
+        'name' => $metaTitle,
+        'description' => $metaDescription,
+        'url' => $tagUrl,
+        'mainEntity' => [
+            '@type' => 'ItemList',
+            'itemListElement' => collect($posts->items())
+                ->map(
+                    fn ($post, $index) => [
+                        '@type' => 'ListItem',
+                        'position' => $index + 1,
+                        'url' => route('posts.show', $post->slug),
+                    ]
+                )
+                ->values()
+                ->all(),
+        ],
+        'breadcrumb' => [
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => [
+                [
+                    '@type' => 'ListItem',
+                    'position' => 1,
+                    'name' => 'Home',
+                    'item' => url('/'),
+                ],
+                [
+                    '@type' => 'ListItem',
+                    'position' => 2,
+                    'name' => $tag->name,
+                    'item' => $tagUrl,
+                ],
+            ],
+        ],
+    ];
 @endphp
 
 <x-layouts.app
-    :title="$tag->meta_title ?? 'Posts tagged with ' . $tag->name . ' - Daniel Petrica'"
-    :description="$tag->meta_description ?? 'Browsing all articles tagged with ' . $tag->name"
+    :title="$metaTitle"
+    :description="$metaDescription"
     :metaImage="$metaImage"
+    :structuredData="$structuredData"
 >
     <x-layouts.hero
         :schemaType="'https://schema.org/CollectionPage'"

@@ -1,0 +1,120 @@
+# ── Dependencies ──────────────────────────────────────
+vendor/
+node_modules/
+
+# ── Build / Output ────────────────────────────────────
+dist/
+build/
+public/build/
+public/hot/
+public/storage/
+public/fonts-manifest.dev.json
+storage/
+!.storage/app/public/.gitignore
+
+# ── Environment / Secrets ─────────────────────────────
+.env
+.env.backup
+.env.production
+.env.*
+!.env.example
+*.key
+auth.json
+
+# ── Lock files ────────────────────────────────────────
+composer.lock
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+bun.lock
+bun.lockb
+
+# ── Cache ─────────────────────────────────────────────
+.phpunit.cache/
+.phpunit.result.cache
+.phpactor.json
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+*.cache
+
+# ── Storage cache ─────────────────────────────────────
+.storage/
+
+# ── IDE / Editor ──────────────────────────────────────
+.idea/
+.vscode/
+.fleet/
+.nova/
+.zed/
+.cursor/
+*.sublime-project
+*.sublime-workspace
+
+# ── OS files ──────────────────────────────────────────
+.DS_Store
+Thumbs.db
+Desktop.ini
+*~
+*.swp
+*.swo
+
+# ── Logs / Temp ───────────────────────────────────────
+*.log
+*.tmp
+*.temp
+npm-debug.log
+yarn-error.log
+
+# ── Binary / Large artifacts ──────────────────────────
+*.zip
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+*.exe
+*.dmg
+*.iso
+*.sql.gz
+*.dump
+*.sqlite
+*.sqlite3
+*.db
+*.bin
+
+# ── Images / Media ────────────────────────────────────
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.webp
+*.ico
+*.mp3
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.webm
+*.ttf
+*.woff
+*.woff2
+*.eot
+
+# ── IDE helpers ───────────────────────────────────────
+_ide_helper.php
+_ide_helper_models.php
+.phpstorm.meta.php
+
+# ── FrankenPHP / Caddy ────────────────────────────────
+**/caddy
+frankenphp
+frankenphp-worker.php
+
+# ── AI tool configs ───────────────────────────────────
+AGENTS.md
+CLAUDE.md
+GEMINI.md

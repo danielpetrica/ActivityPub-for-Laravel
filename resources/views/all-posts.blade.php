@@ -3,12 +3,55 @@
     use App\Classes\Business\OgImageBusiness;
 
     $metaImage = OgImageBusiness::generateForAllPosts();
+
+    $allPostsUrl = route('posts.index');
+
+    // Build the ItemList from the current page's posts for JSON-LD structured data.
+    $itemListElement = [];
+    foreach ($posts as $position => $post) {
+        $itemListElement[] = [
+            '@type' => 'ListItem',
+            'position' => $position + 1,
+            'url' => route('posts.show', $post->slug),
+        ];
+    }
+
+    $structuredData = [
+        '@context' => 'https://schema.org',
+        '@type' => 'CollectionPage',
+        '@id' => $allPostsUrl,
+        'name' => 'All Articles on Laravel, DevOps and More',
+        'description' => 'Browsing all articles about Laravel, DevOps, and more.',
+        'url' => $allPostsUrl,
+        'mainEntity' => [
+            '@type' => 'ItemList',
+            'itemListElement' => $itemListElement,
+        ],
+        'breadcrumb' => [
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => [
+                [
+                    '@type' => 'ListItem',
+                    'position' => 1,
+                    'name' => 'Home',
+                    'item' => url('/'),
+                ],
+                [
+                    '@type' => 'ListItem',
+                    'position' => 2,
+                    'name' => 'All Posts',
+                    'item' => $allPostsUrl,
+                ],
+            ],
+        ],
+    ];
 @endphp
 
 <x-layouts.app
-    title="All Posts - Daniel Petrica"
+    title="All Articles on Laravel, DevOps and More - Daniel Petrica"
     description="Browsing all articles about Laravel, DevOps, and more."
     :metaImage="$metaImage"
+    :structuredData="$structuredData"
 >
     <x-layouts.hero
         :schemaType="'https://schema.org/CollectionPage'"
