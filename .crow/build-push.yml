@@ -48,8 +48,6 @@ steps:
         from_secret: org_username_docker
       password:
         from_secret: org_token_docker
-      secrets:
-        - id=composer_auth,src=composer_auth.json
     depends_on:
       - prepare-assets
 
@@ -66,8 +64,6 @@ steps:
         from_secret: org_username_docker
       password:
         from_secret: org_token_docker
-      secrets:
-        - id=composer_auth,src=composer_auth.json
     depends_on:
       - prepare-assets
 
