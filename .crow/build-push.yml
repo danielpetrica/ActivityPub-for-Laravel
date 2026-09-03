@@ -1,5 +1,6 @@
 labels:
-  agent: unraid-agent
+  agent: nec-server
+  dc: tokyo
 
 when:
   - event: tag
