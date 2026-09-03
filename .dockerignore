@@ -38,3 +38,8 @@ boost.json
 !resources
 !public
 !entrypoint.sh
+
+# Generated package/config caches must not leak dev-only providers (e.g. laravel/boost)
+# into the image; they are regenerated at boot or by composer install.
+bootstrap/cache/*.php
+bootstrap/cache/filament
