@@ -1,6 +1,11 @@
 # Stage 1: Vendor (PHP dependencies + pre-installed extensions)
-FROM forgejo.tailb7c9d.ts.net/daniel_org/php-base:8.5-extensions AS vendor
+# Ready-to-go composer image (official). Only the extensions composer's
+# platform checks + package:discover need: pcntl (Horizon) and intl (Filament).
+FROM composer:2 AS vendor
 WORKDIR /app
+
+ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
+RUN install-php-extensions pcntl intl
 
 COPY composer.json composer.lock ./
 
@@ -41,9 +46,12 @@ COPY --link database/ database/
 COPY --link storage/ storage/
 
 # Stage 3: Worker image (CLI — runs Horizon / schedule:work)
-FROM forgejo.tailb7c9d.ts.net/daniel_org/php-base:8.5-extensions AS worker
+# Ready-to-go PHP CLI image; install only what Horizon/the app need at runtime.
+FROM php:8.5-cli-alpine AS worker
 
 # Redis via predis Composer package (no C extension required)
+COPY --from=vendor /usr/local/bin/install-php-extensions /usr/local/bin/
+RUN install-php-extensions pcntl intl pdo_pgsql
 
 ARG APP_ENV=production
 WORKDIR /app
@@ -59,6 +67,8 @@ COPY --link resources/ resources/
 COPY --from=vendor /app/vendor /app/vendor
 COPY --from=vendor /app/public/build /app/public/build
 
+COPY php-prod.ini /usr/local/etc/php/php.ini
+
 RUN mkdir -p storage bootstrap/cache
 RUN chown -R 82:82 /app
 RUN chmod -R 775 storage bootstrap/cache
@@ -72,7 +82,7 @@ WORKDIR /app
 
 ARG APP_ENV=production
 ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
-RUN install-php-extensions bcmath intl pcntl gd curl pdo_pgsql mbstring imagick
+RUN install-php-extensions pcntl intl pdo_pgsql imagick
 
 # Redis via predis Composer package (no C extension required)
 
