@@ -51,7 +51,7 @@ FROM php:8.5-cli-alpine AS worker
 
 # Redis via predis Composer package (no C extension required)
 COPY --from=vendor /usr/local/bin/install-php-extensions /usr/local/bin/
-RUN install-php-extensions pcntl intl pdo_pgsql
+RUN install-php-extensions pcntl intl pdo_pgsql redis
 
 ARG APP_ENV=production
 WORKDIR /app
@@ -82,7 +82,7 @@ WORKDIR /app
 
 ARG APP_ENV=production
 ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
-RUN install-php-extensions pcntl intl pdo_pgsql imagick
+RUN install-php-extensions pcntl intl pdo_pgsql imagick redis
 
 # Redis via predis Composer package (no C extension required)
 
