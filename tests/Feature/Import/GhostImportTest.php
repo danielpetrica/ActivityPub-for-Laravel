@@ -189,12 +189,14 @@ it('resolves __GHOST_URL__ and typo domains for inline images', function () {
         'https://ghost.test/content/images/a.jpg*' => Http::response('img-a', 200),
         'https://ghost.test/content/images/c.jpg*' => Http::response('img-c', 200),
         'https://danielpetrica.com/content/images/b.jpg*' => Http::response('img-b', 200),
+        'https://danielpetrica.com/content/images/d.jpg*' => Http::response('img-d', 200),
         '*' => Http::response('nope', 404),
     ]);
 
     $html = '<p>Images:</p>'
         .'<img src="__GHOST_URL__/content/images/a.jpg" alt="a">'
         .'<img src="https://danielpetrica.co/content/images/b.jpg" alt="b">'
+        .'<img src="https://danielpetrica.com/content/images/d.jpg" alt="d">'
         .'<img src="media/__GHOST_URL__/content/images/c.jpg" alt="c">'
         .'<img src="__GHOST_URL__/content/images/broken.jpg" alt="broken">'
         .'<a href="__GHOST_URL__/about">About</a>';
@@ -234,6 +236,8 @@ it('resolves __GHOST_URL__ and typo domains for inline images', function () {
     // The three successful downloads must not keep the placeholder or typo.
     expect($htmlOut)->not->toContain('__GHOST_URL__');
     expect($htmlOut)->not->toContain('danielpetrica.co');
+    // Correct .com URLs must not be corrupted into .comm by the typo fix.
+    expect($htmlOut)->not->toContain('.comm');
     // The failed download keeps a resolved (placeholder-free) absolute URL.
     expect($htmlOut)->toContain('https://ghost.test/content/images/broken.jpg');
     // Links get the placeholder replaced with the base URL.
