@@ -21,6 +21,15 @@
     <link rel="alternate" type="application/rss+xml" title="Daniel Petrica - Pages" href="{{ route('rss.pages') }}">
     <link rel="alternate" type="application/rss+xml" title="Daniel Petrica - Tags" href="{{ route('rss.tags') }}">
 
+    {{-- ActivityPub actor discovery --}}
+    @php
+        $activityPubActorUrl = \App\Models\User::query()->first()?->getActorId();
+    @endphp
+    @if($activityPubActorUrl)
+        <link rel="alternate" type="application/activity+json" href="{{ $activityPubActorUrl }}">
+        <link rel="alternate" type="application/ld+json; profile="https://www.w3.org/ns/activitystreams"" href="{{ $activityPubActorUrl }}">
+    @endif
+
     {{-- Open Graph --}}
     <meta property="og:type" content="{{ $ogType ?? 'website' }}" />
     <meta property="og:title" content="{{ $metaTitle ?? ($title ?? 'Daniel Petrica') }}" />
