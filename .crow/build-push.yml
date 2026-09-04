@@ -8,16 +8,12 @@ when:
   - event: manual
 
 steps:
-  - name: prepare-assets
-    image: node:24-alpine
-    environment:
-      NODE_ENV: production
-      FILAMENT_TOKEN:
-        from_secret: FILAMENT_TOKEN
+  - name: prepare-env
+    image: alpine
     commands:
-      - npm install --include=dev
-      - npx vite build
-      # Build local env files & composer auth for downstream build steps
+      # Frontend assets are built inside the Dockerfile (assets stage), so this
+      # step only writes the minimal .env the image build needs (composer
+      # install + package:discover run with APP_ENV=production).
       - |
         cat > .env << 'EOF'
         APP_ENV=production
@@ -32,8 +28,6 @@ steps:
         LOG_CHANNEL=stack
         LOG_LEVEL=error
         EOF
-      - cp .env .env.production
-      - printf '{"http-basic":{"packages.filamentphp.com":{"username":"andrei@danielpetrica.com","password":"%s"}}}' "$FILAMENT_TOKEN" > composer_auth.json
 
   - name: build-and-push-web
     image: codefloe.com/crow-plugins/docker-buildx
@@ -44,12 +38,14 @@ steps:
       target: frankenphp
       platforms: linux/amd64,linux/arm64
       auto_tag: true
+      cache_images:
+        - forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com:web-cache
       username:
         from_secret: org_username_docker
       password:
         from_secret: org_token_docker
     depends_on:
-      - prepare-assets
+      - prepare-env
 
   - name: build-and-push-worker
     image: codefloe.com/crow-plugins/docker-buildx
@@ -60,12 +56,14 @@ steps:
       target: worker
       platforms: linux/amd64,linux/arm64
       auto_tag: true
+      cache_images:
+        - forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com:worker-cache
       username:
         from_secret: org_username_docker
       password:
         from_secret: org_token_docker
     depends_on:
-      - prepare-assets
+      - prepare-env
 
   - name: deploy
     image: alpine

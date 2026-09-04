@@ -1,4 +1,18 @@
-# Stage 1: Vendor (PHP dependencies + pre-installed extensions)
+# Stage 1: Assets (frontend build)
+FROM node:22-alpine AS assets
+WORKDIR /app
+
+COPY package.json yarn.lock ./
+RUN corepack enable && yarn install --frozen-lockfile
+
+COPY vite.config.js ./
+COPY resources ./resources
+COPY public ./public
+
+ENV NODE_ENV=production
+RUN yarn build
+
+# Stage 2: Vendor (PHP dependencies + pre-installed extensions)
 # Ready-to-go composer image (official). Only the extensions composer's
 # platform checks + package:discover need: pcntl (Horizon) and intl (Filament).
 FROM composer:2 AS vendor
@@ -31,7 +45,7 @@ RUN mkdir -p storage/bootstrap/cache \
 
 RUN mkdir -p database && touch database/database.sqlite
 
-COPY public/build/ /app/public/build/
+COPY --from=assets /app/public/build/ /app/public/build/
 
 ENV COMPOSER_CACHE_DIR=/tmp/cache
 RUN --mount=type=cache,target=/tmp/cache \
@@ -97,13 +111,15 @@ COPY --link resources/ resources/
 
 COPY .env .env
 COPY --from=vendor /app/vendor /app/vendor
-COPY --from=vendor /app/public/build /app/public/build
 
 COPY --from=vendor /usr/bin/composer /usr/bin/composer
 
 COPY php-prod.ini /usr/local/etc/php/php.ini
 
+# Copy the full public/ first, then overwrite build/ with the in-Docker built
+# assets so a stale public/build in the build context never wins.
 COPY --link public/ public/
+COPY --from=vendor /app/public/build /app/public/build
 
 COPY entrypoint.sh .
 RUN chmod +x /app/entrypoint.sh

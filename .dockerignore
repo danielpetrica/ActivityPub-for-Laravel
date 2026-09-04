@@ -39,6 +39,9 @@ boost.json
 !public
 !entrypoint.sh
 
+# Assets are built in-Docker (assets stage); never ship a stale local build.
+public/build
+
 # Generated package/config caches must not leak dev-only providers (e.g. laravel/boost)
 # into the image; they are regenerated at boot or by composer install.
 bootstrap/cache/*.php
