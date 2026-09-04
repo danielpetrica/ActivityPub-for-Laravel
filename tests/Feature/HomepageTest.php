@@ -94,3 +94,25 @@ test('no article is duplicated on the homepage', function () {
         ->and($titles)->toContain('Two')
         ->and($titles)->toContain('Three');
 });
+
+test('recent post cards display an excerpt', function () {
+    Post::factory()->create([
+        'title' => 'Post With Excerpt',
+        'excerpt' => 'This is the excerpt shown in the recent posts card.',
+        'status' => PostStatus::Published,
+        'published_at' => now()->subDay(),
+    ]);
+
+    // A second post so the featured hero isn't the only item in the sidebar.
+    Post::factory()->create([
+        'title' => 'Another Post',
+        'excerpt' => 'A different excerpt for the second card.',
+        'status' => PostStatus::Published,
+        'published_at' => now()->subDays(2),
+    ]);
+
+    $response = $this->get('/');
+
+    $response->assertStatus(200);
+    $response->assertSee('This is the excerpt shown in the recent posts card.');
+});

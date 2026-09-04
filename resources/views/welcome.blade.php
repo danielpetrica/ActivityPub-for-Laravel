@@ -47,6 +47,7 @@
                         @foreach($recentPosts as $post)
                             <x-blog.post-link-item
                                 :title="$post->title"
+                                :excerpt="$post->excerpt ?? $post->meta_description ?? ''"
                                 :date="$post->published_at?->toDateString()"
                                 :tags="$post->tags"
                                 :url="route('posts.show', $post->slug)"

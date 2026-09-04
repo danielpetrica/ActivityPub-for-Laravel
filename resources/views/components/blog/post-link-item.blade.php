@@ -1,5 +1,6 @@
 @props([
     'title',
+    'excerpt' => null,
     'image' => null,
     'date' => null,
     'readTime' => null,
@@ -33,6 +34,12 @@
                 {{ $title }}
             </a>
         </h3>
+
+        @if($excerpt)
+            <p class="text-sm text-neutral-500 mt-1 line-clamp-2 leading-snug" itemprop="description">
+                {{ $excerpt }}
+            </p>
+        @endif
 
         <div class="flex items-center gap-2 mt-1 text-xs text-neutral-500">
             @if($date)
