@@ -10,6 +10,7 @@
     'featured' => false,
     'compact' => false,
     'schemaType' => null,
+    'breadcrumbs' => null,
 ])
 
 <header {{ $attributes->merge(['class' => $featured ? 'relative bg-white pt-12 pb-16 lg:pt-20 lg:pb-24 overflow-hidden group/hero' : 'bg-white pt-10 pb-12 lg:pt-16 lg:pb-16 border-b border-neutral-100']) }} @if($schemaType) itemscope itemtype="{{ $schemaType }}" @endif>
@@ -21,8 +22,10 @@
 @endif
 
     <div class="{{ $featured ? 'max-w-7xl' : 'max-w-4xl' }} mx-auto px-4 sm:px-6 lg:px-8 relative z-10 {{ $featured ? '' : 'text-center' }}">
-        @if(!$featured && isset($breadcrumbs))
-            {{ $breadcrumbs }}
+        @if(!$featured && $breadcrumbs)
+            <div class="mb-8 flex justify-center">
+                <x-blog.breadcrumbs :items="$breadcrumbs" />
+            </div>
         @endif
 
         @if($featured)

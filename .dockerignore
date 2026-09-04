@@ -5,7 +5,7 @@
 .mysql-db
 .postgres-db
 node_modules
-vendor
+/vendor
 tests
 .dev
 .ai

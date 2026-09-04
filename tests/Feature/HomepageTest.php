@@ -2,9 +2,14 @@
 
 use App\Enums\PostStatus;
 use App\Models\Post;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    User::factory()->create();
+});
 
 test('homepage shows featured and top posts', function () {
     $post = Post::factory()->create([

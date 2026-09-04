@@ -11,6 +11,7 @@ use App\Tiptap\Nodes\Figcaption;
 use App\Tiptap\Nodes\Figure;
 use App\Tiptap\Nodes\Iframe;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Tiptap\Editor;
 use Tiptap\Extensions\StarterKit;
 use Tiptap\Marks\Link;
@@ -23,7 +24,7 @@ final class RenderPostHtmlAction
      * previously-cached renders (e.g. images missing an `alt`) are not served.
      * We version the key instead of clearing the whole cache to avoid a thundering herd.
      */
-    private const CACHE_VERSION = '.v2';
+    private const CACHE_VERSION = '.v3';
 
     /**
      * Render the given post or page content from Tiptap JSON to HTML.
@@ -80,8 +81,19 @@ final class RenderPostHtmlAction
      */
     private static function rewriteImageSrcs(string $html, string $title = ''): string
     {
-        // Fast bail-out if there's no <img
-        if (stripos($html, '<img') === false) {
+        return self::enrichHtml(html: $html, title: $title);
+    }
+
+    /**
+     * Normalize image URLs, ensure alts, and add stable heading ids so the
+     * rendered article can power the "On this page" table of contents.
+     */
+    private static function enrichHtml(string $html, string $title = ''): string
+    {
+        // Fast bail-out if there are no images and no headings to process.
+        if (stripos($html, '<img') === false
+            && stripos($html, '<h2') === false
+            && stripos($html, '<h3') === false) {
             return $html;
         }
 
@@ -129,6 +141,7 @@ final class RenderPostHtmlAction
         }
 
         self::ensureAltAttributes(images: $images, title: $title);
+        self::ensureHeadingIds(dom: $dom);
 
         $result = $dom->saveHTML();
         libxml_clear_errors();
@@ -174,5 +187,85 @@ final class RenderPostHtmlAction
                 $img->setAttribute('alt', $alt);
             }
         }
+    }
+
+    /**
+     * Add stable `id` attributes to h2/h3 headings so the table of contents
+     * links can anchor to them. Existing ids are left untouched.
+     */
+    private static function ensureHeadingIds(\DOMDocument $dom): void
+    {
+        $used = [];
+
+        foreach (['h2', 'h3'] as $tag) {
+            foreach ($dom->getElementsByTagName($tag) as $heading) {
+                /** @var \DOMElement $heading */
+                if ($heading->hasAttribute('id')) {
+                    continue;
+                }
+
+                $text = trim($heading->textContent);
+                if ($text === '') {
+                    continue;
+                }
+
+                $base = Str::slug($text) ?: 'section';
+                $id = $base;
+                $i = 2;
+                while (isset($used[$id])) {
+                    $id = $base.'-'.$i;
+                    $i++;
+                }
+                $used[$id] = true;
+
+                $heading->setAttribute('id', $id);
+            }
+        }
+    }
+
+    /**
+     * Extract a table-of-contents structure from the rendered (cached) HTML.
+     *
+     * @return array<int, array{label: string, id: string, level: int}>
+     */
+    public static function toc(Post|Page $model): array
+    {
+        $html = self::execute($model);
+
+        if (stripos($html, '<h2') === false && stripos($html, '<h3') === false) {
+            return [];
+        }
+
+        $internalErrors = libxml_use_internal_errors(true);
+        $dom = new \DOMDocument;
+        $dom->loadHTML('<?xml encoding="utf-8" ?>'.$html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+
+        $items = [];
+
+        foreach (['h2', 'h3'] as $tag) {
+            foreach ($dom->getElementsByTagName($tag) as $heading) {
+                /** @var \DOMElement $heading */
+                $text = trim($heading->textContent);
+                if ($text === '') {
+                    continue;
+                }
+
+                $id = $heading->getAttribute('id');
+                if ($id === '') {
+                    $id = Str::slug($text) ?: 'section';
+                }
+
+                $items[] = [
+                    'label' => $text,
+                    'id' => $id,
+                    'level' => $tag === 'h2' ? 2 : 3,
+                ];
+            }
+        }
+
+        libxml_clear_errors();
+        libxml_use_internal_errors($internalErrors);
+
+        return $items;
     }
 }

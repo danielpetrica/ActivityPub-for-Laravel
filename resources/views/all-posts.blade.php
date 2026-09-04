@@ -55,6 +55,10 @@
 >
     <x-layouts.hero
         :schemaType="'https://schema.org/CollectionPage'"
+        :breadcrumbs="[
+            ['label' => 'Home', 'url' => url('/')],
+            ['label' => 'All Posts'],
+        ]"
         title="All Posts"
         excerpt="Stay up to date with my latest articles on Laravel, DevOps, and more."
     />
@@ -78,6 +82,16 @@
             <div class="mt-12">
                 {{ $posts->links('vendor.pagination.allposts') }}
             </div>
+        </div>
+    </section>
+
+    <section class="bg-primary-600 py-10 text-white overflow-hidden relative">
+        <div class="absolute inset-0 opacity-10">
+            <div class="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-white blur-3xl"></div>
+            <div class="absolute -bottom-24 -right-24 w-96 h-96 rounded-full bg-white blur-3xl"></div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <x-forms.newsletter layout="inline" slug="homepage" class="text-white" />
         </div>
     </section>
 </x-layouts.app>

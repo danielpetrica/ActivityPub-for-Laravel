@@ -114,4 +114,29 @@ final class PostBusiness
                 page: $page
             );
     }
+
+    /**
+     * Get published posts that share at least one tag with the given post,
+     * excluding the post itself. Used for the "Related articles" section.
+     */
+    public static function getRelatedPosts(Post $post, int $limit = 3): Collection
+    {
+        $tagIds = $post->tags->pluck('id');
+
+        if ($tagIds->isEmpty()) {
+            return new Collection;
+        }
+
+        return Post::query()
+            ->with(relations: 'tags')
+            ->where(column: 'id', operator: '!=', value: $post->id)
+            ->where(column: 'status', operator: '=', value: PostStatus::Published)
+            ->whereHas(
+                relation: 'tags',
+                callback: fn ($query) => $query->whereIn(column: 'tags.id', values: $tagIds)
+            )
+            ->latest(column: 'published_at')
+            ->limit(value: $limit)
+            ->get();
+    }
 }

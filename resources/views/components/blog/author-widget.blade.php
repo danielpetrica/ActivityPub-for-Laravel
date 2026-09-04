@@ -15,7 +15,7 @@
     <h4 class="font-bold text-neutral-900 text-lg">{{ $name }}</h4>
     <p class="text-xs text-primary-600 font-bold uppercase tracking-wide mb-4">{{ $title }}</p>
     <p class="text-sm text-neutral-500 mb-6">{{ $bio }}</p>
-    <x-ui.button :href="$twitterUrl" variant="secondary" size="sm" class="w-full">
-        Follow on Twitter
-    </x-ui.button>
+    <div class="flex justify-center">
+        <x-social-list />
+    </div>
 </x-ui.card>

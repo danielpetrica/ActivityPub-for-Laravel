@@ -34,6 +34,10 @@
     :canonical="$canonical"
 >
     <x-layouts.hero
+        :breadcrumbs="[
+            ['label' => 'Home', 'url' => url('/')],
+            ['label' => $page->title],
+        ]"
         :title="$page->title"
         :excerpt="$page->excerpt ?? $page->meta_description ?? ''"
     />

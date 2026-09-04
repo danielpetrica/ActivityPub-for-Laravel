@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\RenderPostHtmlAction;
 use App\Classes\Business\OgImageBusiness;
 use App\Classes\Business\PostBusiness;
 use App\Enums\PostStatus;
@@ -38,7 +39,11 @@ final class StaticController extends Controller
 
         return view(
             view: 'post-show',
-            data: ['post' => $post]
+            data: [
+                'post' => $post,
+                'tocItems' => RenderPostHtmlAction::toc($post),
+                'relatedPosts' => PostBusiness::getRelatedPosts(post: $post),
+            ]
         );
     }
 
