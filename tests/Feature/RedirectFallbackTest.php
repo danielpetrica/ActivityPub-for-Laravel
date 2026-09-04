@@ -30,6 +30,21 @@ it('redirects imported ghost urls with and without a trailing slash', function (
         ->assertRedirect($destination);
 });
 
+it('redirects the legacy author page to the full posts index', function () {
+    Redirect::factory()->create([
+        'path' => '/author/andrei/',
+        'destination_url' => '/allposts/',
+        'status_code' => 301,
+        'is_enabled' => true,
+    ]);
+
+    RedirectBusiness::refreshCache();
+
+    $this->get('/author/andrei/')
+        ->assertStatus(301)
+        ->assertRedirect('/allposts/');
+});
+
 it('returns 404 for unknown legacy paths', function () {
     $this->get('/this-legacy-path-does-not-exist/')->assertStatus(404);
     $this->get('/this-legacy-path-does-not-exist')->assertStatus(404);
