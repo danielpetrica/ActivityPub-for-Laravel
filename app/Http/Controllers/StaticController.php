@@ -17,14 +17,17 @@ final class StaticController extends Controller
         $featuredPost = PostBusiness::getRecentPublished(limit: 1)->first();
         $featuredId = $featuredPost?->id;
 
-        // Exclude the featured post from the "Featured Article" and the recent
-        // sidebar lists so it is never duplicated on the homepage.
+        // Exclude the featured post from the "Featured Article" list so it is
+        // never duplicated (hero + card) on the homepage.
         $recentCreatedPosts = PostBusiness::getRecentCreated(limit: 6)
-            ->reject(fn ($post) => $post->id === $featuredId);
-
-        // Fetch one extra so the sidebar still shows 5 items after the exclusion.
-        $recentPosts = PostBusiness::getRecentPublished(limit: 6)
             ->reject(fn ($post) => $post->id === $featuredId)
+            ->values();
+
+        // The sidebar must not repeat the featured post nor the "Featured
+        // Article" card post. Fetch extra and drop both ids.
+        $mainPostId = $recentCreatedPosts->first()?->id;
+        $recentPosts = PostBusiness::getRecentPublished(limit: 7)
+            ->reject(fn ($post) => in_array($post->id, [$featuredId, $mainPostId], true))
             ->take(5)
             ->values();
 

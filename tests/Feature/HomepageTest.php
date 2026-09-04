@@ -57,3 +57,40 @@ test('featured post is not duplicated on the homepage', function () {
     expect($html)->toContain('Oldest Article');
     expect($html)->toContain('Middle Article');
 });
+
+test('no article is duplicated on the homepage', function () {
+    Post::factory()->create([
+        'title' => 'One',
+        'status' => PostStatus::Published,
+        'published_at' => now()->subDays(3),
+        'created_at' => now()->subDays(3),
+    ]);
+
+    Post::factory()->create([
+        'title' => 'Two',
+        'status' => PostStatus::Published,
+        'published_at' => now()->subDays(2),
+        'created_at' => now()->subDays(2),
+    ]);
+
+    Post::factory()->create([
+        'title' => 'Three',
+        'status' => PostStatus::Published,
+        'published_at' => now()->subDay(),
+        'created_at' => now()->subDay(),
+    ]);
+
+    $response = $this->get('/');
+    $html = $response->getContent();
+
+    // Headline elements only (hero h1 + card h2/h3), ignoring img alt text.
+    preg_match_all('/<h[1-3][^>]*itemprop="headline"[^>]*>.*?<\\/h[1-3]>/s', $html, $matches);
+
+    $titles = array_map(fn ($h) => trim(strip_tags($h)), $matches[0]);
+    $titles = array_filter($titles);
+
+    expect(count($titles))->toBe(count(array_unique($titles)))
+        ->and($titles)->toContain('One')
+        ->and($titles)->toContain('Two')
+        ->and($titles)->toContain('Three');
+});
