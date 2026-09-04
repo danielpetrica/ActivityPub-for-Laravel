@@ -25,3 +25,35 @@ test('homepage shows featured and top posts', function () {
 
     $response->assertStatus(200);
 });
+
+test('featured post is not duplicated on the homepage', function () {
+    Post::factory()->create([
+        'title' => 'Oldest Article',
+        'status' => PostStatus::Published,
+        'published_at' => now()->subDays(3),
+    ]);
+
+    Post::factory()->create([
+        'title' => 'Middle Article',
+        'status' => PostStatus::Published,
+        'published_at' => now()->subDays(2),
+    ]);
+
+    Post::factory()->create([
+        'title' => 'Newest Feature Article',
+        'status' => PostStatus::Published,
+        'published_at' => now()->subDay(),
+    ]);
+
+    $response = $this->get('/');
+
+    $response->assertStatus(200);
+
+    // The featured (newest) article must appear exactly once — only in the hero.
+    $html = $response->getContent();
+    expect(substr_count($html, 'Newest Feature Article'))->toBe(1);
+
+    // The other articles should still show up.
+    expect($html)->toContain('Oldest Article');
+    expect($html)->toContain('Middle Article');
+});

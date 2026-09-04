@@ -15,9 +15,19 @@ final class StaticController extends Controller
     public function welcome(): View
     {
         $featuredPost = PostBusiness::getRecentPublished(limit: 1)->first();
-        $recentCreatedPosts = PostBusiness::getRecentCreated(limit: 6);
-        // Show only the last 5 articles on the homepage, per request
-        $recentPosts = PostBusiness::getRecentPublished(limit: 5);
+        $featuredId = $featuredPost?->id;
+
+        // Exclude the featured post from the "Featured Article" and the recent
+        // sidebar lists so it is never duplicated on the homepage.
+        $recentCreatedPosts = PostBusiness::getRecentCreated(limit: 6)
+            ->reject(fn ($post) => $post->id === $featuredId);
+
+        // Fetch one extra so the sidebar still shows 5 items after the exclusion.
+        $recentPosts = PostBusiness::getRecentPublished(limit: 6)
+            ->reject(fn ($post) => $post->id === $featuredId)
+            ->take(5)
+            ->values();
+
         $popularTags = PostBusiness::getPopularTags(limit: 3);
         $metaImage = OgImageBusiness::generateForHomepage();
 
