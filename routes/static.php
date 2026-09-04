@@ -36,6 +36,13 @@ Route::get('/services/{service:slug}/{city:slug}', [LocalServiceController::clas
 Route::get('/mcp/github-actions', [StaticController::class, 'ghActionsMcp'])->name('mcp.gh-actions');
 
 Route::get('/demo', [StaticController::class, 'demo'])->name('demo');
+
+// Design Previews
+Route::get('/preview', fn () => view('preview.index'))->name('preview.index');
+Route::get('/preview/brutalist', fn () => view('preview.brutalist'))->name('preview.brutalist');
+Route::get('/preview/editorial', fn () => view('preview.editorial'))->name('preview.editorial');
+Route::get('/preview/glass', fn () => view('preview.glass'))->name('preview.glass');
+
 // Sitemaps
 Route::get('/talks/100-container-vps', [StaticController::class, 'vpsContainersTalk'])->name('talks.vps-containers');
 

@@ -170,6 +170,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                     @foreach($relatedPosts as $related)
                         <x-blog.article-card
+                            layout="vertical"
                             :title="$related->title"
                             :excerpt="$related->excerpt ?? $related->meta_description ?? ''"
                             :date="$related->published_at?->toDateString()"
