@@ -24,7 +24,7 @@ final class RenderPostHtmlAction
      * previously-cached renders (e.g. images missing an `alt`) are not served.
      * We version the key instead of clearing the whole cache to avoid a thundering herd.
      */
-    private const CACHE_VERSION = '.v3';
+    private const CACHE_VERSION = '.v4';
 
     /**
      * Render the given post or page content from Tiptap JSON to HTML.
@@ -97,11 +97,14 @@ final class RenderPostHtmlAction
             return $html;
         }
 
-        // Use DOMDocument for robust attribute rewriting.
+        // Use DOMDocument for robust attribute rewriting. Wrap the fragment in a
+        // single root element: with LIBXML_HTML_NOIMPLIED, saveHTML() silently
+        // drops sibling top-level elements (e.g. a <p> followed by several bare
+        // <img> tags), which truncated article bodies after the first image.
         $internalErrors = libxml_use_internal_errors(true);
         $dom = new \DOMDocument;
-        // Load with UTF-8 handling; add wrapper to ensure proper parsing.
-        $dom->loadHTML('<?xml encoding="utf-8" ?>'.$html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        $wrapped = '<div>'.$html.'</div>';
+        $dom->loadHTML('<?xml encoding="utf-8" ?>'.$wrapped, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
 
         $images = $dom->getElementsByTagName('img');
         foreach ($images as $img) {
@@ -147,7 +150,15 @@ final class RenderPostHtmlAction
         libxml_clear_errors();
         libxml_use_internal_errors($internalErrors);
 
-        return $result !== false ? $result : $html;
+        if ($result === false) {
+            return $html;
+        }
+
+        // Remove the XML processing instruction and the wrapper div we added.
+        $result = preg_replace('/^<\?xml encoding="utf-8" \?>/', '', $result) ?? $result;
+        $result = preg_replace('/^<div>(.*)<\/div>\s*$/s', '$1', $result) ?? $result;
+
+        return $result;
     }
 
     /**

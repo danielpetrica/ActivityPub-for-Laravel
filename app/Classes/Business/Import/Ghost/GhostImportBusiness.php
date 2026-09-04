@@ -38,8 +38,55 @@ final class GhostImportBusiness
 
     public function __construct(string $ghostBaseUrl, bool $dryRun = false)
     {
-        $this->ghostBaseUrl = rtrim(string: $ghostBaseUrl, characters: '/');
+        $this->ghostBaseUrl = self::normalizeGhostBaseUrl(ghostBaseUrl: $ghostBaseUrl);
         $this->dryRun = $dryRun;
+    }
+
+    /**
+     * Normalize the Ghost base URL: strip the trailing slash, fix the common
+     * "danielpetrica.co" typo (missing the 'm'), and fall back to the app URL
+     * when an empty string is passed. Without this, __GHOST_URL__ placeholders
+     * are replaced with a broken host and image downloads silently fail.
+     */
+    private static function normalizeGhostBaseUrl(string $ghostBaseUrl): string
+    {
+        $base = rtrim(string: $ghostBaseUrl, characters: '/');
+
+        if ($base === '') {
+            $base = rtrim(string: (string) config('app.url'), characters: '/');
+        }
+
+        return str_replace(search: 'danielpetrica.co', replace: 'danielpetrica.com', subject: $base);
+    }
+
+    /**
+     * Resolve any URL/asset reference found in the Ghost export into an
+     * absolute, downloadable URL. Handles:
+     *  - the __GHOST_URL__ placeholder (replaced with the base URL),
+     *  - the "danielpetrica.co" typo,
+     *  - the "media/__GHOST_URL__/…" form Ghost sometimes stores,
+     *  - plain relative root paths such as "/content/images/x.jpg".
+     */
+    private function resolveAssetUrl(string $url): string
+    {
+        // Strip a leading "media/" only when it precedes the placeholder or a
+        // /content path, so "media/__GHOST_URL__/content/…" resolves cleanly.
+        if (str_starts_with(haystack: $url, needle: 'media/')) {
+            $rest = substr(string: $url, offset: strlen('media/'));
+            if (str_starts_with(haystack: $rest, needle: '__GHOST_URL__') || str_starts_with(haystack: $rest, needle: 'content/')) {
+                $url = $rest;
+            }
+        }
+
+        $url = str_replace(search: '__GHOST_URL__', replace: $this->ghostBaseUrl, subject: $url);
+        $url = str_replace(search: 'danielpetrica.co', replace: 'danielpetrica.com', subject: $url);
+
+        // Relative root path (e.g. "/content/images/x.jpg") -> absolute against the base.
+        if (str_starts_with(haystack: $url, needle: '/') && ! str_starts_with(haystack: $url, needle: '//')) {
+            $url = $this->ghostBaseUrl.$url;
+        }
+
+        return $url;
     }
 
     public function run(string $jsonPath): array
@@ -222,7 +269,7 @@ final class GhostImportBusiness
                     'ghost_uuid' => $postData['uuid'] ?? null,
                     'feature_image_path' => $featureImage,
                     'feature_image_alt' => $featureImageAlt,
-                    'feature_image_caption' => strip_tags($featureImageCaption),
+                    'feature_image_caption' => $featureImageCaption ? strip_tags($featureImageCaption) : null,
                     'meta_title' => $metaTitle,
                     'meta_description' => $metaDesc,
                     'og_image' => $ogImage,
@@ -287,9 +334,7 @@ final class GhostImportBusiness
             return null;
         }
 
-        $fullUrl = str_starts_with(haystack: $url, needle: '__GHOST_URL__')
-            ? str_replace(search: '__GHOST_URL__', replace: $this->ghostBaseUrl, subject: $url)
-            : $url;
+        $fullUrl = $this->resolveAssetUrl(url: $url);
 
         try {
             $response = Http::timeout(seconds: 30)->get(url: $fullUrl);
@@ -297,7 +342,9 @@ final class GhostImportBusiness
             if ($response->failed()) {
                 $this->report['warnings'][] = "Failed to download image: {$fullUrl}";
 
-                return $url; // Return original URL if download fails
+                // Return the resolved URL (placeholder/typo fixed) rather than the
+                // raw export value, so the stored src is at least usable.
+                return $fullUrl;
             }
 
             $contents = $response->body();
@@ -323,21 +370,37 @@ final class GhostImportBusiness
 
     private function rewriteHtmlContent(string $html): string
     {
-        // Replace __GHOST_URL__ in HTML
-        $html = str_replace(search: '__GHOST_URL__', replace: $this->ghostBaseUrl, subject: $html);
-
-        // Download and replace inline images
+        // Download and replace inline images FIRST, before the global
+        // __GHOST_URL__ replacement. resolveAssetUrl() handles the placeholder,
+        // the danielpetrica.co typo, the "media/__GHOST_URL__/…" form and
+        // relative "/content/…" paths, so every <img> gets a usable src even
+        // when the download itself fails.
         preg_match_all(pattern: '/<img[^>]+src="([^">]+)"/i', subject: $html, matches: $matches);
 
         if (! empty($matches[1])) {
             foreach (array_unique(array: $matches[1]) as $imgUrl) {
-                $localPath = $this->ingestImage(url: $imgUrl, subfolder: 'content');
-                if ($localPath && $localPath !== $imgUrl) {
-                    $localUrl = MediaUrlBusiness::forMedia(path: $localPath);
-                    $html = str_replace(search: $imgUrl, replace: $localUrl, subject: $html);
+                $ingested = $this->ingestImage(url: $imgUrl, subfolder: 'content');
+
+                if ($ingested === null) {
+                    continue;
+                }
+
+                // Local path (download succeeded) -> proxy URL; otherwise the
+                // already-resolved absolute URL (download failed).
+                $replacement = str_starts_with(haystack: $ingested, needle: 'media/')
+                    ? MediaUrlBusiness::forMedia(path: $ingested)
+                    : $ingested;
+
+                if ($replacement !== $imgUrl) {
+                    $html = str_replace(search: $imgUrl, replace: $replacement, subject: $html);
                 }
             }
         }
+
+        // Replace __GHOST_URL__ everywhere else (links, etc.), then fix the
+        // domain typo in any remaining URLs.
+        $html = str_replace(search: '__GHOST_URL__', replace: $this->ghostBaseUrl, subject: $html);
+        $html = str_replace(search: 'danielpetrica.co', replace: 'danielpetrica.com', subject: $html);
 
         return $html;
     }

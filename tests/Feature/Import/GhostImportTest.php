@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Import;
 
+use App\Actions\RenderPostHtmlAction;
 use App\Classes\Business\Import\Ghost\GhostImportBusiness;
 use App\Enums\PostStatus;
 use App\Models\Page;
@@ -177,6 +178,66 @@ it('imports ghost data correctly', function () {
     $redirect = DB::table('redirects')->where('path', '/my-post/')->first();
     expect($redirect)->not->toBeNull();
     expect($redirect->destination_url)->toBe('/posts/my-post/');
+
+    unlink($tempFile);
+});
+
+it('resolves __GHOST_URL__ and typo domains for inline images', function () {
+    Storage::fake('public');
+
+    Http::fake([
+        'https://ghost.test/content/images/a.jpg*' => Http::response('img-a', 200),
+        'https://ghost.test/content/images/c.jpg*' => Http::response('img-c', 200),
+        'https://danielpetrica.com/content/images/b.jpg*' => Http::response('img-b', 200),
+        '*' => Http::response('nope', 404),
+    ]);
+
+    $html = '<p>Images:</p>'
+        .'<img src="__GHOST_URL__/content/images/a.jpg" alt="a">'
+        .'<img src="https://danielpetrica.co/content/images/b.jpg" alt="b">'
+        .'<img src="media/__GHOST_URL__/content/images/c.jpg" alt="c">'
+        .'<img src="__GHOST_URL__/content/images/broken.jpg" alt="broken">'
+        .'<a href="__GHOST_URL__/about">About</a>';
+
+    $jsonContent = [
+        'db' => [['data' => [
+            'tags' => [],
+            'posts' => [[
+                'id' => 'p1', 'uuid' => 'u1', 'title' => 'Ghost URLs', 'slug' => 'ghost-urls',
+                'html' => $html, 'feature_image' => null, 'featured' => 0, 'type' => 'post',
+                'status' => 'published', 'visibility' => 'public',
+                'created_at' => '2023-01-01T00:00:00.000Z', 'updated_at' => '2023-01-01T00:00:00.000Z',
+                'published_at' => '2023-01-01T00:00:00.000Z', 'custom_excerpt' => null,
+                'codeinjection_head' => null, 'codeinjection_foot' => null,
+                'canonical_url' => null, 'show_title_and_feature_image' => 1,
+            ]],
+            'posts_meta' => [], 'posts_tags' => [],
+        ]]],
+    ];
+
+    $tempFile = tempnam(sys_get_temp_dir(), 'ghost_export');
+    File::put($tempFile, json_encode($jsonContent));
+
+    $importer = new GhostImportBusiness(ghostBaseUrl: 'https://ghost.test');
+    $importer->run($tempFile);
+
+    $post = Post::where('slug', 'ghost-urls')->first();
+    expect($post)->not->toBeNull();
+
+    // Extract the rendered HTML from the stored Tiptap content.
+    $htmlOut = RenderPostHtmlAction::execute($post);
+
+    // Downloaded images are rewritten to the local media proxy.
+    // Downloaded images are rewritten to the local media proxy (path convention
+    // keeps the media/ prefix, matching how files are stored on the S3 disk).
+    expect($htmlOut)->toContain('/objectproxy/media/media/content/');
+    // The three successful downloads must not keep the placeholder or typo.
+    expect($htmlOut)->not->toContain('__GHOST_URL__');
+    expect($htmlOut)->not->toContain('danielpetrica.co');
+    // The failed download keeps a resolved (placeholder-free) absolute URL.
+    expect($htmlOut)->toContain('https://ghost.test/content/images/broken.jpg');
+    // Links get the placeholder replaced with the base URL.
+    expect($htmlOut)->toContain('https://ghost.test/about');
 
     unlink($tempFile);
 });
