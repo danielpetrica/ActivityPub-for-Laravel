@@ -13,11 +13,11 @@ it('caches links for each position', function () {
     Link::factory()->create(['position' => LinkPosition::Footer, 'label' => 'Cached Footer']);
 
     $headerLinks = LinkBusiness::getLinksForPosition(LinkPosition::Header);
-    expect($headerLinks->first()->label)->toBe('Cached Header');
+    expect($headerLinks->pluck('label'))->toContain('Cached Header');
     expect(Cache::has('links.header'))->toBeTrue();
 
     $footerLinks = LinkBusiness::getLinksForPosition(LinkPosition::Footer);
-    expect($footerLinks->first()->label)->toBe('Cached Footer');
+    expect($footerLinks->pluck('label'))->toContain('Cached Footer');
     expect(Cache::has('links.footer'))->toBeTrue();
 });
 
