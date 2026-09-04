@@ -56,9 +56,11 @@ final class GhostImportBusiness
             $base = rtrim(string: (string) config('app.url'), characters: '/');
         }
 
-        // Replace the typo "danielpetrica.co" ONLY when it is not already part
-        // of the correct "danielpetrica.com" (a naive str_replace would corrupt
-        // correct URLs into "danielpetrica.comm").
+        // Repair the corrupted "danielpetrica.comm" form (from an earlier naive
+        // str_replace), then fix the typo "danielpetrica.co" ONLY when it is not
+        // already part of the correct "danielpetrica.com".
+        $base = preg_replace('/danielpetrica\.comm/', 'danielpetrica.com', $base) ?? $base;
+
         return preg_replace('/danielpetrica\.co(?!m)/', 'danielpetrica.com', $base) ?? $base;
     }
 
@@ -82,6 +84,7 @@ final class GhostImportBusiness
         }
 
         $url = str_replace(search: '__GHOST_URL__', replace: $this->ghostBaseUrl, subject: $url);
+        $url = preg_replace('/danielpetrica\.comm/', 'danielpetrica.com', $url) ?? $url;
         $url = preg_replace('/danielpetrica\.co(?!m)/', 'danielpetrica.com', $url) ?? $url;
 
         // Relative root path (e.g. "/content/images/x.jpg") -> absolute against the base.
@@ -403,6 +406,7 @@ final class GhostImportBusiness
         // Replace __GHOST_URL__ everywhere else (links, etc.), then fix the
         // domain typo in any remaining URLs.
         $html = str_replace(search: '__GHOST_URL__', replace: $this->ghostBaseUrl, subject: $html);
+        $html = preg_replace('/danielpetrica\.comm/', 'danielpetrica.com', $html) ?? $html;
         $html = preg_replace('/danielpetrica\.co(?!m)/', 'danielpetrica.com', $html) ?? $html;
 
         return $html;

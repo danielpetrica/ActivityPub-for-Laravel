@@ -190,6 +190,7 @@ it('resolves __GHOST_URL__ and typo domains for inline images', function () {
         'https://ghost.test/content/images/c.jpg*' => Http::response('img-c', 200),
         'https://danielpetrica.com/content/images/b.jpg*' => Http::response('img-b', 200),
         'https://danielpetrica.com/content/images/d.jpg*' => Http::response('img-d', 200),
+        'https://danielpetrica.com/content/images/e.jpg*' => Http::response('img-e', 200),
         '*' => Http::response('nope', 404),
     ]);
 
@@ -197,6 +198,7 @@ it('resolves __GHOST_URL__ and typo domains for inline images', function () {
         .'<img src="__GHOST_URL__/content/images/a.jpg" alt="a">'
         .'<img src="https://danielpetrica.co/content/images/b.jpg" alt="b">'
         .'<img src="https://danielpetrica.com/content/images/d.jpg" alt="d">'
+        .'<img src="https://danielpetrica.comm/content/images/e.jpg" alt="e">'
         .'<img src="media/__GHOST_URL__/content/images/c.jpg" alt="c">'
         .'<img src="__GHOST_URL__/content/images/broken.jpg" alt="broken">'
         .'<a href="__GHOST_URL__/about">About</a>';
