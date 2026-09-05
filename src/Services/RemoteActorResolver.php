@@ -2,7 +2,9 @@
 
 namespace DanielPetrica\LaravelActivityPub\Services;
 
+use DanielPetrica\LaravelActivityPub\Contracts\ActorContract;
 use DanielPetrica\LaravelActivityPub\Jobs\FetchRemoteActor;
+use DanielPetrica\LaravelActivityPub\Models\Actor;
 use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -10,6 +12,10 @@ use Illuminate\Support\Facades\Log;
 final class RemoteActorResolver
 {
     private array $cache = [];
+
+    public function __construct(
+        private HttpSignatureService $httpSignatureService,
+    ) {}
 
     public function resolve(string $actorUri, ?array $preFetchedData = null): ?RemoteActor
     {
@@ -65,9 +71,22 @@ final class RemoteActorResolver
         }
 
         try {
+            $headers = ['Accept' => 'application/activity+json'];
+
+            $localActor = $this->resolveLocalActor();
+
+            if ($localActor !== null) {
+                $headers = $this->httpSignatureService->sign(
+                    method: 'GET',
+                    url: $actorUri,
+                    headers: $headers,
+                    actor: $localActor,
+                );
+            }
+
             $response = Http::timeout(
                 seconds: config('activitypub.federation.delivery_timeout', 10),
-            )->withHeaders(['Accept' => 'application/activity+json'])
+            )->withHeaders($headers)
                 ->get(url: $actorUri);
 
             if (! $response->successful()) {
@@ -169,5 +188,29 @@ final class RemoteActorResolver
         }
 
         return false;
+    }
+
+    /**
+     * Resolve a local actor to sign outgoing federation requests with.
+     * Prefers the currently authenticated user's actor, falling back to the
+     * first actor that holds a private key (e.g. when running in a queued job).
+     */
+    protected function resolveLocalActor(): ?Actor
+    {
+        $user = auth()->user();
+
+        if ($user instanceof ActorContract) {
+            $actor = Actor::query()
+                ->where(column: 'username', operator: '=', value: $user->getPreferredUsername())
+                ->first();
+
+            if ($actor !== null && $actor->private_key_pem !== null) {
+                return $actor;
+            }
+        }
+
+        return Actor::query()
+            ->whereNotNull('private_key_pem')
+            ->first();
     }
 }
