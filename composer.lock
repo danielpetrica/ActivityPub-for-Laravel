@@ -769,16 +769,16 @@
         },
         {
             "name": "danielpetrica/activitypub-for-laravel",
-            "version": "v0.2.1",
+            "version": "v0.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/danielpetrica/ActivityPub-for-Laravel.git",
-                "reference": "663c6da1d2942e85191557acbb4149a5bcb39c0f"
+                "reference": "2c7051ed9880e0bc4d607ab48b13c1ee647cb483"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/danielpetrica/ActivityPub-for-Laravel/zipball/663c6da1d2942e85191557acbb4149a5bcb39c0f",
-                "reference": "663c6da1d2942e85191557acbb4149a5bcb39c0f",
+                "url": "https://api.github.com/repos/danielpetrica/ActivityPub-for-Laravel/zipball/2c7051ed9880e0bc4d607ab48b13c1ee647cb483",
+                "reference": "2c7051ed9880e0bc4d607ab48b13c1ee647cb483",
                 "shasum": ""
             },
             "require": {
@@ -822,10 +822,10 @@
                 "webfinger"
             ],
             "support": {
-                "source": "https://github.com/danielpetrica/ActivityPub-for-Laravel/tree/v0.2.1",
+                "source": "https://github.com/danielpetrica/ActivityPub-for-Laravel/tree/v0.3.0",
                 "issues": "https://github.com/danielpetrica/ActivityPub-for-Laravel/issues"
             },
-            "time": "2026-06-21T13:36:55+00:00"
+            "time": "2026-09-05T15:47:45+00:00"
         },
         {
             "name": "dflydev/dot-access-data",

@@ -127,6 +127,12 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        'activitypub' => [
+            'driver' => 'stack',
+            'channels' => ['single', 'nightwatch'],
+            'ignore_exceptions' => false,
+        ],
+
     ],
 
 ];
