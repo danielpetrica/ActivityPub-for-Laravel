@@ -54,8 +54,9 @@
 
             <!-- Footer Newsletter -->
             <div>
-                <h4 class="font-bold text-neutral-900 mb-6">Newsletter</h4>
+                <h4 class="font-bold text-neutral-900 mb-6">Stay Updated</h4>
                 <x-forms.newsletter layout="footer" />
+                <p class="text-xs text-neutral-400 mt-3">Or subscribe via <a href="{{ route('rss.index') }}" class="text-primary-600 hover:underline">RSS</a>.</p>
             </div>
         </div>
 

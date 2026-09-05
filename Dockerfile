@@ -3,7 +3,9 @@ FROM node:22-alpine AS assets
 WORKDIR /app
 
 COPY package.json yarn.lock ./
-RUN corepack enable && yarn install --frozen-lockfile
+RUN --mount=type=cache,target=/root/.cache/yarn \
+    --mount=type=cache,target=/root/.cache/corepack \
+    corepack enable && yarn install --frozen-lockfile
 
 COPY vite.config.js ./
 COPY resources ./resources
@@ -79,7 +81,6 @@ COPY .env .env
 COPY --link composer.json .
 COPY --link resources/ resources/
 COPY --from=vendor /app/vendor /app/vendor
-COPY --from=vendor /app/public/build /app/public/build
 
 COPY php-prod.ini /usr/local/etc/php/php.ini
 

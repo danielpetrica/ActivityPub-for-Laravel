@@ -9,7 +9,7 @@
                 <h2 class="text-xl font-semibold text-neutral-900">Subscribe to the newsletter</h2>
                 <p class="mt-1 text-sm text-neutral-600">One email when new articles are published. No spam, unsubscribe anytime.</p>
             </div>
-            <button type="button" id="subscribe-close-btn" class="p-2 text-neutral-500 hover:text-neutral-800 rounded-md focus:outline-none" aria-label="Close subscribe dialog">
+            <button type="button" id="subscribe-close-btn" class="p-2 text-neutral-500 hover:text-neutral-800 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2" aria-label="Close subscribe dialog">
                 <x-ui.icon name="x" class="h-5 w-5" />
             </button>
         </div>
@@ -60,6 +60,9 @@
         // Support ESC to close via native dialog behaviour
     });
 
+    // TODO: Deduplicate this CSRF fetch logic — identical block exists in
+    // resources/views/components/forms/newsletter.blade.php. Extract to a shared
+    // JS module or a single inline <script> included via a Blade component.
     (function() {
         var CSRF_ENDPOINT = '{{ route('csrf-token') }}';
 

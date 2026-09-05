@@ -16,20 +16,18 @@
                     ['label' => 'Laravel', 'slug' => 'laravel'],
                 ];
             @endphp
-            <div class="hidden md:flex items-center space-x-8" role="menubar">
+            <div class="hidden md:flex items-center space-x-8">
                 @foreach($headerLinks as $link)
                     <a href="{{ $link->url }}"
                        @if($link->is_external) target="_blank" rel="noopener noreferrer" @endif
-                       class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors focus:outline-none focus:text-primary-600"
-                       role="menuitem">{{ $link->label }}</a>
+                       class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors focus:outline-none focus:text-primary-600">{{ $link->label }}</a>
                 @endforeach
 
                 <span class="w-px h-4 bg-neutral-200" aria-hidden="true"></span>
 
                 @foreach($categoryLinks as $cat)
                     <a href="{{ route('tags.show', $cat['slug']) }}"
-                       class="text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors focus:outline-none focus:text-primary-700"
-                       role="menuitem">{{ $cat['label'] }}</a>
+                       class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors focus:outline-none focus:text-primary-600">{{ $cat['label'] }}</a>
                 @endforeach
             </div>
 
@@ -84,7 +82,7 @@
     <div class="p-4 md:p-6">
         <form action="/search" method="GET" class="relative group">
             <x-ui.icon name="search" class="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 group-focus-within:text-primary-500 transition-colors" />
-            <input type="search" name="q" id="search-input" placeholder="Search articles, topics, tutorials..." class="w-full pl-12 pr-4 py-3 text-lg bg-neutral-100 rounded-xl border border-transparent focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 outline-none transition-all" autocomplete="off">
+            <input type="search" name="q" id="search-input" placeholder="Search articles, topics, tutorials..." aria-label="Search articles" class="w-full pl-12 pr-4 py-3 text-lg bg-neutral-100 rounded-xl border border-transparent focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 outline-none transition-all" autocomplete="off">
             <kbd class="absolute right-4 top-1/2 -translate-y-1/2 hidden md:inline-flex items-center px-2 py-1 text-xs font-semibold text-neutral-400 bg-white border border-neutral-200 rounded-md shadow-sm pointer-events-none">ESC</kbd>
         </form>
 
@@ -104,6 +102,17 @@
                 const isExpanded = btn.getAttribute('aria-expanded') === 'true';
                 btn.setAttribute('aria-expanded', !isExpanded);
                 menu.classList.toggle('hidden');
+            });
+        }
+
+        // Mobile menu: close on Escape, trap focus
+        if (menu) {
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && !menu.classList.contains('hidden')) {
+                    menu.classList.add('hidden');
+                    btn.setAttribute('aria-expanded', 'false');
+                    btn.focus();
+                }
             });
         }
 

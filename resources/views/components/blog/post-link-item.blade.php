@@ -13,7 +13,7 @@
     itemtype="http://schema.org/BlogPosting"
     {{ $attributes->class(['flex gap-4 py-4 group border-b border-neutral-100 last:border-b-0']) }}
 >
-    <a href="{{ $url }}" class="shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-neutral-50 border border-neutral-100">
+    <div class="shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-neutral-50 border border-neutral-100">
         @if($image)
             <img
                 itemprop="image"
@@ -26,7 +26,7 @@
                 <x-ui.icon name="code-2" size="5" class="text-neutral-600" />
             </div>
         @endif
-    </a>
+    </div>
 
     <div class="flex-1 min-w-0">
         <h3 class="font-semibold text-neutral-900 group-hover:text-primary-600 transition-colors line-clamp-2" itemprop="headline">

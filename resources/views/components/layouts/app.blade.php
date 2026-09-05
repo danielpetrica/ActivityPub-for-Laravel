@@ -81,6 +81,10 @@
     </style>
 </head>
 <body class="bg-neutral-50 text-neutral-800 antialiased selection:bg-primary-200 selection:text-primary-900">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:bg-primary-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:outline-none">
+        Skip to content
+    </a>
+
     @php
         $tagIds = [];
         if (isset($post)) {
@@ -97,7 +101,7 @@
 
     <x-layouts.header />
 
-    <main>
+    <main id="main-content">
         {{ $slot }}
     </main>
 

@@ -7,55 +7,12 @@ permissions:
     packages: write
 
 jobs:
-    prepare-assets:
-        name: Prepare frontend assets
-        runs-on: heavy
-        steps:
-            - uses: actions/checkout@v6
-
-            - name: Set up Node
-              uses: actions/setup-node@v4
-              with:
-                  node-version: 22
-
-            - name: Enable corepack
-              run: corepack enable && corepack prepare yarn@1.22.22 --activate
-
-            - name: Cache node_modules
-              uses: actions/cache@v4
-              with:
-                  path: ~/.npm
-                  key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
-                  restore-keys: |
-                      ${{ runner.os }}-node-
-
-            - name: Install dependencies
-              run: yarn install --frozen-lockfile
-
-            - name: Build assets
-              run: yarn build
-              env:
-                  NODE_ENV: production
-
-            - name: Upload built assets
-              uses: actions/upload-artifact@v3
-              with:
-                  name: assets
-                  path: public/build/
-
     build-web:
         name: Build web image
-        needs: prepare-assets
         runs-on: heavy
-        timeout-minutes: 45
+        timeout-minutes: 15
         steps:
             - uses: actions/checkout@v6
-
-            - name: Download built assets
-              uses: actions/download-artifact@v3
-              with:
-                  name: assets
-                  path: public/build/
 
             - name: Set up QEMU
               uses: docker/setup-qemu-action@v3
@@ -116,17 +73,10 @@ jobs:
 
     build-worker:
         name: Build worker image
-        needs: prepare-assets
         runs-on: heavy
-        timeout-minutes: 45
+        timeout-minutes: 15
         steps:
             - uses: actions/checkout@v6
-
-            - name: Download built assets
-              uses: actions/download-artifact@v3
-              with:
-                  name: assets
-                  path: public/build/
 
             - name: Set up QEMU
               uses: docker/setup-qemu-action@v3

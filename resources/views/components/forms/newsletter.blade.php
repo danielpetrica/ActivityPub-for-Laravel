@@ -31,14 +31,17 @@
             <p class="text-sm opacity-80">{{ $formModel?->description ?? 'Register to be the first to receive my new articles on Laravel, DevOps, and more.' }}</p>
         </div>
         <div class="flex gap-2 w-full md:w-auto">
-            <x-forms.input name="email" type="email" placeholder="Email address" required class="flex-1 bg-white text-black" />
+            <label for="newsletter-email-inline" class="sr-only">Email address</label>
+            <x-forms.input name="email" type="email" id="newsletter-email-inline" placeholder="Email address" required class="flex-1 bg-white text-black" />
             <x-ui.button type="submit" variant="dark">{{ $buttonText }}</x-ui.button>
         </div>
     @elseif($layout === 'footer')
+        <label for="footer-email" class="sr-only">Email address</label>
         <x-forms.input name="email" type="email" id="footer-email" placeholder="Email address" required class="bg-white text-black" />
         <x-ui.button type="submit" class="w-full" size="sm">{{ $buttonText }}</x-ui.button>
     @else
-        <x-forms.input name="email" type="email" placeholder="daniel@example.com" required class="flex-1 bg-white text-black" />
+        <label for="newsletter-email-default" class="sr-only">Email address</label>
+        <x-forms.input name="email" type="email" id="newsletter-email-default" placeholder="daniel@example.com" required class="flex-1 bg-white text-black" />
         <x-ui.button type="submit" variant="dark" class="px-8 py-3 shadow-lg hover:shadow-primary-500/25">
             {{ $buttonText }}
         </x-ui.button>

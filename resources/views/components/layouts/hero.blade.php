@@ -15,7 +15,7 @@
 
 <header {{ $attributes->merge(['class' => $featured ? 'relative bg-white pt-12 pb-16 lg:pt-20 lg:pb-24 overflow-hidden group/hero' : 'bg-white pt-10 pb-12 lg:pt-16 lg:pb-16 border-b border-neutral-100']) }} @if($schemaType) itemscope itemtype="{{ $schemaType }}" @endif>
 @if($featured)
-    <div class="absolute inset-0 opacity-30 pointer-events-none">
+    <div class="absolute inset-0 opacity-30 pointer-events-none" aria-hidden="true">
         <div class="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-primary-100 blur-3xl"></div>
         <div class="absolute top-1/2 left-0 w-72 h-72 rounded-full bg-orange-100 blur-3xl"></div>
     </div>
