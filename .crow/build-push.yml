@@ -106,40 +106,30 @@ steps:
       - prepare-env
 
   - name: merge-web-manifest
-    image: codefloe.com/crow-plugins/docker-buildx
-    privileged: true
-    settings:
-      registry: forgejo.tailb7c9d.ts.net
-      repo: forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com
-      manifest: true
-      manifest_sources:
-        - forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com:web-amd64
-        - forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com:web-arm64
-      tags:
-        - web
-      username:
+    image: alpine
+    commands:
+      - apk add --no-cache docker-cli docker-cli-buildx
+      - echo "$ORG_TOKEN_DOCKER" | docker login forgejo.tailb7c9d.ts.net -u "$ORG_USERNAME_DOCKER" --password-stdin
+      - docker buildx imagetools create -t forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com:web forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com:web-amd64 forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com:web-arm64
+    environment:
+      ORG_USERNAME_DOCKER:
         from_secret: org_username_docker
-      password:
+      ORG_TOKEN_DOCKER:
         from_secret: org_token_docker
     depends_on:
       - build-and-push-web-amd64
       - build-and-push-web-arm64
 
   - name: merge-worker-manifest
-    image: codefloe.com/crow-plugins/docker-buildx
-    privileged: true
-    settings:
-      registry: forgejo.tailb7c9d.ts.net
-      repo: forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com
-      manifest: true
-      manifest_sources:
-        - forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com:worker-amd64
-        - forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com:worker-arm64
-      tags:
-        - worker
-      username:
+    image: alpine
+    commands:
+      - apk add --no-cache docker-cli docker-cli-buildx
+      - echo "$ORG_TOKEN_DOCKER" | docker login forgejo.tailb7c9d.ts.net -u "$ORG_USERNAME_DOCKER" --password-stdin
+      - docker buildx imagetools create -t forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com:worker forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com:worker-amd64 forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com:worker-arm64
+    environment:
+      ORG_USERNAME_DOCKER:
         from_secret: org_username_docker
-      password:
+      ORG_TOKEN_DOCKER:
         from_secret: org_token_docker
     depends_on:
       - build-and-push-worker-amd64
