@@ -19,11 +19,13 @@
     ],
     "guidelines": true,
     "skills": [
+        "infer-conventions",
         "ai-sdk-development",
         "laravel-best-practices",
         "configuring-horizon",
         "mcp-development",
         "configure-nightwatch",
+        "octane-development",
         "scout-development",
         "livewire-development",
         "pest-testing",
