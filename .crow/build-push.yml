@@ -35,6 +35,8 @@ steps:
     settings:
       registry: forgejo.tailb7c9d.ts.net
       repo: forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com
+      tags:
+        - web
       target: frankenphp
       platforms: linux/amd64,linux/arm64
       auto_tag: true
@@ -53,6 +55,8 @@ steps:
     settings:
       registry: forgejo.tailb7c9d.ts.net
       repo: forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com
+      tags:
+        - worker
       target: worker
       platforms: linux/amd64,linux/arm64
       auto_tag: true
