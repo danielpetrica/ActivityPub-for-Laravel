@@ -84,9 +84,9 @@ COPY --from=vendor /app/vendor /app/vendor
 
 COPY php-prod.ini /usr/local/etc/php/php.ini
 
-RUN mkdir -p storage bootstrap/cache
-RUN chown -R 82:82 /app
-RUN chmod -R 775 storage bootstrap/cache
+RUN mkdir -p storage bootstrap/cache \
+    && chown -R 82:82 /app \
+    && chmod -R 775 storage bootstrap/cache
 
 USER 82
 CMD ["php", "artisan", "horizon"]
@@ -117,6 +117,9 @@ COPY php-prod.ini /usr/local/etc/php/php.ini
 # assets so a stale public/build in the build context never wins.
 COPY --link public/ public/
 COPY --from=vendor /app/public/build /app/public/build
+
+# Ensure no Vite dev server marker leaks into production
+RUN rm -f /app/public/hot
 
 COPY entrypoint.sh .
 RUN chmod +x /app/entrypoint.sh
