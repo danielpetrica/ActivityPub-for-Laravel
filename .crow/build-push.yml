@@ -29,19 +29,18 @@ steps:
         LOG_LEVEL=error
         EOF
 
-  - name: build-and-push-web
+  - name: build-and-push-web-amd64
     image: codefloe.com/crow-plugins/docker-buildx
     privileged: true
     settings:
       registry: forgejo.tailb7c9d.ts.net
       repo: forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com
       tags:
-        - web
+        - web-amd64
       target: frankenphp
-      platforms: linux/amd64,linux/arm64
-      auto_tag: true
+      platforms: linux/amd64
       cache_images:
-        - forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com:web-cache
+        - forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com:web-amd64-cache
       username:
         from_secret: org_username_docker
       password:
@@ -49,25 +48,102 @@ steps:
     depends_on:
       - prepare-env
 
-  - name: build-and-push-worker
+  - name: build-and-push-web-arm64
     image: codefloe.com/crow-plugins/docker-buildx
     privileged: true
     settings:
       registry: forgejo.tailb7c9d.ts.net
       repo: forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com
       tags:
-        - worker
-      target: worker
-      platforms: linux/amd64,linux/arm64
-      auto_tag: true
+        - web-arm64
+      target: frankenphp
+      platforms: linux/arm64
       cache_images:
-        - forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com:worker-cache
+        - forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com:web-arm64-cache
       username:
         from_secret: org_username_docker
       password:
         from_secret: org_token_docker
     depends_on:
       - prepare-env
+
+  - name: build-and-push-worker-amd64
+    image: codefloe.com/crow-plugins/docker-buildx
+    privileged: true
+    settings:
+      registry: forgejo.tailb7c9d.ts.net
+      repo: forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com
+      tags:
+        - worker-amd64
+      target: worker
+      platforms: linux/amd64
+      cache_images:
+        - forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com:worker-amd64-cache
+      username:
+        from_secret: org_username_docker
+      password:
+        from_secret: org_token_docker
+    depends_on:
+      - prepare-env
+
+  - name: build-and-push-worker-arm64
+    image: codefloe.com/crow-plugins/docker-buildx
+    privileged: true
+    settings:
+      registry: forgejo.tailb7c9d.ts.net
+      repo: forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com
+      tags:
+        - worker-arm64
+      target: worker
+      platforms: linux/arm64
+      cache_images:
+        - forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com:worker-arm64-cache
+      username:
+        from_secret: org_username_docker
+      password:
+        from_secret: org_token_docker
+    depends_on:
+      - prepare-env
+
+  - name: merge-web-manifest
+    image: codefloe.com/crow-plugins/docker-buildx
+    privileged: true
+    settings:
+      registry: forgejo.tailb7c9d.ts.net
+      repo: forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com
+      manifest: true
+      manifest_sources:
+        - forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com:web-amd64
+        - forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com:web-arm64
+      tags:
+        - web
+      username:
+        from_secret: org_username_docker
+      password:
+        from_secret: org_token_docker
+    depends_on:
+      - build-and-push-web-amd64
+      - build-and-push-web-arm64
+
+  - name: merge-worker-manifest
+    image: codefloe.com/crow-plugins/docker-buildx
+    privileged: true
+    settings:
+      registry: forgejo.tailb7c9d.ts.net
+      repo: forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com
+      manifest: true
+      manifest_sources:
+        - forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com:worker-amd64
+        - forgejo.tailb7c9d.ts.net/daniel_org/danielpetrica.com:worker-arm64
+      tags:
+        - worker
+      username:
+        from_secret: org_username_docker
+      password:
+        from_secret: org_token_docker
+    depends_on:
+      - build-and-push-worker-amd64
+      - build-and-push-worker-arm64
 
   - name: deploy
     image: alpine
@@ -86,5 +162,5 @@ steps:
       - chmod 600 ~/.ssh/deploy_key
       - ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key "ubuntu@$DEPLOY_HOST" "cd /home/ubuntu/traefik/danielpetrica/prod && ./deploy.sh"
     depends_on:
-      - build-and-push-web
-      - build-and-push-worker
+      - merge-web-manifest
+      - merge-worker-manifest
