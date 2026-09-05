@@ -32,11 +32,8 @@
             <div class="grid lg:grid-cols-12 gap-12 items-center">
                 <div class="lg:col-span-7 order-2 lg:order-1 relative">
                     <a href="{{ $url }}" class="block group/hero-link">
-                        <x-ui.badge variant="primary" size="md" class="mb-6 gap-2">
-                            <span class="w-2 h-2 rounded-full bg-primary-500 animate-pulse"></span>
-                            Latest Feature
-                        </x-ui.badge>
-                        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-neutral-900 tracking-tight leading-tight mb-6 group-hover/hero-link:text-primary-600 transition-colors" itemprop="headline">
+                        <span class="block text-sm font-bold uppercase tracking-wider text-primary-600 mb-4">Latest</span>
+                        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-neutral-900 tracking-tight leading-tight mb-6 group-hover/hero-link:text-primary-600 transition-colors" itemprop="headline">
                             {!! $title !!}
                         </h1>
                         @if($excerpt)
@@ -83,7 +80,7 @@
                 @if($image)
                     <div class="lg:col-span-5 order-1 lg:order-2">
                         <a href="{{ $url }}" class="block group/hero-image relative">
-                            <div class="absolute inset-0 bg-primary-600 rounded-2xl rotate-3 group-hover/hero-image:rotate-2 transition-transform opacity-20"></div>
+                            <div class="absolute inset-0 bg-primary-600 rounded-2xl transition-transform opacity-20"></div>
                             <img itemprop="image" src="{{ $image }}" alt="{{ strip_tags($title) }}" class="relative rounded-2xl shadow-2xl w-full h-auto object-contain bg-neutral-50 aspect-[1200/630] border border-neutral-100 group-hover/hero-image:scale-[1.02] transition-transform duration-500">
                         </a>
                     </div>
@@ -98,7 +95,7 @@
                 </div>
             @endif
 
-            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-neutral-900 tracking-tight leading-tight mb-6" itemprop="headline">
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-900 tracking-tight leading-tight mb-6" itemprop="headline">
                 {!! $title !!}
             </h1>
 

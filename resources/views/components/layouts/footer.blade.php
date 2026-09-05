@@ -54,8 +54,7 @@
 
             <!-- Footer Newsletter -->
             <div>
-                <h4 class="font-bold text-neutral-900 mb-6">Weekly Digest</h4>
-                <p class="text-xs text-neutral-500 mb-4">Subscribe for the latest tech updates of my blog.</p>
+                <h4 class="font-bold text-neutral-900 mb-6">Newsletter</h4>
                 <x-forms.newsletter layout="footer" />
             </div>
         </div>

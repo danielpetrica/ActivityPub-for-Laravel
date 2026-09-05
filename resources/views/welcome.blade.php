@@ -28,7 +28,7 @@
                 <div class="lg:col-span-2">
                     @php $mainPost = $recentCreatedPosts->first(); @endphp
                     @if($mainPost)
-                        <h2 class="text-2xl font-extrabold text-neutral-900 mb-8">Featured Article</h2>
+                        <h2 class="text-2xl font-bold text-neutral-900 mb-8">Featured Article</h2>
                         <x-blog.post-card-featured
                             :title="$mainPost->title"
                             :excerpt="$mainPost->excerpt ?? $mainPost->meta_description ?? ''"
@@ -42,13 +42,14 @@
                 </div>
 
                 <div class="lg:col-span-1">
-                    <h2 class="text-2xl font-extrabold text-neutral-900 mb-8">Recent Posts</h2>
+                    <h2 class="text-2xl font-bold text-neutral-900 mb-8">Recent Posts</h2>
                     <div class="divide-y divide-neutral-100">
                         @foreach($recentPosts as $post)
                             <x-blog.post-link-item
                                 :title="$post->title"
                                 :excerpt="$post->excerpt ?? $post->meta_description ?? ''"
                                 :date="$post->published_at?->toDateString()"
+                                readTime="5 min read"
                                 :tags="$post->tags"
                                 :url="route('posts.show', $post->slug)"
                                 :image="$post->feature_image_path ? MediaUrlBusiness::forMedia($post->feature_image_path) : null"
@@ -67,7 +68,7 @@
     </section>
 
     {{-- Newsletter CTA --}}
-    <section class="bg-primary-600 py-10 text-white overflow-hidden relative">
+    <section class="bg-primary-600 py-16 text-white overflow-hidden relative">
         <div class="absolute inset-0 opacity-10">
             <div class="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-white blur-3xl"></div>
             <div class="absolute -bottom-24 -right-24 w-96 h-96 rounded-full bg-white blur-3xl"></div>
@@ -82,7 +83,6 @@
         <section class="py-12 bg-neutral-50 border-y border-neutral-100">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex flex-wrap items-center justify-center gap-3">
-                    <span class="text-sm font-bold text-neutral-400 uppercase tracking-wider">Popular Topics:</span>
                     @foreach($popularTags as $tag)
                         <x-ui.badge href="{{ route('tags.show', $tag->slug) }}" variant="secondary" size="md">
                             {{ $tag->name }}

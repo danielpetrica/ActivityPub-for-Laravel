@@ -60,12 +60,12 @@ COPY --link database/ database/
 COPY --link storage/ storage/
 
 # Stage 3: Worker image (CLI — runs Horizon / schedule:work)
-# Ready-to-go PHP CLI image; install only what Horizon/the app need at runtime.
-FROM php:8.5-cli-alpine AS worker
+# Pre-built PHP CLI image with common extensions already installed.
+# Only add pdo_pgsql which isn't included by default.
+FROM serversideup/php:8.5-cli-alpine AS worker
+USER root
 
-# Redis via predis Composer package (no C extension required)
-COPY --from=vendor /usr/local/bin/install-php-extensions /usr/local/bin/
-RUN install-php-extensions pcntl intl pdo_pgsql redis
+RUN install-php-extensions pdo_pgsql
 
 ARG APP_ENV=production
 WORKDIR /app
@@ -91,14 +91,12 @@ USER 82
 CMD ["php", "artisan", "horizon"]
 
 # Stage 4: Web image (FrankenPHP / Octane)
-FROM dunglas/frankenphp:php8.5-alpine AS frankenphp
+# Pre-built FrankenPHP image with Composer, common extensions, and Caddy included.
+FROM serversideup/php:8.5-frankenphp AS frankenphp
+USER root
 WORKDIR /app
 
 ARG APP_ENV=production
-ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
-RUN install-php-extensions pcntl intl pdo_pgsql imagick redis
-
-# Redis via predis Composer package (no C extension required)
 
 COPY --link app/ app/
 COPY --link bootstrap/ bootstrap/
@@ -111,8 +109,6 @@ COPY --link resources/ resources/
 
 COPY .env .env
 COPY --from=vendor /app/vendor /app/vendor
-
-COPY --from=vendor /usr/bin/composer /usr/bin/composer
 
 COPY php-prod.ini /usr/local/etc/php/php.ini
 
