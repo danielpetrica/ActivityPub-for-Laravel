@@ -134,4 +134,29 @@ return [
         'enabled' => env('ACTIVITYPUB_CACHE_ENABLED', true),
         'ttl' => 86400,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Logging
+    |--------------------------------------------------------------------------
+    |
+    | Enable detailed logging for federation operations. When enabled, the
+    | package logs every step of remote actor resolution, WebFinger lookups,
+    | HTTP responses from remote servers, and delivery outcomes.
+    |
+    | Use a dedicated log channel to keep federation logs separate from your
+    | application logs. Define the channel in config/logging.php:
+    |
+    |   'activitypub' => [
+    |       'driver' => 'daily',
+    |       'path' => storage_path('logs/activitypub.log'),
+    |       'days' => 14,
+    |   ],
+    |
+    */
+    'logging' => [
+        'enabled' => env('ACTIVITYPUB_LOGGING_ENABLED', false),
+        'channel' => env('ACTIVITYPUB_LOG_CHANNEL'),
+        'level' => env('ACTIVITYPUB_LOG_LEVEL', 'debug'),
+    ],
 ];

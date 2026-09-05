@@ -78,9 +78,53 @@ ACTIVITYPUB_DOMAIN=https://your-domain.com          # Actor identifiers domain (
 ACTIVITYPUB_FEDERATION_ENABLED=true                  # Enable outbound federation
 ACTIVITYPUB_FEDIVERSE_ENABLED=true                   # Enable Blade-based fediverse web UI
 ACTIVITYPUB_CACHE_ENABLED=true                       # Cache-Control headers on ActivityPub responses
+ACTIVITYPUB_LOGGING_ENABLED=true                     # Enable detailed federation logging
+ACTIVITYPUB_LOG_CHANNEL=activitypub                  # Log channel (optional, defaults to app default)
+ACTIVITYPUB_LOG_LEVEL=info                           # Log level: debug, info, warning, error
 ```
 
 The full configuration is published to `config/activitypub.php` and includes settings for routes, HTTP signatures, federation timeouts, user agent, and the actor model class.
+
+## Debugging
+
+Federation issues (failed follows, unreachable remote actors) can be hard to diagnose in production. Enable detailed logging to trace the full resolution flow:
+
+```env
+ACTIVITYPUB_LOGGING_ENABLED=true
+ACTIVITYPUB_LOG_CHANNEL=activitypub   # optional — uses app default if omitted
+ACTIVITYPUB_LOG_LEVEL=info            # debug|info|warning|error
+```
+
+When enabled, the package logs every step of remote actor resolution:
+
+- WebFinger discovery requests and results
+- HTTP status codes and response bodies from remote servers
+- SSRF protection blocks
+- HTTP signature signing decisions
+- Activity delivery outcomes
+
+Example log output:
+
+```
+[2026-09-06 12:00:00] local.INFO: ActivityPub: Resolving handle {"handle":"user@mastodon.social"}
+[2026-09-06 12:00:00] local.INFO: ActivityPub: WebFinger lookup {"resource":"acct:user@mastodon.social"}
+[2026-09-06 12:00:01] local.INFO: ActivityPub: WebFinger resolved {"href":"https://mastodon.social/users/user"}
+[2026-09-06 12:00:01] local.INFO: ActivityPub: Fetching remote actor {"actorUri":"https://mastodon.social/users/user"}
+[2026-09-06 12:00:02] local.WARNING: ActivityPub: Remote actor HTTP fetch failed {"actorUri":"...","statusCode":403}
+```
+
+Point your log channel to a file or external service to capture these in production:
+
+```php
+// config/logging.php
+'channels' => [
+    'activitypub' => [
+        'driver' => 'daily',
+        'path' => storage_path('logs/activitypub.log'),
+        'days' => 14,
+    ],
+],
+```
 
 ## Usage
 

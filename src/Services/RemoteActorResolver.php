@@ -6,11 +6,13 @@ use DanielPetrica\LaravelActivityPub\Contracts\ActorContract;
 use DanielPetrica\LaravelActivityPub\Jobs\FetchRemoteActor;
 use DanielPetrica\LaravelActivityPub\Models\Actor;
 use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
+use DanielPetrica\LaravelActivityPub\Traits\LogsActivityPub;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 final class RemoteActorResolver
 {
+    use LogsActivityPub;
+
     private array $cache = [];
 
     public function __construct(
@@ -22,9 +24,13 @@ final class RemoteActorResolver
         $data = $preFetchedData;
 
         if ($data === null) {
+            $this->activityPubLog('info', 'Resolving remote actor', ['actorUri' => $actorUri]);
+
             $data = $this->fetchActorData(actorUri: $actorUri);
 
             if ($data === null) {
+                $this->activityPubLog('warning', 'Could not resolve remote actor', ['actorUri' => $actorUri]);
+
                 return null;
             }
         }
@@ -67,6 +73,8 @@ final class RemoteActorResolver
     public function fetchActorData(string $actorUri): ?array
     {
         if ($this->isPrivateDomain(url: $actorUri)) {
+            $this->activityPubLog('warning', 'Private domain blocked', ['actorUri' => $actorUri]);
+
             return null;
         }
 
@@ -90,20 +98,37 @@ final class RemoteActorResolver
                 ->get(url: $actorUri);
 
             if (! $response->successful()) {
+                $this->activityPubLog('warning', 'Remote actor HTTP fetch failed', [
+                    'actorUri' => $actorUri,
+                    'statusCode' => $response->status(),
+                    'responseBody' => mb_strcut($response->body(), 0, 500),
+                ]);
+
                 return null;
             }
 
             $data = $response->json();
 
             if ($data === null || $data === []) {
+                $this->activityPubLog('warning', 'Remote actor returned empty or invalid data', [
+                    'actorUri' => $actorUri,
+                    'responseBody' => mb_strcut($response->body(), 0, 500),
+                ]);
+
                 return null;
             }
 
+            $this->activityPubLog('info', 'Remote actor fetched successfully', [
+                'actorUri' => $actorUri,
+                'username' => $data['preferredUsername'] ?? 'unknown',
+            ]);
+
             return $data;
         } catch (\Exception $e) {
-            Log::debug('RemoteActorResolver: fetch failed', [
+            $this->activityPubLog('warning', 'Remote actor fetch exception', [
                 'actorUri' => $actorUri,
                 'error' => $e->getMessage(),
+                'exception' => get_class($e),
             ]);
 
             return null;
@@ -157,7 +182,7 @@ final class RemoteActorResolver
 
         if (filter_var(value: $ip, filter: FILTER_VALIDATE_IP, options: FILTER_FLAG_IPV6)) {
             if ($ip === '::1') {
-                Log::debug('RemoteActorResolver: private IP blocked', ['url' => $url, 'ip' => $ip]);
+                $this->activityPubLog('warning', 'Private IPv6 loopback blocked', ['url' => $url, 'ip' => $ip]);
 
                 return true;
             }
@@ -182,7 +207,7 @@ final class RemoteActorResolver
         );
 
         if ($isPrivate) {
-            Log::debug('RemoteActorResolver: private IP blocked', ['url' => $url, 'ip' => $ip]);
+            $this->activityPubLog('warning', 'Private IP blocked', ['url' => $url, 'ip' => $ip]);
 
             return true;
         }

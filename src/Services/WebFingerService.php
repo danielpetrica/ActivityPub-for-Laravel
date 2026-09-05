@@ -2,12 +2,13 @@
 
 namespace DanielPetrica\LaravelActivityPub\Services;
 
+use DanielPetrica\LaravelActivityPub\Traits\LogsActivityPub;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 final class WebFingerService
 {
+    use LogsActivityPub;
     public function resolve(string $resource): ?array
     {
         if (str_starts_with(haystack: $resource, needle: 'acct:')) {
@@ -38,6 +39,8 @@ final class WebFingerService
     protected function fetch(string $url): ?array
     {
         if ($this->isPrivateDomain(url: $url)) {
+            $this->activityPubLog('warning', 'WebFinger private domain blocked', ['url' => $url]);
+
             return null;
         }
 
@@ -46,36 +49,54 @@ final class WebFingerService
             ttl: 300,
             callback: function () use ($url): ?array {
                 try {
+                    $this->activityPubLog('info', 'WebFinger lookup', ['url' => $url]);
+
                     $response = Http::timeout(
                         seconds: config('activitypub.federation.delivery_timeout', 10),
                     )->get(url: $url);
 
                     if (! $response->successful()) {
+                        $this->activityPubLog('warning', 'WebFinger HTTP request failed', [
+                            'url' => $url,
+                            'statusCode' => $response->status(),
+                            'responseBody' => mb_strcut($response->body(), 0, 500),
+                        ]);
+
                         return null;
                     }
 
                     $data = $response->json();
 
                     if ($data === null || ! isset($data['links'])) {
+                        $this->activityPubLog('warning', 'WebFinger response missing links', [
+                            'url' => $url,
+                            'responseBody' => mb_strcut($response->body(), 0, 500),
+                        ]);
+
                         return null;
                     }
 
                     foreach ($data['links'] as $link) {
                         if (isset($link['type'], $link['href'])
                             && $link['type'] === 'application/activity+json') {
+                            $this->activityPubLog('info', 'WebFinger resolved', ['url' => $url, 'href' => $link['href']]);
+
                             return $link;
                         }
                     }
 
+                    $this->activityPubLog('warning', 'WebFinger no activity+json link found', [
+                        'url' => $url,
+                        'links' => $data['links'],
+                    ]);
+
                     return null;
                 } catch (\Exception $e) {
-                    Log::debug(
-                        message: 'WebFingerService: Request failed',
-                        context: [
-                            'url' => $url,
-                            'error' => $e->getMessage(),
-                        ],
-                    );
+                    $this->activityPubLog('warning', 'WebFinger request exception', [
+                        'url' => $url,
+                        'error' => $e->getMessage(),
+                        'exception' => get_class($e),
+                    ]);
 
                     return null;
                 }
@@ -99,7 +120,7 @@ final class WebFingerService
 
         if (filter_var(value: $ip, filter: FILTER_VALIDATE_IP, options: FILTER_FLAG_IPV6)) {
             if ($ip === '::1') {
-                Log::debug('WebFingerService: private IP blocked', ['url' => $url, 'ip' => $ip]);
+                $this->activityPubLog('warning', 'WebFinger private IPv6 loopback blocked', ['url' => $url, 'ip' => $ip]);
 
                 return true;
             }
@@ -124,7 +145,7 @@ final class WebFingerService
         );
 
         if ($isPrivate) {
-            Log::debug('WebFingerService: private IP blocked', ['url' => $url, 'ip' => $ip]);
+            $this->activityPubLog('warning', 'WebFinger private IP blocked', ['url' => $url, 'ip' => $ip]);
 
             return true;
         }

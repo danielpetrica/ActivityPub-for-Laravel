@@ -12,14 +12,15 @@ use DanielPetrica\LaravelActivityPub\Models\Actor;
 use DanielPetrica\LaravelActivityPub\Models\Following;
 use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
 use DanielPetrica\LaravelActivityPub\Services\RemoteActorResolver;
+use DanielPetrica\LaravelActivityPub\Traits\LogsActivityPub;
 use DanielPetrica\LaravelActivityPub\Traits\ResolvesLocalActor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Log;
 
 final class InteractController extends Controller
 {
+    use LogsActivityPub;
     use ResolvesLocalActor;
 
     public function __construct(
@@ -35,13 +36,30 @@ final class InteractController extends Controller
         $localActor = $this->resolveLocalActor();
 
         $remoteActorUrl = $request->input(key: 'remote_actor_url');
+
+        $this->activityPubLog('info', 'Follow request initiated', [
+            'localActor' => $localActor->username,
+            'remoteActorUrl' => $remoteActorUrl,
+        ]);
+
         $remoteActor = $this->resolveRemoteActor(actorUrl: $remoteActorUrl, localActor: $localActor);
 
         if ($remoteActor === null) {
+            $this->activityPubLog('warning', 'Could not resolve remote actor for follow', [
+                'localActor' => $localActor->username,
+                'remoteActorUrl' => $remoteActorUrl,
+            ]);
+
             return redirect()
                 ->back()
                 ->withErrors(['remote_actor_url' => 'Could not resolve the remote actor']);
         }
+
+        $this->activityPubLog('info', 'Remote actor resolved, dispatching follow activity', [
+            'localActor' => $localActor->username,
+            'remoteActorUrl' => $remoteActorUrl,
+            'inboxUrl' => $remoteActor->inbox_url,
+        ]);
 
         $activity = $this->activityBuilder->follow(actor: $localActor, objectUrl: $remoteActorUrl);
 
@@ -67,13 +85,10 @@ final class InteractController extends Controller
             'status' => FollowerStatus::Pending,
         ]);
 
-        Log::debug(
-            message: 'InteractController: Follow activity dispatched',
-            context: [
-                'localActor' => $localActor->username,
-                'targetActor' => $remoteActorUrl,
-            ],
-        );
+        $this->activityPubLog('info', 'Follow activity dispatched', [
+            'localActor' => $localActor->username,
+            'targetActor' => $remoteActorUrl,
+        ]);
 
         return redirect()
             ->route(route: 'fediverse.following')

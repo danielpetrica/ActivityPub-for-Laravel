@@ -6,6 +6,7 @@ use DanielPetrica\LaravelActivityPub\Enums\ActivityType;
 use DanielPetrica\LaravelActivityPub\Models\Activity;
 use DanielPetrica\LaravelActivityPub\Services\RemoteActorResolver;
 use DanielPetrica\LaravelActivityPub\Services\WebFingerService;
+use DanielPetrica\LaravelActivityPub\Traits\LogsActivityPub;
 use DanielPetrica\LaravelActivityPub\Traits\ResolvesLocalActor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,6 +15,7 @@ use Illuminate\View\View;
 
 final class DiscoverController extends Controller
 {
+    use LogsActivityPub;
     use ResolvesLocalActor;
 
     public function __construct(
@@ -57,10 +59,14 @@ final class DiscoverController extends Controller
                 ->withErrors(['handle' => 'Could not parse domain from the address']);
         }
 
+        $this->activityPubLog('info', 'Resolving handle', ['handle' => $handle, 'username' => $username, 'domain' => $domain]);
+
         $resource = 'acct:'.$username.'@'.$domain;
         $webfingerResult = $this->webFingerService->resolve(resource: $resource);
 
         if ($webfingerResult === null || ! isset($webfingerResult['href'])) {
+            $this->activityPubLog('warning', 'WebFinger resolution failed', ['handle' => $handle, 'resource' => $resource]);
+
             return redirect()
                 ->route(route: 'fediverse.discover')
                 ->withErrors(['handle' => 'Could not find that Fediverse account']);
@@ -68,13 +74,19 @@ final class DiscoverController extends Controller
 
         $actorUrl = $webfingerResult['href'];
 
+        $this->activityPubLog('info', 'WebFinger resolved, fetching actor profile', ['handle' => $handle, 'actorUrl' => $actorUrl]);
+
         $data = $this->remoteActorResolver->fetchActorData(actorUri: $actorUrl);
 
         if ($data === null) {
+            $this->activityPubLog('warning', 'Could not fetch remote actor profile', ['handle' => $handle, 'actorUrl' => $actorUrl]);
+
             return redirect()
                 ->route(route: 'fediverse.discover')
                 ->withErrors(['handle' => 'Could not fetch the remote actor profile']);
         }
+
+        $this->activityPubLog('info', 'Remote actor profile fetched', ['handle' => $handle, 'actorUrl' => $actorUrl, 'username' => $data['preferredUsername'] ?? 'unknown']);
 
         $remoteActorModel = $this->remoteActorResolver->upsertFromData(
             actorUri: $actorUrl,
