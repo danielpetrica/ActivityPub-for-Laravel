@@ -23,6 +23,14 @@ class CommentForm
                     ->searchable(),
                 TextInput::make('author_name')
                     ->placeholder('Guest Name'),
+                TextInput::make('email')
+                    ->label('Email')
+                    ->placeholder('Guest Email')
+                    ->email()
+                    ->nullable(),
+                Toggle::make('subscribe_to_updates')
+                    ->label('Subscribe to Updates')
+                    ->default(false),
                 Textarea::make('comment')
                     ->required()
                     ->columnSpanFull(),

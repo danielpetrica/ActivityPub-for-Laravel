@@ -16,6 +16,8 @@ use Illuminate\Support\Carbon;
  * @property int|null $remote_actor_id
  * @property string|null $remote_activity_id
  * @property string|null $author_name
+ * @property string|null $email
+ * @property bool $subscribe_to_updates
  * @property string $comment
  * @property bool $is_approved
  * @property Carbon $created_at
@@ -29,10 +31,11 @@ final class Comment extends Model
     /** @use HasFactory<CommentFactory> */
     use HasFactory;
 
-    protected $fillable = ['post_id', 'user_id', 'remote_actor_id', 'remote_activity_id', 'author_name', 'comment', 'is_approved'];
+    protected $fillable = ['post_id', 'user_id', 'remote_actor_id', 'remote_activity_id', 'author_name', 'email', 'subscribe_to_updates', 'comment', 'is_approved'];
 
     protected $casts = [
         'is_approved' => 'boolean',
+        'subscribe_to_updates' => 'boolean',
         'remote_actor_id' => 'integer',
         'remote_activity_id' => 'string',
     ];

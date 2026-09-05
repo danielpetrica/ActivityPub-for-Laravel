@@ -80,7 +80,7 @@ final class StaticController extends Controller
             ->with(relations: 'tags')
             ->where(column: 'status', operator: '=', value: PostStatus::Published)
             ->latest(column: 'published_at')
-            ->paginate(perPage: 12);
+            ->paginate(perPage: 15);
 
         return view(
             view: 'tag-show',
@@ -93,7 +93,7 @@ final class StaticController extends Controller
 
     public function postIndex(int $page = 1): View
     {
-        $posts = PostBusiness::getPaginatedPublished(perPage: 12, page: $page);
+        $posts = PostBusiness::getPaginatedPublished(perPage: 15, page: $page);
 
         return view(
             view: 'all-posts',

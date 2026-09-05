@@ -8,7 +8,10 @@
             <img
                 src="{{ asset('image-logo.png') }}"
                 alt="Daniel Petrica logo"
-                class="w-full h-full object-contain "
+                width="40"
+                height="40"
+                class="w-full h-full object-contain max-w-[40px]"
+                loading="eager"
             />
         </figure>
     </div>

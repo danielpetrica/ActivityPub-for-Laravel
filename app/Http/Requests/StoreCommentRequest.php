@@ -16,6 +16,8 @@ final class StoreCommentRequest extends FormRequest
             'post_id' => ['required', 'exists:posts,id'],
             'author_name' => ['required_without:user_id', 'nullable', 'string', 'max:255'],
             'comment' => ['required', 'string', 'min:3', 'max:1000'],
+            'email' => ['required', 'email:rfc', 'max:255'],
+            'subscribe_to_updates' => ['nullable', 'boolean'],
         ];
     }
 }

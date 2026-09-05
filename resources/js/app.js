@@ -88,11 +88,19 @@ async function initComments(postId) {
                 <form id="comment-form" class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-neutral-700 mb-1">Name</label>
-                        <input type="text" name="author_name" required class="w-full px-4 py-2 rounded-lg border border-neutral-200 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all">
+                        <input type="text" name="author_name" required class="w-full px-4 py-3 border border-neutral-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-neutral-700 mb-1">Email</label>
+                        <input type="email" name="email" required placeholder="your@email.com" class="w-full px-4 py-3 border border-neutral-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition">
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <input type="checkbox" name="subscribe_to_updates" id="subscribe_to_updates" value="true" class="mt-1 rounded border-neutral-300 text-primary-600 focus:ring-primary-500">
+                        <label for="subscribe_to_updates" class="text-xs text-neutral-500">Receive updates about new comments and articles</label>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-neutral-700 mb-1">Comment</label>
-                        <textarea name="comment" required rows="4" class="w-full px-4 py-2 rounded-lg border border-neutral-200 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all"></textarea>
+                        <textarea name="comment" required rows="4" class="w-full px-4 py-3 border border-neutral-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition"></textarea>
                     </div>
                     <button type="submit" class="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">
                         Post Comment
@@ -109,6 +117,8 @@ async function initComments(postId) {
             const data = {
                 post_id: postId,
                 author_name: formData.get('author_name'),
+                email: formData.get('email'),
+                subscribe_to_updates: formData.has('subscribe_to_updates'),
                 comment: formData.get('comment')
             };
 

@@ -29,13 +29,13 @@
     $imageWrapperClasses = match (true) {
         $isCarousel => 'relative aspect-[1200/630] overflow-hidden rounded-xl mb-4 shadow-sm group-hover:shadow-md transition-shadow bg-neutral-50',
         $isVertical => 'relative aspect-[1200/630] w-full shrink-0 overflow-hidden bg-neutral-50',
-        default => 'relative h-48 sm:h-auto sm:min-h-full sm:w-48 md:w-56 lg:w-64 shrink-0 overflow-hidden bg-neutral-50 ' . $imageOrderClass,
+        default => 'relative h-48 sm:h-auto sm:min-h-full sm:w-56 md:w-64 lg:w-80 shrink-0 overflow-hidden bg-neutral-50 ' . $imageOrderClass,
     };
 
     $contentClasses = match (true) {
         $isCarousel => '',
         $isVertical => 'p-6 flex-1 flex flex-col',
-        default => 'p-6 flex-1 flex flex-col sm:min-h-full ' . ($imagePosition === 'right' ? 'sm:order-1' : 'sm:order-2'),
+        default => 'p-4 sm:p-6 lg:p-8 flex-1 flex flex-col sm:min-h-full ' . ($imagePosition === 'right' ? 'sm:order-1' : 'sm:order-2'),
     };
 @endphp
 
@@ -55,16 +55,6 @@
                     <x-ui.icon name="code-2" size="12" class="text-neutral-600" />
                 </div>
             @endif
-
-            @if($tags && $tags->isNotEmpty())
-                <div class="absolute top-4 left-4 z-30 flex flex-wrap gap-2">
-                    @foreach($tags as $tag)
-                        <a href="{{ route('tags.show', $tag->slug) }}" class="bg-white/90 backdrop-blur font-bold text-[10px] px-2 py-0.5 rounded text-primary-600 shadow-sm hover:bg-primary-600 hover:text-white transition-all" itemprop="articleSection">
-                            {{ $tag->name }}
-                        </a>
-                    @endforeach
-                </div>
-            @endif
         </div>
 
         <div class="{{ $contentClasses }}">
@@ -80,11 +70,24 @@
                 </div>
             @endif
 
-            <h3 class="{{ $isCarousel ? 'font-bold text-lg text-neutral-900 group-hover:text-primary-600 line-clamp-2 mb-1 transition-colors' : 'text-xl font-bold text-neutral-900 mb-3 group-hover:text-primary-600 transition-colors' }}" itemprop="headline">
+            <h3 class="{{ $isCarousel ? 'font-bold text-lg text-neutral-900 group-hover:text-primary-600 line-clamp-2 mb-1 transition-colors' : 'text-xl lg:text-2xl font-bold text-neutral-900 mb-3 group-hover:text-primary-600 transition-colors' }}" itemprop="headline">
                 <a href="{{ $url }}" class="hover:text-primary-600 transition-colors">
                     {{ $title }}
                 </a>
             </h3>
+
+            @if(! $isCarousel && $tags && $tags->isNotEmpty())
+                <div class="flex flex-wrap gap-1.5 mb-3">
+                    @foreach($tags->take(2) as $tag)
+                        <a href="{{ route('tags.show', $tag->slug) }}" class="text-xs font-medium text-primary-600 bg-primary-50 px-2.5 py-1 rounded hover:bg-primary-100 transition-colors" itemprop="articleSection">
+                            {{ $tag->name }}
+                        </a>
+                    @endforeach
+                    @if($tags->count() > 2)
+                        <span class="text-xs font-medium text-neutral-400 bg-neutral-50 px-2.5 py-1 rounded">+{{ $tags->count() - 2 }}</span>
+                    @endif
+                </div>
+            @endif
 
             @if($isCarousel)
                 @if($date)

@@ -65,7 +65,7 @@
 
     <section class="py-20 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 gap-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
                 @foreach($posts as $post)
                     <x-blog.article-card
                         :title="$post->title"

@@ -22,6 +22,11 @@ class CommentsTable
                     ->searchable(),
                 TextColumn::make('author_name')
                     ->searchable(),
+                TextColumn::make('email')
+                    ->searchable()
+                    ->nullable(),
+                IconColumn::make('subscribe_to_updates')
+                    ->boolean(),
                 IconColumn::make('is_approved')
                     ->boolean(),
                 TextColumn::make('created_at')

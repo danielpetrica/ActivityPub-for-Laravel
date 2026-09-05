@@ -13,12 +13,20 @@ final class CommentBusiness
      */
     public static function create(Post $post, array $data): Comment
     {
-        return $post->comments()->create(attributes: [
+        $comment = $post->comments()->create(attributes: [
             'user_id' => $data['user_id'] ?? null,
             'author_name' => $data['author_name'] ?? null,
+            'email' => $data['email'] ?? null,
+            'subscribe_to_updates' => $data['subscribe_to_updates'] ?? false,
             'comment' => $data['comment'],
             'is_approved' => false, // Always moderated
         ]);
+
+        if ($comment->subscribe_to_updates && $comment->email) {
+            NewsletterBusiness::subscribe(email: $comment->email);
+        }
+
+        return $comment;
     }
 
     /**

@@ -103,7 +103,7 @@ final class PostBusiness
     /**
      * Get paginated published posts.
      */
-    public static function getPaginatedPublished(int $perPage = 12, int $page = 1): LengthAwarePaginator
+    public static function getPaginatedPublished(int $perPage = 15, int $page = 1): LengthAwarePaginator
     {
         return Post::query()
             ->with(relations: 'tags')

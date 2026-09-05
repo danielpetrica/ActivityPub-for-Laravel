@@ -63,11 +63,10 @@ COPY --link storage/ storage/
 
 # Stage 3: Worker image (CLI — runs Horizon / schedule:work)
 # Pre-built PHP CLI image with common extensions already installed.
-# Only add pdo_pgsql which isn't included by default.
 FROM serversideup/php:8.5-cli-alpine AS worker
 USER root
 
-RUN install-php-extensions pdo_pgsql
+RUN install-php-extensions pdo_pgsql intl
 
 ARG APP_ENV=production
 WORKDIR /app
@@ -95,6 +94,9 @@ CMD ["php", "artisan", "horizon"]
 # Pre-built FrankenPHP image with Composer, common extensions, and Caddy included.
 FROM serversideup/php:8.5-frankenphp AS frankenphp
 USER root
+
+RUN install-php-extensions pdo_pgsql intl
+
 WORKDIR /app
 
 ARG APP_ENV=production

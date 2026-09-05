@@ -75,11 +75,32 @@
         :breadcrumbs="$breadcrumbs"
         :title="$post->title"
         :excerpt="$post->meta_description ?? ''"
-        :date="$post->published_at?->toDateString()"
-        readTime="5 min read"
-        :section="$post->primaryTag?->name ?? $post->tags->first()?->name"
         :image="$metaImage"
-    />
+    >
+        <x-slot:meta>
+            <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+                @if($primaryCrumb)
+                    <span class="font-bold uppercase tracking-wider text-primary-600" itemprop="articleSection">
+                        {{ $primaryCrumb->name }}
+                    </span>
+                    <span class="text-neutral-300">•</span>
+                @endif
+                @if($post->published_at)
+                    <span class="text-neutral-500 flex items-center gap-1.5">
+                        <x-ui.icon name="calendar" class="text-primary-500" />
+                        <time itemprop="datePublished" datetime="{{ $post->published_at->toDateString() }}">
+                            {{ $post->published_at->format('M d, Y') }}
+                        </time>
+                    </span>
+                    <span class="text-neutral-300">•</span>
+                @endif
+                <span class="text-neutral-500 flex items-center gap-1.5">
+                    <x-ui.icon name="clock" class="text-primary-500" />
+                    <span>5 min read</span>
+                </span>
+            </div>
+        </x-slot:meta>
+    </x-layouts.hero>
 
     <article class="py-16 lg:py-20 bg-white" itemscope itemtype="https://schema.org/BlogPosting">
         {{-- Microdata for SEO --}}

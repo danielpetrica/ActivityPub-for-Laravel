@@ -74,7 +74,7 @@
     </section>
 
     {{-- Newsletter CTA --}}
-    <section class="bg-primary-600 py-16 text-white overflow-hidden relative">
+    <section class="bg-primary-600 py-10 sm:py-16 text-white overflow-hidden relative">
         <div class="absolute inset-0 opacity-10">
             <div class="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-white blur-3xl"></div>
             <div class="absolute -bottom-24 -right-24 w-96 h-96 rounded-full bg-white blur-3xl"></div>
