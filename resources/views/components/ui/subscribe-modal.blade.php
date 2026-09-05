@@ -10,7 +10,7 @@
                 <p class="mt-1 text-sm text-neutral-600">One email when new articles are published. No spam, unsubscribe anytime.</p>
             </div>
             <button type="button" id="subscribe-close-btn" class="p-2 text-neutral-500 hover:text-neutral-800 rounded-md focus:outline-none" aria-label="Close subscribe dialog">
-                <i data-lucide="x" class="h-5 w-5"></i>
+                <x-ui.icon name="x" class="h-5 w-5" />
             </button>
         </div>
 

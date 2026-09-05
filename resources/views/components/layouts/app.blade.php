@@ -106,10 +106,6 @@
     <!-- Reusable subscribe dialog -->
     <x-ui.subscribe-modal />
 
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script>
-        lucide.createIcons();
-    </script>
     {{ $scripts ?? '' }}
 </body>
 </html>

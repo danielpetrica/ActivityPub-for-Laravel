@@ -36,7 +36,7 @@
             <!-- Right Actions -->
             <div class="hidden md:flex items-center gap-4">
                 <button id="search-open-btn" class="p-2 text-neutral-500 hover:text-primary-600 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-full" aria-label="Search articles">
-                    <i data-lucide="search" class="h-5 w-5"></i>
+                    <x-ui.icon name="search" class="h-5 w-5" />
                 </button>
                 <x-ui.button type="button" size="sm" class="rounded-full shadow-lg shadow-primary-500/20" data-subscribe-open>
                     Subscribe
@@ -46,7 +46,7 @@
             <!-- Mobile Menu Button -->
             <div class="md:hidden flex items-center">
                 <button id="mobile-menu-btn" class="text-neutral-500 hover:text-primary-600 p-2 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-md" aria-label="Open menu" aria-expanded="false">
-                    <i data-lucide="menu" class="h-6 w-6"></i>
+                    <x-ui.icon name="menu" class="h-6 w-6" />
                 </button>
             </div>
         </div>
@@ -71,7 +71,7 @@
 
             <div class="pt-4 border-t border-neutral-100 mt-2">
                 <button id="mobile-search-open-btn" class="flex items-center gap-3 w-full px-3 py-2 text-base font-medium text-neutral-900 hover:bg-primary-50 hover:text-primary-600 rounded-md transition-colors">
-                    <i data-lucide="search" class="h-5 w-5"></i>
+                    <x-ui.icon name="search" class="h-5 w-5" />
                     <span>Search articles</span>
                 </button>
                 <x-ui.button type="button" class="w-full mt-3" data-subscribe-open>Subscribe</x-ui.button>
@@ -83,7 +83,7 @@
 <dialog id="search-dialog" class="backdrop:bg-neutral-900/50 backdrop:backdrop-blur-sm p-0 rounded-2xl border-0 shadow-2xl w-full max-w-2xl bg-white overflow-hidden focus:outline-none">
     <div class="p-4 md:p-6">
         <form action="/search" method="GET" class="relative group">
-            <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 group-focus-within:text-primary-500 transition-colors"></i>
+            <x-ui.icon name="search" class="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 group-focus-within:text-primary-500 transition-colors" />
             <input type="search" name="q" id="search-input" placeholder="Search articles, topics, tutorials..." class="w-full pl-12 pr-4 py-3 text-lg bg-neutral-100 rounded-xl border border-transparent focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 outline-none transition-all" autocomplete="off">
             <kbd class="absolute right-4 top-1/2 -translate-y-1/2 hidden md:inline-flex items-center px-2 py-1 text-xs font-semibold text-neutral-400 bg-white border border-neutral-200 rounded-md shadow-sm pointer-events-none">ESC</kbd>
         </form>

@@ -81,7 +81,7 @@
                 <a href="{{ route('rss.index') }}" class="hover:text-neutral-600 focus:outline-none focus:underline">RSS</a>
             </div>
             <p class="flex items-center gap-1">
-                Site built by me <i data-lucide="coffee" class="w-3 h-3" aria-hidden="true"></i> Daniel Petrica
+                Site built by me <x-ui.icon name="coffee" class="w-3 h-3" /> Daniel Petrica
             </p>
         </div>
     </div>
