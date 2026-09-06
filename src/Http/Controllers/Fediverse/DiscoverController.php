@@ -4,6 +4,7 @@ namespace DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse;
 
 use DanielPetrica\LaravelActivityPub\Enums\ActivityType;
 use DanielPetrica\LaravelActivityPub\Models\Activity;
+use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
 use DanielPetrica\LaravelActivityPub\Services\RemoteActorResolver;
 use DanielPetrica\LaravelActivityPub\Services\WebFingerService;
 use DanielPetrica\LaravelActivityPub\Traits\LogsActivityPub;
@@ -23,12 +24,56 @@ final class DiscoverController extends Controller
         private RemoteActorResolver $remoteActorResolver,
     ) {}
 
+    private const DEFAULT_HANDLE = 'danielpetrica@infosec.exchange';
+
     public function index(): View
     {
         $user = auth()->user();
 
+        $remoteActor = null;
+        $remoteActorUrl = null;
+        $handle = null;
+        $domain = null;
+        $isFollowing = false;
+
+        $parts = explode(separator: '@', string: self::DEFAULT_HANDLE);
+        $username = $parts[0];
+        $domain = $parts[1];
+        $resource = 'acct:'.$username.'@'.$domain;
+        $webfingerResult = $this->webFingerService->resolve(resource: $resource);
+
+        if ($webfingerResult !== null && isset($webfingerResult['href'])) {
+            $actorUrl = $webfingerResult['href'];
+            $data = $this->remoteActorResolver->fetchActorData(actorUri: $actorUrl);
+
+            if ($data !== null) {
+                $this->remoteActorResolver->upsertFromData(actorUri: $actorUrl, data: $data);
+
+                $localActor = $this->resolveLocalActor();
+                $remoteActorModel = RemoteActor::where('actor_url', $actorUrl)->first();
+
+                $remoteActor = $data;
+                $remoteActorUrl = $actorUrl;
+                $handle = self::DEFAULT_HANDLE;
+
+                if ($localActor && $remoteActorModel) {
+                    $isFollowing = Activity::query()
+                        ->where(column: 'actor_id', operator: '=', value: $localActor->id)
+                        ->where(column: 'type', operator: '=', value: ActivityType::Follow)
+                        ->where(column: 'remote_actor_id', operator: '=', value: $remoteActorModel->id)
+                        ->where(column: 'is_incoming', operator: '=', value: false)
+                        ->exists();
+                }
+            }
+        }
+
         return view(view: 'activitypub::fediverse.discover', data: [
             'actor' => $user,
+            'remoteActor' => $remoteActor,
+            'remoteActorUrl' => $remoteActorUrl,
+            'handle' => $handle,
+            'domain' => $domain,
+            'isFollowing' => $isFollowing,
         ]);
     }
 
