@@ -19,6 +19,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 final class Following extends Model
 {
+    protected $table = 'following';
+
     protected $fillable = [
         'actor_id',
         'remote_actor_id',
