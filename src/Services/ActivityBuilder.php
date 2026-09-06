@@ -46,12 +46,17 @@ final class ActivityBuilder implements ActivityBuilderContract
      */
     public function accept(ActorContract $actor, array $originalPayload): array
     {
+        $remoteActorUrl = is_array($originalPayload['actor'] ?? null)
+            ? ($originalPayload['actor']['url'] ?? $originalPayload['actor']['id'] ?? null)
+            : ($originalPayload['actor'] ?? null);
+
         return [
             '@context' => 'https://www.w3.org/ns/activitystreams',
             'id' => $actor->getActorId().'#accepts/'.Str::uuid(),
             'type' => 'Accept',
             'actor' => $actor->getActorId(),
             'object' => $originalPayload,
+            'to' => $remoteActorUrl ? [$remoteActorUrl] : [],
         ];
     }
 
