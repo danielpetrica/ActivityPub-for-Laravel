@@ -75,7 +75,6 @@
             @yield('content')
 
             <footer class="mt-8 px-4 py-4 text-center text-sm text-gray-500 border-t border-gray-200">
-                <p>&copy; 2026 LaraPlugins.io All rights reserved.</p>
                 <p>Looking for a Laravel developer? <a href="#" class="text-indigo-600 hover:underline">Work with me</a></p>
                 <p>Made with love by Daniel Petrica</p>
             </footer>
