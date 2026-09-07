@@ -66,8 +66,14 @@ it('returns actor JSON-LD with Accept header', function (): void {
 
     // Verify URL structure
     $response->assertJson([
-        'inbox' => $baseUrl.'/users/jane/inbox',
-        'outbox' => $baseUrl.'/users/jane/outbox',
+        'inbox' => [
+            'id' => $baseUrl.'/users/jane/inbox',
+            'type' => 'OrderedCollection',
+        ],
+        'outbox' => [
+            'id' => $baseUrl.'/users/jane/outbox',
+            'type' => 'OrderedCollection',
+        ],
         'followers' => $baseUrl.'/users/jane/followers',
         'following' => $baseUrl.'/users/jane/following',
         'publicKey' => [
