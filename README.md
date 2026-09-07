@@ -10,6 +10,8 @@ A self-hosted ActivityPub server for Laravel 13 that enables federation with the
 - WebFinger discovery (JRD format)
 - NodeInfo 2.0 and host-meta endpoints
 - Featured/endorsed collections
+- Mastodon spec compliance (discoverable, published fields)
+- Accept activity always delivered even when federation is disabled
 
 **Federation**
 - Outbound delivery of Create, Update, Delete, Follow, Accept, Reject, Like, Announce, Undo
@@ -49,6 +51,9 @@ A self-hosted ActivityPub server for Laravel 13 that enables federation with the
 
 **Web UI**
 - Blade-based Fediverse dashboard with 8 views (dashboard, timeline, inbox, discover, profile, outbox, following, layout)
+- Status/diagnostics page (/fediverse/status) showing queue health, federation status, activity counts
+- Delivery status badges (Pending/Delivered/Failed) on outbox and dashboard
+- Followers page
 - Profile editing, follow/unfollow, like, boost, and reply interactions
 
 **Artisan Commands**
@@ -81,6 +86,10 @@ ACTIVITYPUB_CACHE_ENABLED=true                       # Cache-Control headers on 
 ACTIVITYPUB_LOGGING_ENABLED=true                     # Enable detailed federation logging
 ACTIVITYPUB_LOG_CHANNEL=activitypub                  # Log channel (optional, defaults to app default)
 ACTIVITYPUB_LOG_LEVEL=info                           # Log level: debug, info, warning, error
+ACTIVITYPUB_RESOLVE_TIMEOUT=10                       # Timeout for WebFinger/actor resolution (seconds)
+ACTIVITYPUB_DEBUG_DISPLAY=false                      # Show debug info in inbox/outbox views
+ACTIVITYPUB_QUEUE_CONNECTION=redis                   # Queue connection (null = app default)
+ACTIVITYPUB_QUEUE_NAME=default                       # Queue name for activity delivery
 ```
 
 The full configuration is published to `config/activitypub.php` and includes settings for routes, HTTP signatures, federation timeouts, user agent, and the actor model class.
@@ -187,11 +196,11 @@ src/
   Enums/                        -- ActivityStatus, ActivityType, ActivityObjectType,
   |                                FollowerStatus
   Events/                       -- 6 event classes
-  Http/
+    Http/
     Controllers/                -- Actor, Inbox, Outbox, Followers, Following,
     |                               WebFinger, NodeInfo, HostMeta, Featured
     |   Concerns/RespondsToAccept.php
-    |   Fediverse/              -- 8 Blade UI controllers
+    |   Fediverse/              -- 8 Blade UI controllers (StatusController, FollowersController, ...)
     Middleware/
       VerifyHttpSignature.php   -- Incoming signature verification
     Requests/                   -- InboxRequest, WebFingerRequest, ProfileUpdateRequest
@@ -225,7 +234,7 @@ src/
 vendor/bin/pest
 ```
 
-40 Pest tests across 7 test files covering actors, inbox processing, WebFinger, console commands, content delivery, and unit-tested activity building.
+91+ Pest tests across 10 test files covering actors, inbox processing, WebFinger, console commands, content delivery, and unit-tested activity building.
 
 ## Roadmap
 
