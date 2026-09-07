@@ -146,7 +146,7 @@ it('dispatches DeliverActivity when federation is enabled', function (): void {
     });
 });
 
-it('does not dispatch DeliverActivity when federation is disabled', function (): void {
+it('always dispatches Accept delivery even when federation is disabled', function (): void {
     Bus::fake();
     config()->set('activitypub.federation.enabled', false);
 
@@ -163,7 +163,7 @@ it('does not dispatch DeliverActivity when federation is disabled', function ():
 
     $response->assertStatus(status: 202);
 
-    Bus::assertNotDispatched(DeliverActivity::class);
+    Bus::assertDispatched(DeliverActivity::class);
 });
 
 it('returns actor profile with OrderedCollection inbox and outbox', function (): void {

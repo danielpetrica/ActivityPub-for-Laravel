@@ -68,12 +68,10 @@ final class HandleFollowAction implements ActivityHandler
             payload: $acceptActivity,
         );
 
-        if (config(key: 'activitypub.federation.enabled')) {
-            DeliverActivity::dispatch(
-                inboxUrl: $remoteActor->inbox_url,
-                activityModelId: $acceptRecord->id,
-                actorId: $actor->id,
-            );
-        }
+        DeliverActivity::dispatch(
+            inboxUrl: $remoteActor->inbox_url,
+            activityModelId: $acceptRecord->id,
+            actorId: $actor->id,
+        );
     }
 }
