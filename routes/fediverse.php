@@ -2,6 +2,7 @@
 
 use DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse\DashboardController;
 use DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse\DiscoverController;
+use DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse\FollowersController;
 use DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse\FollowingController;
 use DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse\InboxController;
 use DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse\InteractController;
@@ -17,6 +18,8 @@ Route::get(uri: '/timeline', action: TimelineController::class)->name(name: 'tim
 Route::get(uri: '/inbox', action: InboxController::class)->name(name: 'inbox');
 
 Route::get(uri: '/following', action: FollowingController::class)->name(name: 'following');
+
+Route::get(uri: '/followers', action: FollowersController::class)->name(name: 'followers');
 
 Route::get(uri: '/discover', action: [DiscoverController::class, 'index'])->name(name: 'discover');
 Route::post(uri: '/discover/resolve', action: [DiscoverController::class, 'resolve'])->name(name: 'discover.resolve')->middleware('throttle:30,1');

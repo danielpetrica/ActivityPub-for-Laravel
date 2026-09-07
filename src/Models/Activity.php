@@ -36,6 +36,7 @@ final class Activity extends Model
         'delivered_at',
         'remote_actor_id',
         'is_incoming',
+        'debug',
     ];
 
     protected function casts(): array
@@ -46,6 +47,7 @@ final class Activity extends Model
             'delivered_at' => 'datetime',
             'is_incoming' => 'boolean',
             'status' => ActivityStatus::class,
+            'debug' => 'array',
         ];
     }
 

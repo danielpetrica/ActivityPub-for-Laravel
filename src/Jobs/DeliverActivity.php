@@ -13,6 +13,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 final class DeliverActivity implements ShouldBeUnique, ShouldQueue
 {
@@ -43,13 +44,19 @@ final class DeliverActivity implements ShouldBeUnique, ShouldQueue
         $actor = Actor::findOrFail($this->actorId);
         $activity = $activityModel->payload;
 
-        $responseCode = $deliveryClient->deliver(
+        $result = $deliveryClient->deliver(
             inboxUrl: $this->inboxUrl,
             activity: $activity,
             actor: $actor,
         );
 
-        if ($responseCode === null) {
+        if ($result === null) {
+            Activity::query()
+                ->where('id', '=', $this->activityModelId)
+                ->update([
+                    'debug' => ['error' => 'Failed to encode activity JSON'],
+                ]);
+
             Log::debug('DeliverActivity: failed to encode activity JSON', [
                 'inboxUrl' => $this->inboxUrl,
             ]);
@@ -57,12 +64,16 @@ final class DeliverActivity implements ShouldBeUnique, ShouldQueue
             return;
         }
 
+        $responseCode = $result['status'];
+        $responseBody = $result['body'];
+
         if ($responseCode >= 200 && $responseCode < 300) {
             Activity::query()
                 ->where(column: 'id', operator: '=', value: $this->activityModelId)
                 ->update(values: [
                     'status' => 'delivered',
                     'delivered_at' => now(),
+                    'debug' => ['response_code' => $responseCode],
                 ]);
 
             event(new ActivityDelivered(
@@ -75,6 +86,16 @@ final class DeliverActivity implements ShouldBeUnique, ShouldQueue
                 'inboxUrl' => $this->inboxUrl,
             ]);
         } else {
+            Activity::query()
+                ->where('id', '=', $this->activityModelId)
+                ->update([
+                    'debug' => [
+                        'response_code' => $responseCode,
+                        'response_body' => Str::limit($responseBody, 1000),
+                        'attempt' => $this->attempts(),
+                    ],
+                ]);
+
             Log::debug('DeliverActivity: delivery failed', [
                 'inboxUrl' => $this->inboxUrl,
                 'status' => $responseCode,
@@ -88,7 +109,13 @@ final class DeliverActivity implements ShouldBeUnique, ShouldQueue
     {
         Activity::query()
             ->where('id', '=', $this->activityModelId)
-            ->update(['status' => 'failed']);
+            ->update([
+                'status' => 'failed',
+                'debug' => [
+                    'error' => $e->getMessage(),
+                    'attempt' => $this->attempts(),
+                ],
+            ]);
 
         event(new ActivityDeliveryFailed(
             activityId: $this->activityModelId,

@@ -48,6 +48,13 @@
                         @endif
 
                         <p class="text-xs text-gray-400 mt-1">{{ $activity->created_at->diffForHumans() }}</p>
+
+                        @if (config('activitypub.debug_display') && $activity->debug)
+                            <details class="mt-2">
+                                <summary class="text-xs text-gray-400 cursor-pointer hover:text-gray-600">Debug info</summary>
+                                <pre class="mt-1 text-xs text-gray-500 bg-gray-50 rounded p-2 overflow-x-auto">{{ json_encode($activity->debug, JSON_PRETTY_PRINT) }}</pre>
+                            </details>
+                        @endif
                     </div>
                 </div>
             @endforeach

@@ -181,19 +181,21 @@ final class ActivityPubService
 
     protected function deliverSingleSync(string $inboxUrl, array $activity, Actor $actor, ?int $activityId = null): ?int
     {
-        $responseCode = $this->deliveryClient->deliver(
+        $result = $this->deliveryClient->deliver(
             inboxUrl: $inboxUrl,
             activity: $activity,
             actor: $actor,
         );
 
-        if ($responseCode === null) {
+        if ($result === null) {
             Log::debug('deliverSingleSync: failed to encode activity JSON', [
                 'inboxUrl' => $inboxUrl,
             ]);
 
             return null;
         }
+
+        $responseCode = $result['status'];
 
         if ($responseCode >= 200 && $responseCode < 300 && $activityId !== null) {
             Activity::query()

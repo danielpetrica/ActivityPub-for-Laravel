@@ -159,4 +159,16 @@ return [
         'channel' => env('ACTIVITYPUB_LOG_CHANNEL'),
         'level' => env('ACTIVITYPUB_LOG_LEVEL', 'debug'),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Debug Display
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, the Fediverse inbox and outbox views will show debug
+    | information including response codes, error messages from remote
+    | servers, and delivery attempt details. Useful during development.
+    |
+    */
+    'debug_display' => env('ACTIVITYPUB_DEBUG_DISPLAY', false),
 ];

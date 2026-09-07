@@ -11,7 +11,10 @@ final readonly class DeliveryClient
         private HttpSignatureService $httpSignatureService,
     ) {}
 
-    public function deliver(string $inboxUrl, array $activity, Actor $actor): ?int
+    /**
+     * @return array{status: int, body: string}|null
+     */
+    public function deliver(string $inboxUrl, array $activity, Actor $actor): ?array
     {
         $body = json_encode($activity);
 
@@ -42,6 +45,9 @@ final readonly class DeliveryClient
             ->withBody($body, 'application/activity+json')
             ->post($inboxUrl);
 
-        return $response->status();
+        return [
+            'status' => $response->status(),
+            'body' => $response->body(),
+        ];
     }
 }
