@@ -20,6 +20,20 @@
                             @default bg-gray-100 text-gray-700 @endswitch
                     ">{{ $activity->type->value }}</span>
 
+                    @if (! $activity->is_incoming)
+                        @switch($activity->status->value)
+                            @case('pending')
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700">Pending</span>
+                                @break
+                            @case('delivered')
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Delivered</span>
+                                @break
+                            @case('failed')
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">Failed</span>
+                                @break
+                        @endswitch
+                    @endif
+
                     <div class="flex-1 min-w-0">
                         @if ($activity->remoteActor)
                             <div class="flex items-center gap-2 mb-1">

@@ -102,6 +102,12 @@
                                     @case('Create') bg-purple-100 text-purple-700 @break
                                     @default bg-gray-100 text-gray-700 @endswitch
                             ">{{ $activity->type->value }}</span>
+                            @if ($activity->status->value === 'pending')
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700">Pending</span>
+                            @endif
+                            @if ($activity->status->value === 'failed')
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">Failed</span>
+                            @endif
                             <div class="flex-1 min-w-0">
                                 @if ($activity->remoteActor)
                                     <p class="text-sm font-medium text-gray-900 truncate">{{ $activity->remoteActor->name ?? $activity->remoteActor->username }}</p>

@@ -35,7 +35,16 @@ final class DeliverActivity implements ShouldBeUnique, ShouldQueue
         public string $inboxUrl,
         public int $activityModelId,
         public int $actorId,
-    ) {}
+    ) {
+        $connection = config('activitypub.queue.connection');
+        $queue = config('activitypub.queue.queue', 'default');
+
+        if ($connection !== null) {
+            $this->onConnection($connection);
+        }
+
+        $this->onQueue($queue);
+    }
 
     public function uniqueId(): string
     {

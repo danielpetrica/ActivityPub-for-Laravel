@@ -8,6 +8,7 @@ use DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse\InboxController;
 use DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse\InteractController;
 use DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse\OutboxController;
 use DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse\ProfileController;
+use DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse\StatusController;
 use DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse\TimelineController;
 use Illuminate\Support\Facades\Route;
 
@@ -34,3 +35,5 @@ Route::get(uri: '/outbox', action: OutboxController::class)->name(name: 'outbox'
 
 Route::get(uri: '/profile', action: [ProfileController::class, 'edit'])->name(name: 'profile');
 Route::post(uri: '/profile', action: [ProfileController::class, 'update'])->name(name: 'profile.update')->middleware('throttle:30,1');
+
+Route::get(uri: '/status', action: StatusController::class)->name(name: 'status');

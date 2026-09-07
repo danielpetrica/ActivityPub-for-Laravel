@@ -88,6 +88,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Queue
+    |--------------------------------------------------------------------------
+    |
+    | Configure the queue connection and queue name used for delivering
+    | activities. Leave connection null to use the application default.
+    | Set the queue name to route deliveries to a specific queue.
+    |
+    */
+    'queue' => [
+        'connection' => env('ACTIVITYPUB_QUEUE_CONNECTION'),
+        'queue' => env('ACTIVITYPUB_QUEUE_NAME', 'default'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Version
     |--------------------------------------------------------------------------
     |
