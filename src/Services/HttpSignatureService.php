@@ -12,7 +12,7 @@ final class HttpSignatureService
         $parsedUrl = parse_url(url: $url);
         $path = $parsedUrl['path'] ?? '/';
         $host = $parsedUrl['host'] ?? '';
-        $date = now()->toRfc7231String();
+        $date = $headers['Date'] ?? now()->toRfc7231String();
 
         $signingParts = [
             '(request-target): '.strtolower(string: $method).' '.$path,

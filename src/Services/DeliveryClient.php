@@ -22,13 +22,10 @@ final readonly class DeliveryClient
             return null;
         }
 
-        $date = gmdate('D, d M Y H:i:s T');
-
         $digest = 'SHA-256='.base64_encode(hash('sha256', $body, binary: true));
 
         $headers = [
             'Content-Type' => 'application/activity+json',
-            'Date' => $date,
             'Host' => parse_url($inboxUrl, PHP_URL_HOST),
             'Digest' => $digest,
         ];
