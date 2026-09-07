@@ -23,6 +23,7 @@ final class ActorResource extends JsonResource
                 'https://www.w3.org/ns/activitystreams',
                 'https://w3id.org/security/v1',
                 'https://w3id.org/security/v2',
+                ['discoverable' => 'http://joinmastodon.org/ns#discoverable'],
             ],
             'id' => $url,
             'type' => config('activitypub.actor_type', 'Person'),
@@ -44,6 +45,8 @@ final class ActorResource extends JsonResource
             'followers' => $this->resource->followers_url,
             'following' => $this->resource->following_url,
             'manuallyApprovesFollowers' => $this->resource->manually_approves_followers,
+            'published' => $this->resource->published?->toIso8601String(),
+            'discoverable' => $this->resource->discoverable,
             'publicKey' => [
                 'id' => $this->resource->key_id,
                 'type' => 'Key',

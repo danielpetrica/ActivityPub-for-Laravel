@@ -20,6 +20,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $public_key_pem
  * @property string $private_key_pem
  * @property bool $manually_approves_followers
+ * @property bool $discoverable
+ * @property \Carbon\CarbonInterface|null $published
  * @property CarbonInterface $created_at
  * @property CarbonInterface $updated_at
  */
@@ -38,6 +40,8 @@ final class Actor extends Model implements ActorContract
         'public_key_pem',
         'private_key_pem',
         'manually_approves_followers',
+        'discoverable',
+        'published',
     ];
 
     protected function casts(): array
@@ -46,6 +50,8 @@ final class Actor extends Model implements ActorContract
             'private_key_pem' => 'encrypted',
             'public_key_pem' => 'string',
             'manually_approves_followers' => 'boolean',
+            'discoverable' => 'boolean',
+            'published' => 'datetime',
         ];
     }
 
