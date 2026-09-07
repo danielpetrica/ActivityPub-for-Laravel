@@ -52,7 +52,7 @@ final class WebFingerService
                     $this->activityPubLog('info', 'WebFinger lookup', ['url' => $url]);
 
                     $response = Http::timeout(
-                        seconds: config('activitypub.federation.delivery_timeout', 10),
+                        seconds: config('activitypub.federation.resolve_timeout', 5),
                     )->get(url: $url);
 
                     if (! $response->successful()) {

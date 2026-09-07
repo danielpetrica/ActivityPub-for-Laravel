@@ -14,7 +14,7 @@ final class ActivityResource extends JsonResource
     /**
      * @return array<string, mixed>
      */
-    public static function make(Activity $activity, Request $request): array
+    public static function format(Activity $activity, Request $request): array
     {
         $instance = new self(resource: $activity);
 

@@ -27,6 +27,10 @@ final class DeliverActivity implements ShouldBeUnique, ShouldQueue
 
     public int $maxExceptions = 3;
 
+    public int $timeout = 30;
+
+    public bool $failOnTimeout = true;
+
     public function __construct(
         public string $inboxUrl,
         public int $activityModelId,

@@ -50,7 +50,7 @@ final class InboxController extends Controller
                 ->get();
 
             $items = $activities->map(function (Activity $activity) use ($request) {
-                return ActivityResource::make(
+                return ActivityResource::format(
                     activity: $activity,
                     request: $request,
                 );

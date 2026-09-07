@@ -93,7 +93,7 @@ final class RemoteActorResolver
             }
 
             $response = Http::timeout(
-                seconds: config('activitypub.federation.delivery_timeout', 10),
+                seconds: config('activitypub.federation.resolve_timeout', 5),
             )->withHeaders($headers)
                 ->get(url: $actorUri);
 
