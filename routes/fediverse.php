@@ -37,3 +37,7 @@ Route::get(uri: '/profile', action: [ProfileController::class, 'edit'])->name(na
 Route::post(uri: '/profile', action: [ProfileController::class, 'update'])->name(name: 'profile.update')->middleware('throttle:30,1');
 
 Route::get(uri: '/status', action: StatusController::class)->name(name: 'status');
+
+Route::post(uri: '/status/reschedule', action: [StatusController::class, 'reschedulePending'])->name(name: 'status.reschedule');
+Route::post(uri: '/status/refresh-accounts', action: [StatusController::class, 'refreshFollowedAccounts'])->name(name: 'status.refresh-accounts');
+Route::post(uri: '/status/prune', action: [StatusController::class, 'pruneOldActivities'])->name(name: 'status.prune');

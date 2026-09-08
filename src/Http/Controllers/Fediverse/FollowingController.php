@@ -2,7 +2,6 @@
 
 namespace DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse;
 
-use DanielPetrica\LaravelActivityPub\Enums\FollowerStatus;
 use DanielPetrica\LaravelActivityPub\Models\Following;
 use DanielPetrica\LaravelActivityPub\Traits\ResolvesLocalActor;
 use Illuminate\Routing\Controller;
@@ -19,7 +18,6 @@ final class FollowingController extends Controller
 
         $following = Following::with('remoteActor')
             ->where('actor_id', $localActor->id)
-            ->where('status', FollowerStatus::Accepted)
             ->latest()
             ->get();
 

@@ -75,4 +75,42 @@
             </table>
         </div>
     </div>
+
+    <div class="mt-8">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Maintenance</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+                <h4 class="text-sm font-semibold text-gray-900">Reschedule Pending</h4>
+                <p class="text-xs text-gray-500 mt-1">Re-dispatch all pending outgoing activities to the queue for delivery.</p>
+                <form action="{{ route('fediverse.status.reschedule') }}" method="POST" class="mt-3" onsubmit="return confirm('Reschedule all pending activities?')">
+                    @csrf
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
+                        Reschedule
+                    </button>
+                </form>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+                <h4 class="text-sm font-semibold text-gray-900">Refresh Followed Accounts</h4>
+                <p class="text-xs text-gray-500 mt-1">Fetch latest profile data for all followed remote accounts.</p>
+                <form action="{{ route('fediverse.status.refresh-accounts') }}" method="POST" class="mt-3" onsubmit="return confirm('Refresh all followed accounts?')">
+                    @csrf
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
+                        Refresh All
+                    </button>
+                </form>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+                <h4 class="text-sm font-semibold text-gray-900">Prune Old Activities</h4>
+                <p class="text-xs text-gray-500 mt-1">Delete delivered activities older than 30 days to keep the database clean.</p>
+                <form action="{{ route('fediverse.status.prune') }}" method="POST" class="mt-3" onsubmit="return confirm('Prune old activities?')">
+                    @csrf
+                    <button type="submit" class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors">
+                        Prune
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
 @endsection

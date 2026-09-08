@@ -34,6 +34,12 @@
                             <p class="text-sm font-semibold text-gray-900 truncate">{{ $ra->name ?? $ra->username }}</p>
                             <p class="text-xs text-gray-500 truncate">{{ $ra->username }}@ {{ $ra->domain }}</p>
                             <p class="text-xs text-gray-400 mt-1">Following since {{ $follow->created_at->format('M j, Y') }}</p>
+                            @if ($follow->status->value === 'pending')
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700">Pending</span>
+                            @endif
+                            @if ($follow->status->value === 'accepted')
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Accepted</span>
+                            @endif
                         </div>
 
                         <form action="{{ route('fediverse.unfollow') }}" method="POST" onsubmit="return confirm('Unfollow {{ addslashes($ra->name ?? $ra->username) }}?')">

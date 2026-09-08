@@ -2,13 +2,17 @@
 
 namespace DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse;
 
+use DanielPetrica\LaravelActivityPub\Jobs\DeliverActivity;
+use DanielPetrica\LaravelActivityPub\Jobs\FetchRemoteActor;
 use DanielPetrica\LaravelActivityPub\Models\Activity;
 use DanielPetrica\LaravelActivityPub\Models\Actor;
 use DanielPetrica\LaravelActivityPub\Models\Follower;
 use DanielPetrica\LaravelActivityPub\Models\Following;
 use DanielPetrica\LaravelActivityPub\Traits\ResolvesLocalActor;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\View\View;
@@ -176,5 +180,71 @@ final class StatusController extends Controller
                 'detail' => $e->getMessage(),
             ];
         }
+    }
+
+    public function reschedulePending(Request $request): RedirectResponse
+    {
+        $pendingActivities = Activity::query()
+            ->where('status', 'pending')
+            ->where('is_incoming', false)
+            ->get();
+
+        $count = 0;
+
+        foreach ($pendingActivities as $activity) {
+            $remoteActor = $activity->remoteActor;
+
+            if ($remoteActor && $activity->actor) {
+                Bus::dispatch(new DeliverActivity(
+                    inboxUrl: $remoteActor->inbox_url,
+                    activityModelId: $activity->id,
+                    actorId: $activity->actor_id,
+                ));
+
+                $count++;
+            }
+        }
+
+        return redirect()->route('fediverse.status')
+            ->with('success', "Rescheduled {$count} pending activities for delivery.");
+    }
+
+    public function refreshFollowedAccounts(Request $request): RedirectResponse
+    {
+        $acceptedFollowings = Following::query()
+            ->where('status', 'accepted')
+            ->with('remoteActor')
+            ->get();
+
+        $refreshedUrls = [];
+
+        foreach ($acceptedFollowings as $following) {
+            $remoteActor = $following->remoteActor;
+
+            if ($remoteActor && ! in_array($remoteActor->actor_url, $refreshedUrls)) {
+                Bus::dispatch(new FetchRemoteActor(
+                    actorUri: $remoteActor->actor_url,
+                ));
+
+                $refreshedUrls[] = $remoteActor->actor_url;
+            }
+        }
+
+        $count = count($refreshedUrls);
+
+        return redirect()->route('fediverse.status')
+            ->with('success', "Dispatched refresh for {$count} followed accounts.");
+    }
+
+    public function pruneOldActivities(Request $request): RedirectResponse
+    {
+        $pruned = Activity::query()
+            ->where('status', 'delivered')
+            ->where('is_incoming', false)
+            ->where('delivered_at', '<', now()->subDays(30))
+            ->delete();
+
+        return redirect()->route('fediverse.status')
+            ->with('success', "Pruned {$pruned} delivered activities older than 30 days.");
     }
 }
