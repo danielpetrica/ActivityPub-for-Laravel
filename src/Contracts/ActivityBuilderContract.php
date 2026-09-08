@@ -14,6 +14,9 @@ interface ActivityBuilderContract
     public function accept(ActorContract $actor, array $originalPayload): array;
 
     /** @return array<string, mixed> */
+    public function reject(ActorContract $actor, array $originalPayload): array;
+
+    /** @return array<string, mixed> */
     public function like(ActorContract $actor, string $objectUrl): array;
 
     /** @return array<string, mixed> */

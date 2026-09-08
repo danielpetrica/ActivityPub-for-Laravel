@@ -63,6 +63,25 @@ final class ActivityBuilder implements ActivityBuilderContract
     /**
      * @return array<string, mixed>
      */
+    public function reject(ActorContract $actor, array $originalPayload): array
+    {
+        $remoteActorUrl = is_array($originalPayload['actor'] ?? null)
+            ? ($originalPayload['actor']['url'] ?? $originalPayload['actor']['id'] ?? null)
+            : ($originalPayload['actor'] ?? null);
+
+        return [
+            '@context' => 'https://www.w3.org/ns/activitystreams',
+            'id' => $actor->getActorId().'#rejects/'.Str::uuid(),
+            'type' => 'Reject',
+            'actor' => $actor->getActorId(),
+            'object' => $originalPayload,
+            'to' => $remoteActorUrl ? [$remoteActorUrl] : [],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
     public function like(ActorContract $actor, string $objectUrl): array
     {
         return [

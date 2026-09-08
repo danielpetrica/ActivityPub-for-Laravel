@@ -24,6 +24,10 @@ Route::get(uri: '/following', action: FollowingController::class)->name(name: 'f
 Route::get(uri: '/followers', action: FollowersController::class)->name(name: 'followers');
 
 Route::get(uri: '/servers', action: FederatedServersController::class)->name(name: 'servers');
+Route::post(uri: '/servers/block-domain', action: [FederatedServersController::class, 'blockDomain'])->name(name: 'servers.block-domain');
+Route::delete(uri: '/servers/unblock-domain', action: [FederatedServersController::class, 'unblockDomain'])->name(name: 'servers.unblock-domain');
+Route::post(uri: '/servers/block-actor', action: [FederatedServersController::class, 'blockActor'])->name(name: 'servers.block-actor');
+Route::delete(uri: '/servers/unblock-actor', action: [FederatedServersController::class, 'unblockActor'])->name(name: 'servers.unblock-actor');
 
 Route::get(uri: '/discover', action: [DiscoverController::class, 'index'])->name(name: 'discover');
 Route::post(uri: '/discover/resolve', action: [DiscoverController::class, 'resolve'])->name(name: 'discover.resolve')->middleware('throttle:30,1');

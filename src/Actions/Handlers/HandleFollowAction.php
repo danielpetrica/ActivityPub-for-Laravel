@@ -9,6 +9,8 @@ use DanielPetrica\LaravelActivityPub\Events\FollowReceived;
 use DanielPetrica\LaravelActivityPub\Jobs\DeliverActivity;
 use DanielPetrica\LaravelActivityPub\Jobs\ForwardPostsToNewServerJob;
 use DanielPetrica\LaravelActivityPub\Models\Actor;
+use DanielPetrica\LaravelActivityPub\Models\BlockedDomain;
+use DanielPetrica\LaravelActivityPub\Models\BlockedRemoteActor;
 use DanielPetrica\LaravelActivityPub\Models\Follower;
 use DanielPetrica\LaravelActivityPub\Services\ActivityPubService;
 use DanielPetrica\LaravelActivityPub\Services\RemoteActorResolver;
@@ -31,6 +33,52 @@ final class HandleFollowAction implements ActivityHandler
         $remoteActor = $this->remoteActorResolver->resolveFromPayload(payload: $payload);
 
         if ($remoteActor === null) {
+            return;
+        }
+
+        // Auto-reject if domain is blocked
+        if (BlockedDomain::where('domain', $remoteActor->domain)->exists()) {
+            $rejectActivity = $this->activityBuilder->reject(
+                actor: $actor,
+                originalPayload: $payload,
+            );
+
+            $rejectRecord = $this->activityPubService->recordActivity(
+                localActor: $actor,
+                type: ActivityType::Reject,
+                remoteActor: $remoteActor,
+                payload: $rejectActivity,
+            );
+
+            DeliverActivity::dispatch(
+                inboxUrl: $remoteActor->inbox_url,
+                activityModelId: $rejectRecord->id,
+                actorId: $actor->id,
+            );
+
+            return;
+        }
+
+        // Auto-reject if actor is blocked
+        if (BlockedRemoteActor::where('remote_actor_id', $remoteActor->id)->exists()) {
+            $rejectActivity = $this->activityBuilder->reject(
+                actor: $actor,
+                originalPayload: $payload,
+            );
+
+            $rejectRecord = $this->activityPubService->recordActivity(
+                localActor: $actor,
+                type: ActivityType::Reject,
+                remoteActor: $remoteActor,
+                payload: $rejectActivity,
+            );
+
+            DeliverActivity::dispatch(
+                inboxUrl: $remoteActor->inbox_url,
+                activityModelId: $rejectRecord->id,
+                actorId: $actor->id,
+            );
+
             return;
         }
 
