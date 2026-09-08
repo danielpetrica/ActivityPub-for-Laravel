@@ -26,8 +26,10 @@ final class NodeInfoController extends Controller
         return $this->cachedJsonResponse(data: [
             'version' => '2.0',
             'software' => [
-                'name' => 'laravel-activitypub',
+                'name' => 'danielpetrica/activitypub-for-laravel',
                 'version' => config('activitypub.version', '1.0.0'),
+                'homepage' => 'https://laraplugins.io/plugins/danielpetrica/activitypub-for-laravel',
+                'repository' => 'https://github.com/danielpetrica/ActivityPub-for-Laravel',
             ],
             'protocols' => ['activitypub'],
             'services' => [
