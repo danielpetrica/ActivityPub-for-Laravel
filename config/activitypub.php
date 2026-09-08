@@ -94,7 +94,6 @@ return [
         'max_delivery_attempts' => 3,
         'delivery_timeout' => 10,
         'resolve_timeout' => env('ACTIVITYPUB_RESOLVE_TIMEOUT', 10),
-        'user_agent' => 'danielpetrica/activitypub-for-laravel (+https://danielpetrica.com)',
     ],
 
     /*

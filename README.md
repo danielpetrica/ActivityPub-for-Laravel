@@ -123,7 +123,7 @@ ACTIVITYPUB_QUEUE_NAME=default                       # Queue name for activity d
 ACTIVITYPUB_FEDIVERSE_GATE=null                       # Gate name for authorization (null = any authenticated user)
 ```
 
-The full configuration is published to `config/activitypub.php` and includes settings for routes, HTTP signatures, federation timeouts, user agent, and the actor model class.
+The full configuration is published to `config/activitypub.php` and includes settings for routes, HTTP signatures, federation timeouts, and the actor model class.
 
 ## Authorization
 
