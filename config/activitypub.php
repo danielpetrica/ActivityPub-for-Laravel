@@ -146,6 +146,7 @@ return [
         'enabled' => env('ACTIVITYPUB_FEDIVERSE_ENABLED', true),
         'prefix' => 'fediverse',
         'middleware' => ['web', 'auth'],
+        'gate' => env('ACTIVITYPUB_FEDIVERSE_GATE'),
     ],
 
     /*

@@ -120,9 +120,28 @@ ACTIVITYPUB_RESOLVE_TIMEOUT=10                       # Timeout for WebFinger/act
 ACTIVITYPUB_DEBUG_DISPLAY=false                      # Show debug info in inbox/outbox views
 ACTIVITYPUB_QUEUE_CONNECTION=redis                   # Queue connection (null = app default)
 ACTIVITYPUB_QUEUE_NAME=default                       # Queue name for activity delivery
+ACTIVITYPUB_FEDIVERSE_GATE=null                       # Gate name for authorization (null = any authenticated user)
 ```
 
 The full configuration is published to `config/activitypub.php` and includes settings for routes, HTTP signatures, federation timeouts, user agent, and the actor model class.
+
+## Authorization
+
+The Fediverse dashboard is protected by Laravel's gate system. By default, any authenticated user can access it. To restrict access, define a gate in your `AuthServiceProvider` and configure it:
+
+```php
+// app/Providers/AuthServiceProvider.php
+public function boot(): void
+{
+    Gate::define('viewFediverse', fn ($user) => $user->isAdmin);
+}
+```
+
+```env
+ACTIVITYPUB_FEDIVERSE_GATE=viewFediverse
+```
+
+If `ACTIVITYPUB_FEDIVERSE_GATE` is null (default), all authenticated users can access the dashboard.
 
 ## Debugging
 

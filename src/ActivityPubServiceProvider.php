@@ -98,6 +98,11 @@ final class ActivityPubServiceProvider extends ServiceProvider
             class: VerifyHttpSignature::class,
         );
 
+        Route::aliasMiddleware(
+            name: 'activitypub.authorize-fediverse',
+            class: \DanielPetrica\LaravelActivityPub\Http\Middleware\AuthorizeFediverse::class,
+        );
+
         $this->loadMigrationsFrom(paths: __DIR__.'/../database/migrations');
 
         if (config(key: 'activitypub.routes.enabled', default: true)) {
@@ -124,7 +129,10 @@ final class ActivityPubServiceProvider extends ServiceProvider
             Route::group(
                 attributes: [
                     'prefix' => config(key: 'activitypub.fediverse.prefix', default: 'fediverse'),
-                    'middleware' => config(key: 'activitypub.fediverse.middleware', default: ['web', 'auth']),
+                    'middleware' => array_merge(
+                        config(key: 'activitypub.fediverse.middleware', default: ['web', 'auth']),
+                        ['activitypub.authorize-fediverse'],
+                    ),
                     'as' => 'fediverse.',
                 ],
                 routes: function (): void {
