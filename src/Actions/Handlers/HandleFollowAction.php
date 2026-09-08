@@ -12,6 +12,7 @@ use DanielPetrica\LaravelActivityPub\Models\Actor;
 use DanielPetrica\LaravelActivityPub\Models\BlockedDomain;
 use DanielPetrica\LaravelActivityPub\Models\BlockedRemoteActor;
 use DanielPetrica\LaravelActivityPub\Models\Follower;
+use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
 use DanielPetrica\LaravelActivityPub\Services\ActivityPubService;
 use DanielPetrica\LaravelActivityPub\Services\RemoteActorResolver;
 
@@ -30,14 +31,28 @@ final class HandleFollowAction implements ActivityHandler
 
     public function handle(Actor $actor, array $payload): void
     {
-        $remoteActor = $this->remoteActorResolver->resolveFromPayload(payload: $payload);
-
-        if ($remoteActor === null) {
+        // Extract actor URL and domain from payload before resolving
+        $actorUrl = $payload['actor'] ?? null;
+        if (! is_string($actorUrl)) {
             return;
         }
 
-        // Auto-reject if domain is blocked
-        if (BlockedDomain::where('domain', $remoteActor->domain)->exists()) {
+        $domain = parse_url($actorUrl, PHP_URL_HOST);
+        if ($domain === null) {
+            return;
+        }
+
+        // Auto-reject if domain is blocked (before any HTTP fetch)
+        if (BlockedDomain::where('domain', $domain)->exists()) {
+            $remoteActor = RemoteActor::firstOrCreate(
+                ['actor_url' => $actorUrl],
+                [
+                    'inbox_url' => $actorUrl.'/inbox',
+                    'username' => basename($actorUrl),
+                    'domain' => $domain,
+                ]
+            );
+
             $rejectActivity = $this->activityBuilder->reject(
                 actor: $actor,
                 originalPayload: $payload,
@@ -56,6 +71,13 @@ final class HandleFollowAction implements ActivityHandler
                 actorId: $actor->id,
             );
 
+            return;
+        }
+
+        // Now resolve the remote actor (may trigger HTTP fetch)
+        $remoteActor = $this->remoteActorResolver->resolveFromPayload(payload: $payload);
+
+        if ($remoteActor === null) {
             return;
         }
 

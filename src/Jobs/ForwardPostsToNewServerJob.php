@@ -7,18 +7,27 @@ use DanielPetrica\LaravelActivityPub\Models\Actor;
 use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
 use DanielPetrica\LaravelActivityPub\Services\ActivityPubService;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
-final class ForwardPostsToNewServerJob implements ShouldQueue
+final class ForwardPostsToNewServerJob implements ShouldBeUnique, ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable;
 
     public int $tries = 3;
 
     public int $timeout = 60;
+
+    public int $uniqueFor = 3600;
+
+    public function uniqueId(): string
+    {
+        return 'forward-posts:'.$this->remoteActorId;
+    }
 
     public function __construct(
         public int $remoteActorId,
@@ -60,7 +69,7 @@ final class ForwardPostsToNewServerJob implements ShouldQueue
                 ->where(function ($query) use ($modelClass) {
                     // If the model has a 'published_at' column, use it
                     $instance = new $modelClass();
-                    if ($instance->getTable() === 'posts' || $instance->getTable() === 'articles' || in_array('published_at', $instance->getFillable())) {
+                    if (Schema::hasColumn($instance->getTable(), 'published_at')) {
                         $query->whereNotNull('published_at');
                     }
                 })

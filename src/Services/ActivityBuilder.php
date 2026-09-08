@@ -29,7 +29,7 @@ final class ActivityBuilder implements ActivityBuilderContract
     {
         return [
             '@context' => 'https://www.w3.org/ns/activitystreams',
-            'id' => $actor->getActorId().'#undo-follow/'.time(),
+            'id' => $actor->getActorId().'#undo-follow/'.Str::uuid(),
             'type' => 'Undo',
             'actor' => $actor->getActorId(),
             'object' => [
@@ -100,7 +100,7 @@ final class ActivityBuilder implements ActivityBuilderContract
     {
         return [
             '@context' => 'https://www.w3.org/ns/activitystreams',
-            'id' => $actor->getActorId().'#announce/'.time(),
+            'id' => $actor->getActorId().'#announce/'.Str::uuid(),
             'type' => 'Announce',
             'actor' => $actor->getActorId(),
             'object' => $objectUrl,
