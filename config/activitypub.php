@@ -56,6 +56,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Federatable Models
+    |--------------------------------------------------------------------------
+    |
+    | List of Eloquent model classes that implement FederatableContentContract.
+    | These models are queried when forwarding posts to new followers.
+    |
+    */
+    'federatable_models' => [],
+
+    /*
+    |--------------------------------------------------------------------------
     | HTTP Signatures
     |--------------------------------------------------------------------------
     |

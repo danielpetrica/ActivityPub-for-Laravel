@@ -39,6 +39,12 @@
                     Following
                 </a>
 
+                <a href="{{ route('fediverse.servers') }}"
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm {{ request()->routeIs('fediverse.servers') ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white' }}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+                    Servers
+                </a>
+
                 <a href="{{ route('fediverse.discover') }}"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm {{ request()->routeIs('fediverse.discover*') ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white' }}">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>

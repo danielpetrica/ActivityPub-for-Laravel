@@ -25,6 +25,11 @@ final class TestFederatableContent extends Model implements FederatableContentCo
         return true;
     }
 
+    public function isActivityPubPinned(): bool
+    {
+        return false;
+    }
+
     public function activityPubActor(): ActorContract
     {
         $actor = Actor::query()

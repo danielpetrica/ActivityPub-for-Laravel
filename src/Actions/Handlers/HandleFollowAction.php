@@ -7,6 +7,7 @@ use DanielPetrica\LaravelActivityPub\Enums\ActivityType;
 use DanielPetrica\LaravelActivityPub\Enums\FollowerStatus;
 use DanielPetrica\LaravelActivityPub\Events\FollowReceived;
 use DanielPetrica\LaravelActivityPub\Jobs\DeliverActivity;
+use DanielPetrica\LaravelActivityPub\Jobs\ForwardPostsToNewServerJob;
 use DanielPetrica\LaravelActivityPub\Models\Actor;
 use DanielPetrica\LaravelActivityPub\Models\Follower;
 use DanielPetrica\LaravelActivityPub\Services\ActivityPubService;
@@ -73,5 +74,20 @@ final class HandleFollowAction implements ActivityHandler
             activityModelId: $acceptRecord->id,
             actorId: $actor->id,
         );
+
+        // Forward posts to new server on first follower from domain
+        $existingFollowersFromDomain = Follower::query()
+            ->where('actor_id', $actor->id)
+            ->whereHas('remoteActor', function ($query) use ($remoteActor) {
+                $query->where('domain', $remoteActor->domain);
+            })
+            ->count();
+
+        if ($existingFollowersFromDomain <= 1) {
+            ForwardPostsToNewServerJob::dispatch(
+                remoteActorId: $remoteActor->id,
+                actorId: $actor->id,
+            );
+        }
     }
 }

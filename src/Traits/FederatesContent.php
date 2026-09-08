@@ -39,4 +39,9 @@ trait FederatesContent
             );
         });
     }
+
+    public function isActivityPubPinned(): bool
+    {
+        return false;
+    }
 }

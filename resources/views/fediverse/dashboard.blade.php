@@ -108,6 +108,12 @@
                             @if ($activity->status->value === 'failed')
                                 <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">Failed</span>
                             @endif
+                            @if (isset($activity->payload['pinned']) && $activity->payload['pinned'])
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-700">Pinned</span>
+                            @endif
+                            @if (isset($activity->payload['published']))
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">Published</span>
+                            @endif
                             <div class="flex-1 min-w-0">
                                 @if ($activity->remoteActor)
                                     <p class="text-sm font-medium text-gray-900 truncate">{{ $activity->remoteActor->name ?? $activity->remoteActor->username }}</p>

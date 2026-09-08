@@ -6,6 +6,8 @@ interface FederatableContentContract
 {
     public function shouldFederate(): bool;
 
+    public function isActivityPubPinned(): bool;
+
     public function activityPubActor(): ActorContract;
 
     public function getActivityPubId(): string;
