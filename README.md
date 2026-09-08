@@ -1,4 +1,4 @@
-# Laravel ActivityPub
+# danielpetrica/activitypub-for-laravel
 
 A self-hosted ActivityPub server for Laravel 13 that enables federation with the Fediverse (Mastodon, Pleroma/Akkoma, Misskey, Pixelfed, PeerTube, etc.).
 
@@ -19,6 +19,9 @@ A self-hosted ActivityPub server for Laravel 13 that enables federation with the
 - Shared inbox optimization: delivery grouped by `shared_inbox_url`, prefers shared inbox over personal inbox
 - Follower management with Accept/Block/Reject handling
 - Following model for outbound follows
+- Post forwarding on first follow from a domain (`ForwardPostsToNewServerJob`)
+- Block domains and users with auto-rejection of follows
+- `reject()` method in ActivityBuilder
 - `Activity` model tracks all federated activities with backed `ActivityStatus` enum (pending, delivered, received, failed)
 
 **HTTP Signatures**
@@ -50,11 +53,32 @@ A self-hosted ActivityPub server for Laravel 13 that enables federation with the
 - Skip data query on paginated collection pages > 1
 
 **Web UI**
-- Blade-based Fediverse dashboard with 8 views (dashboard, timeline, inbox, discover, profile, outbox, following, layout)
+- Blade-based Fediverse dashboard with 11 views (dashboard, timeline, inbox, discover, profile, outbox, following, followers, servers, status, layout)
+- Federated servers page (/fediverse/servers) showing all remote domains with follower counts
+- Block/unblock servers and users from the UI
 - Status/diagnostics page (/fediverse/status) showing queue health, federation status, activity counts
 - Delivery status badges (Pending/Delivered/Failed) on outbox and dashboard
-- Followers page
+- Pinned and Published badges on activities
+- Followers page with domain and status filters
 - Profile editing, follow/unfollow, like, boost, and reply interactions
+
+**Content Forwarding**
+- Automatic post forwarding to new servers on first follow from a domain
+- Configurable via `federatable_models` config option
+- Delivers 3 oldest published posts from registered content models
+- `isActivityPubPinned()` method on FederatableContentContract
+
+**Blocking**
+- Block entire domains — auto-rejects all follows from that domain
+- Block individual remote actors — auto-rejects follows from that actor
+- Reject activity sent to blocked actors
+- Stored in `blocked_domains` and `blocked_remote_actors` database tables
+
+**NodeInfo 2.0**
+- Full NodeInfo 2.0 compliance with software name, version, homepage, repository
+- `usage.localPosts` — count of outbound Create activities
+- `usage.users.activeMonth` — actors active in last 30 days
+- `last_active_at` tracking on outbound activities
 
 **Artisan Commands**
 - `activitypub:create-actor` — creates a local actor with RSA key pair
@@ -198,9 +222,9 @@ src/
   Events/                       -- 6 event classes
     Http/
     Controllers/                -- Actor, Inbox, Outbox, Followers, Following,
-    |                               WebFinger, NodeInfo, HostMeta, Featured
+    |                               WebFinger, NodeInfo, HostMeta, Featured, FederatedServersController
     |   Concerns/RespondsToAccept.php
-    |   Fediverse/              -- 8 Blade UI controllers (StatusController, FollowersController, ...)
+    |   Fediverse/              -- 9 Blade UI controllers (StatusController, FollowersController, ...)
     Middleware/
       VerifyHttpSignature.php   -- Incoming signature verification
     Requests/                   -- InboxRequest, WebFingerRequest, ProfileUpdateRequest
@@ -209,12 +233,15 @@ src/
     DeliverActivity.php         -- Queued outbound delivery with backoff
     FetchRemoteActor.php        -- Remote actor resolution
     PruneOldActivities.php      -- Cleanup job
+    ForwardPostsToNewServerJob.php -- Forward posts to new follower's server
   Models/
     Actor.php                   -- Local actor with RSA key pair
     RemoteActor.php             -- Cached remote actor data
     Follower.php                -- Follower relationships
     Following.php               -- Outbound follow tracking
     Activity.php                -- Federated activity log
+    BlockedDomain.php           -- Domain blocklist
+    BlockedRemoteActor.php      -- Actor blocklist
   Services/
     ActivityPubService.php      -- Main service (facade backed)
     HttpSignatureService.php    -- Outbound request signing
@@ -234,13 +261,12 @@ src/
 vendor/bin/pest
 ```
 
-91+ Pest tests across 10 test files covering actors, inbox processing, WebFinger, console commands, content delivery, and unit-tested activity building.
+119+ Pest tests across 12 test files covering actors, inbox processing, WebFinger, console commands, content delivery, Mastodon spec compliance, HTTP signatures, blocking, post forwarding, and unit-tested activity building.
 
 ## Roadmap
 
 - [ ] Account migration (Move / AlsoKnownAs)
 - [ ] Tailwind CSS build step (currently CDN)
-- [ ] Block activity filtering from timeline
 - [ ] JSON-LD compaction for Pleroma/Akkoma compatibility
 - [ ] Filament-based admin dashboard
 
