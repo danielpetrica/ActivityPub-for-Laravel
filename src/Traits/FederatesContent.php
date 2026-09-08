@@ -10,7 +10,16 @@ trait FederatesContent
 {
     public static function bootFederatesContent(): void
     {
-        static::saved(callback: function (Model $model): void {
+        // Capture federatable state BEFORE the save
+        static::saving(function (Model $model): void {
+            if (! ($model instanceof FederatableContentContract)) {
+                return;
+            }
+
+            $model->was_federatable_before_save = $model->shouldFederate();
+        });
+
+        static::saved(function (Model $model): void {
             if (! ($model instanceof FederatableContentContract)) {
                 return;
             }
@@ -21,7 +30,12 @@ trait FederatesContent
 
             $service = app(ActivityPubService::class);
 
-            if ($model->wasRecentlyCreated) {
+            // Send Create if:
+            // - Model was just created, OR
+            // - Model was NOT federatable before this save (draft → published)
+            $wasFederatable = $model->was_federatable_before_save ?? false;
+
+            if ($model->wasRecentlyCreated || ! $wasFederatable) {
                 $service->sendCreate(content: $model);
             } else {
                 $service->sendUpdate(content: $model);
