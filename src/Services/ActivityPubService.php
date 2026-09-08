@@ -336,6 +336,11 @@ final class ActivityPubService
         array $payload,
         bool $isIncoming = false,
     ): Activity {
+        // Track last activity for outbound actions
+        if (! $isIncoming) {
+            $localActor->update(['last_active_at' => now()]);
+        }
+
         $object = $payload['object'] ?? [];
         $objectId = is_string($object) ? $object : ($object['id'] ?? null);
         $objectType = is_array($object) ? ($object['type'] ?? null) : null;

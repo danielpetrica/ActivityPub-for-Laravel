@@ -2,6 +2,7 @@
 
 namespace DanielPetrica\LaravelActivityPub\Http\Controllers;
 
+use DanielPetrica\LaravelActivityPub\Models\Activity;
 use DanielPetrica\LaravelActivityPub\Models\Actor;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
@@ -34,8 +35,15 @@ final class NodeInfoController extends Controller
                 'outbound' => [],
             ],
             'usage' => [
+                'localPosts' => Activity::query()
+                    ->where('type', 'Create')
+                    ->where('is_incoming', false)
+                    ->count(),
                 'users' => [
                     'total' => Actor::query()->count(),
+                    'activeMonth' => Actor::query()
+                        ->where('last_active_at', '>=', now()->subDays(30))
+                        ->count(),
                 ],
             ],
             'openRegistrations' => config('activitypub.open_registrations', false),
