@@ -144,5 +144,9 @@ final class ActivityPubServiceProvider extends ServiceProvider
             ],
             groups: 'activitypub-views',
         );
+
+        \Illuminate\Support\Facades\Blade::directive('sanitize', function (string $expression) {
+            return "<?php echo \\DanielPetrica\\LaravelActivityPub\\Helpers\\ActivityPubHelper::sanitizeContent({$expression}); ?>";
+        });
     }
 }

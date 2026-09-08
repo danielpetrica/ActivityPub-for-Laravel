@@ -5,6 +5,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fediverse Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* ActivityPub post content styles */
+        .post-content p { margin-bottom: 0.5em; }
+        .post-content p:last-child { margin-bottom: 0; }
+        .post-content a { color: #4f46e5; text-decoration: none; }
+        .post-content a:hover { text-decoration: underline; }
+        .post-content blockquote {
+            border-left: 3px solid #e5e7eb;
+            padding-left: 1em;
+            margin: 0.5em 0;
+            color: #6b7280;
+        }
+        .post-content pre {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            overflow-x: auto;
+            font-size: 0.875rem;
+        }
+        .post-content code {
+            background: #f3f4f6;
+            padding: 0.125rem 0.25rem;
+            border-radius: 0.25rem;
+            font-size: 0.875em;
+        }
+        .post-content pre code {
+            background: none;
+            padding: 0;
+        }
+        .post-content ul, .post-content ol {
+            margin: 0.5em 0;
+            padding-left: 1.5em;
+        }
+        .post-content li { margin-bottom: 0.25em; }
+        .post-content h1, .post-content h2, .post-content h3,
+        .post-content h4, .post-content h5, .post-content h6 {
+            font-weight: 600;
+            margin: 0.75em 0 0.25em;
+        }
+
+        /* Mastodon microformat classes */
+        .h-card { display: inline; }
+        .u-url { color: #4f46e5; text-decoration: none; }
+        .u-url:hover { text-decoration: underline; }
+        .mention { color: #4f46e5; }
+        .invisible { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+        .ellipsis::after { content: "…"; }
+        .invisible + .ellipsis::after { content: none; }
+    </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
     <div class="flex">
