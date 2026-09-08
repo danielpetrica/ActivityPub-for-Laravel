@@ -6,6 +6,7 @@ use DanielPetrica\LaravelActivityPub\Models\Actor;
 use DanielPetrica\LaravelActivityPub\Services\KeyPairService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Throwable;
 
@@ -51,7 +52,7 @@ final class CreateActorCommand extends Command
         // Verify a matching user exists in the application
         $userModel = config(key: 'auth.providers.users.model');
 
-        if ($userModel !== null && class_exists(class: $userModel)) {
+        if ($userModel !== null && class_exists(class: $userModel) && Schema::hasTable((new $userModel)->getTable())) {
             $user = $userModel::query()
                 ->where(column: 'username', operator: '=', value: $username)
                 ->orWhere(column: 'email', operator: 'like', value: $username.'@%')
