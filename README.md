@@ -1,6 +1,12 @@
 # danielpetrica/activitypub-for-laravel
 
+[![LaraPlugins.io: danielpetrica/activitypub-for-laravel info card](https://laraplugins.io/api/infocard/danielpetrica/activitypub-for-laravel?design=facts&theme=light)](https://laraplugins.io/plugins/danielpetrica/activitypub-for-laravel)
+
 A self-hosted ActivityPub server for Laravel 13 that enables federation with the Fediverse (Mastodon, Pleroma/Akkoma, Misskey, Pixelfed, PeerTube, etc.).
+
+---
+
+[![LaraPlugins.io: danielpetrica/activitypub-for-laravel](https://laraplugins.io/api/infocard/danielpetrica/activitypub-for-laravel?design=badge&theme=light)](https://laraplugins.io/plugins/danielpetrica/activitypub-for-laravel)
 
 ## Features
 
