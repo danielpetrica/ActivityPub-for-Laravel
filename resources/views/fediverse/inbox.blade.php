@@ -42,7 +42,7 @@
                         @endphp
 
                         @if ($objContent)
-                            <div class="text-sm text-gray-600 mt-1 line-clamp-3 post-content">{{!! \DanielPetrica\LaravelActivityPub\Helpers\ActivityPubHelper::sanitizeContent($objContent) !!}}</div>
+                            <div class="text-sm text-gray-600 mt-1 line-clamp-3 post-content">{!! \DanielPetrica\LaravelActivityPub\Helpers\ActivityPubHelper::sanitizeContent($objContent) !!}</div>
                         @elseif ($objName)
                             <p class="text-sm text-gray-600 mt-1">"{{ Str::limit($objName, 100) }}"</p>
                         @endif

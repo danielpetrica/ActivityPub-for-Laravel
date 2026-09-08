@@ -56,7 +56,7 @@
                     @endif
 
                     @if ($objContent)
-                        <div class="text-sm text-gray-700 leading-relaxed post-content">{{!! \DanielPetrica\LaravelActivityPub\Helpers\ActivityPubHelper::sanitizeContent($objContent) !!}}</div>
+                        <div class="text-sm text-gray-700 leading-relaxed post-content">{!! \DanielPetrica\LaravelActivityPub\Helpers\ActivityPubHelper::sanitizeContent($objContent) !!}</div>
                     @endif
 
                     @if (!empty($mediaAttachments))
