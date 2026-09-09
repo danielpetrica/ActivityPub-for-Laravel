@@ -4,6 +4,7 @@ namespace DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse;
 
 use DanielPetrica\LaravelActivityPub\Jobs\DeliverActivity;
 use DanielPetrica\LaravelActivityPub\Jobs\FetchRemoteActor;
+use DanielPetrica\LaravelActivityPub\Jobs\ForwardPostsToNewServerJob;
 use DanielPetrica\LaravelActivityPub\Models\Activity;
 use DanielPetrica\LaravelActivityPub\Models\Actor;
 use DanielPetrica\LaravelActivityPub\Models\Follower;
@@ -246,5 +247,39 @@ final class StatusController extends Controller
 
         return redirect()->route('fediverse.status')
             ->with('success', "Pruned {$pruned} delivered activities older than 30 days.");
+    }
+
+    public function forwardPosts(Request $request): RedirectResponse
+    {
+        $localActor = $this->resolveLocalActor();
+
+        if (! $localActor) {
+            return redirect()->route('fediverse.status')->with('error', 'No local actor found.');
+        }
+
+        $models = config('activitypub.federatable_models', []);
+
+        if (empty($models)) {
+            return redirect()->route('fediverse.status')->with('error', 'No federatable models configured. Set ACTIVITYPUB_FEDERATED_MODELS in config.');
+        }
+
+        // Get all followers (one per domain)
+        $followerDomains = Follower::query()
+            ->where('actor_id', $localActor->id)
+            ->join('remote_actors', 'followers.remote_actor_id', '=', 'remote_actors.id')
+            ->select('remote_actors.id as remote_actor_id', 'remote_actors.domain')
+            ->distinct('remote_actors.domain')
+            ->get();
+
+        $jobCount = 0;
+        foreach ($followerDomains as $follower) {
+            ForwardPostsToNewServerJob::dispatch(
+                remoteActorId: $follower->remote_actor_id,
+                actorId: $localActor->id,
+            );
+            $jobCount++;
+        }
+
+        return redirect()->route('fediverse.status')->with('success', "Dispatched post forwarding to {$jobCount} server(s).");
     }
 }

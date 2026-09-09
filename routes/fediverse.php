@@ -48,3 +48,4 @@ Route::get(uri: '/status', action: StatusController::class)->name(name: 'status'
 Route::post(uri: '/status/reschedule', action: [StatusController::class, 'reschedulePending'])->name(name: 'status.reschedule');
 Route::post(uri: '/status/refresh-accounts', action: [StatusController::class, 'refreshFollowedAccounts'])->name(name: 'status.refresh-accounts');
 Route::post(uri: '/status/prune', action: [StatusController::class, 'pruneOldActivities'])->name(name: 'status.prune');
+Route::post(uri: '/status/forward-posts', action: [StatusController::class, 'forwardPosts'])->name(name: 'status.forward-posts');
