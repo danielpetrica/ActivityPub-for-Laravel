@@ -232,6 +232,57 @@ ActivityPub::sendUpdate($post);
 ActivityPub::sendDelete($post->getActivityPubId(), $post->activityPubActor());
 ```
 
+### Post Forwarding
+
+When the first user from a remote server follows your account, the plugin can automatically forward your oldest posts to populate their server with your content.
+
+#### Setup
+
+1. Register your content models in the config:
+
+```php
+// config/activitypub.php
+'federatable_models' => [
+    \App\Models\Post::class,
+    \App\Models\Article::class,
+],
+```
+
+2. Each model must implement `FederatableContentContract` and use the `FederatesContent` trait (see above).
+
+3. Enable federation:
+```env
+ACTIVITYPUB_FEDERATION_ENABLED=true
+```
+
+#### How it works
+
+- When the first follower from a domain follows you, `ForwardPostsToNewServerJob` is dispatched
+- It queries your registered `federatable_models` for the 3 oldest published posts (`shouldFederate() == true`)
+- Recreates fresh `Create` activities and delivers them to the remote server's inbox
+- Only fires once per domain (first follower trigger)
+
+#### Manual forwarding
+
+You can also manually trigger post forwarding from the Fediverse dashboard:
+
+1. Go to `/fediverse/status`
+2. Click "Forward Posts" in the Maintenance section
+3. This sends your posts to all current follower servers
+
+#### Pinned posts
+
+Implement `isActivityPubPinned()` on your model to mark posts as pinned:
+
+```php
+public function isActivityPubPinned(): bool
+{
+    return $this->is_pinned;
+}
+```
+
+Pinned posts are displayed with a "Pinned" badge in the outbox view.
+
 ## Architecture
 
 ```
