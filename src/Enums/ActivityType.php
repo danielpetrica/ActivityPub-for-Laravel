@@ -6,6 +6,7 @@ enum ActivityType: string
 {
     case Accept = 'Accept';
     case Announce = 'Announce';
+    case Block = 'Block';
     case Create = 'Create';
     case Delete = 'Delete';
     case Follow = 'Follow';

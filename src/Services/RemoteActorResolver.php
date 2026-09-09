@@ -176,8 +176,9 @@ final class RemoteActorResolver
 
         $ip = gethostbyname(hostname: $host);
 
+        // If DNS resolution fails (returns hostname unchanged), block the request
         if ($ip === $host) {
-            return false;
+            return true;
         }
 
         if (filter_var(value: $ip, filter: FILTER_VALIDATE_IP, options: FILTER_FLAG_IPV6)) {
@@ -200,8 +201,10 @@ final class RemoteActorResolver
         $second = (int) $parts[1];
 
         $isPrivate = (
-            $first === 127
+            $first === 0
             || $first === 10
+            || $first === 127
+            || ($first === 169 && $second === 254)
             || ($first === 172 && $second >= 16 && $second <= 31)
             || ($first === 192 && $second === 168)
         );

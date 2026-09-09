@@ -125,6 +125,8 @@ ACTIVITYPUB_FEDIVERSE_GATE=null                       # Gate name for authorizat
 
 The full configuration is published to `config/activitypub.php` and includes settings for routes, HTTP signatures, federation timeouts, and the actor model class.
 
+> **⚠️ Warning:** The plugin encrypts actor private keys using your `APP_KEY`. If you change or rotate your `APP_KEY`, all existing actors' HTTP signatures will break and federation will stop working. Back up your `APP_KEY` before rotating it.
+
 ## Authorization
 
 The Fediverse dashboard is protected by Laravel's gate system. By default, any authenticated user can access it. To restrict access, define a gate in your `AuthServiceProvider` and configure it:

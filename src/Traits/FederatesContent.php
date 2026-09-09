@@ -16,7 +16,7 @@ trait FederatesContent
                 return;
             }
 
-            $model->was_federatable_before_save = $model->shouldFederate();
+            $model->setAttribute('_was_federatable_before_save', $model->shouldFederate() ? 1 : 0);
         });
 
         static::saved(function (Model $model): void {
@@ -33,7 +33,7 @@ trait FederatesContent
             // Send Create if:
             // - Model was just created, OR
             // - Model was NOT federatable before this save (draft → published)
-            $wasFederatable = $model->was_federatable_before_save ?? false;
+            $wasFederatable = (bool) $model->getAttribute('_was_federatable_before_save');
 
             if ($model->wasRecentlyCreated || ! $wasFederatable) {
                 $service->sendCreate(content: $model);

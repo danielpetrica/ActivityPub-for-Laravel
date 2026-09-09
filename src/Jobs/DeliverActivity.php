@@ -114,7 +114,8 @@ final class DeliverActivity implements ShouldBeUnique, ShouldQueue
                 'status' => $responseCode,
             ]);
 
-            $this->release(delay: 60);
+            $this->fail(new \RuntimeException("Delivery failed with status {$responseCode}"));
+            return;
         }
     }
 

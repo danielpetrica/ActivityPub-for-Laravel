@@ -24,6 +24,8 @@ final class ForwardPostsToNewServerJob implements ShouldBeUnique, ShouldQueue
 
     public int $uniqueFor = 3600;
 
+    public array $backoff = [30, 120, 600];
+
     public function uniqueId(): string
     {
         return 'forward-posts:'.$this->remoteActorId;
@@ -113,5 +115,14 @@ final class ForwardPostsToNewServerJob implements ShouldBeUnique, ShouldQueue
                 ]);
             }
         }
+    }
+
+    public function failed(\Throwable $e): void
+    {
+        Log::error('ForwardPostsToNewServerJob: permanently failed', [
+            'remoteActorId' => $this->remoteActorId,
+            'actorId' => $this->actorId,
+            'error' => $e->getMessage(),
+        ]);
     }
 }

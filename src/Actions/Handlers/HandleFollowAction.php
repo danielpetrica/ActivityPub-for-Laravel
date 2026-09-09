@@ -104,13 +104,17 @@ final class HandleFollowAction implements ActivityHandler
             return;
         }
 
+        $status = $actor->manually_approves_followers
+            ? FollowerStatus::Pending
+            : FollowerStatus::Accepted;
+
         Follower::query()->updateOrCreate(
             attributes: [
                 'actor_id' => $actor->id,
                 'remote_actor_id' => $remoteActor->id,
             ],
             values: [
-                'status' => FollowerStatus::Accepted,
+                'status' => $status,
             ],
         );
 
@@ -127,23 +131,25 @@ final class HandleFollowAction implements ActivityHandler
             isIncoming: true,
         );
 
-        $acceptActivity = $this->activityBuilder->accept(
-            actor: $actor,
-            originalPayload: $payload,
-        );
+        if ($status === FollowerStatus::Accepted) {
+            $acceptActivity = $this->activityBuilder->accept(
+                actor: $actor,
+                originalPayload: $payload,
+            );
 
-        $acceptRecord = $this->activityPubService->recordActivity(
-            localActor: $actor,
-            type: ActivityType::Accept,
-            remoteActor: $remoteActor,
-            payload: $acceptActivity,
-        );
+            $acceptRecord = $this->activityPubService->recordActivity(
+                localActor: $actor,
+                type: ActivityType::Accept,
+                remoteActor: $remoteActor,
+                payload: $acceptActivity,
+            );
 
-        DeliverActivity::dispatch(
-            inboxUrl: $remoteActor->inbox_url,
-            activityModelId: $acceptRecord->id,
-            actorId: $actor->id,
-        );
+            DeliverActivity::dispatch(
+                inboxUrl: $remoteActor->inbox_url,
+                activityModelId: $acceptRecord->id,
+                actorId: $actor->id,
+            );
+        }
 
         // Forward posts to new server on first follower from domain
         $existingFollowersFromDomain = Follower::query()

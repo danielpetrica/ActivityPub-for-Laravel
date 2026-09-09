@@ -90,7 +90,7 @@ return [
     |
     */
     'federation' => [
-        'enabled' => env('ACTIVITYPUB_FEDERATION_ENABLED', false),
+        'enabled' => env('ACTIVITYPUB_FEDERATION_ENABLED', true),
         'max_delivery_attempts' => 3,
         'delivery_timeout' => 10,
         'resolve_timeout' => env('ACTIVITYPUB_RESOLVE_TIMEOUT', 10),

@@ -15,6 +15,7 @@ use DanielPetrica\LaravelActivityPub\Models\Actor;
 use DanielPetrica\LaravelActivityPub\Models\Follower;
 use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 final class ActivityPubService
 {
@@ -286,7 +287,7 @@ final class ActivityPubService
     {
         return [
             '@context' => 'https://www.w3.org/ns/activitystreams',
-            'id' => $actor->getActorId().'#'.$type.'/'.time(),
+            'id' => $actor->getActorId().'#'.$type.'/'.Str::uuid(),
             'type' => $type,
             'actor' => $actor->getActorId(),
             'object' => $object,

@@ -183,10 +183,10 @@ it('accepts valid incoming signature', function (): void {
     $keys = generateTestKeyPair();
 
     $remoteActor = RemoteActor::query()->create(attributes: [
-        'actor_url' => 'https://valid.example.com/users/sender',
-        'inbox_url' => 'https://valid.example.com/users/sender/inbox',
+        'actor_url' => 'https://localhost/users/sender',
+        'inbox_url' => 'https://localhost/users/sender/inbox',
         'username' => 'sender',
-        'domain' => 'valid.example.com',
+        'domain' => 'localhost',
         'public_key_pem' => $keys['public'],
     ]);
 

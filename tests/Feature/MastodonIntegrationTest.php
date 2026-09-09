@@ -204,6 +204,7 @@ it('returns followers and following as proper collection URLs', function (): voi
 });
 
 it('delivers Accept to remote inbox with correct structure', function (): void {
+    Bus::fake();
     config()->set('activitypub.federation.enabled', true);
 
     $remoteActor = RemoteActor::query()->create([

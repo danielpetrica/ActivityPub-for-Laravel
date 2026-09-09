@@ -41,7 +41,7 @@ final class HandleBlockAction implements ActivityHandler
 
         $this->activityPubService->recordActivity(
             localActor: $actor,
-            type: ActivityType::Undo,
+            type: ActivityType::Block,
             remoteActor: $remoteActor,
             payload: $payload,
             isIncoming: true,

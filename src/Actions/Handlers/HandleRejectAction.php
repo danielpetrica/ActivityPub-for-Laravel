@@ -45,7 +45,7 @@ final class HandleRejectAction implements ActivityHandler
 
         $this->activityPubService->recordActivity(
             localActor: $actor,
-            type: ActivityType::Undo,
+            type: ActivityType::Reject,
             remoteActor: $remoteActor,
             payload: $payload,
             isIncoming: true,

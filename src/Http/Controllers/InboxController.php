@@ -83,7 +83,7 @@ final class InboxController extends Controller
 
     public function __invoke(InboxRequest $request, Actor $actor): JsonResponse
     {
-        if ($request->header('Content-Length') && (int) $request->header('Content-Length') > 1048576) {
+        if (strlen($request->getContent()) > 1048576) {
             return response()->json(['error' => 'Payload too large.'], 413);
         }
 
@@ -108,7 +108,7 @@ final class InboxController extends Controller
 
     public function sharedInbox(InboxRequest $request): JsonResponse
     {
-        if ($request->header('Content-Length') && (int) $request->header('Content-Length') > 1048576) {
+        if (strlen($request->getContent()) > 1048576) {
             return response()->json(['error' => 'Payload too large.'], 413);
         }
 
