@@ -109,23 +109,7 @@ final class VerifyHttpSignature
 
         $actorUrl = str_replace(search: '#main-key', replace: '', subject: $keyId);
 
-        // Validate keyId domain matches request origin
-        $keyIdHost = parse_url($actorUrl, PHP_URL_HOST);
-        $requestHost = $request->getHost();
-
-        // Allow forwarded host from reverse proxies
-        $forwardedHost = $request->header('x-forwarded-host');
-        $hostHeader = $request->header('host');
-
-        $validHosts = array_filter([$requestHost, $forwardedHost, $hostHeader]);
-
-        if ($keyIdHost !== null && ! in_array($keyIdHost, $validHosts)) {
-            return response()->json(
-                data: ['error' => 'keyId domain does not match request origin.'],
-                status: 401,
-            );
-        }
-
+        // Validate keyId uses HTTPS — prevents downgrade attacks
         if (parse_url($actorUrl, PHP_URL_SCHEME) !== 'https') {
             return response()->json(
                 data: ['error' => 'keyId must use HTTPS.'],
