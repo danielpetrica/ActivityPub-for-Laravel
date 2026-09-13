@@ -27,7 +27,7 @@ final class TimelineController extends Controller
             ->with(['remoteActor', 'actor'])
             ->whereIn('remote_actor_id', $followedActorIds)
             ->where(column: 'is_incoming', operator: '=', value: true)
-            ->where(column: 'type', operator: '=', value: 'Create')
+            ->whereIn('type', ['Create', 'Announce'])
             ->latest()
             ->paginate(perPage: 20);
 
