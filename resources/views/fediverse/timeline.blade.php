@@ -11,7 +11,7 @@
         <div class="flex flex-col gap-4">
             @foreach ($activities as $activity)
                 @php
-                    $isAnnounce = $activity->type === 'Announce';
+                    $isAnnounce = $activity->type->value === 'Announce';
                     $object = $activity->payload['object'] ?? [];
                     $objContent = is_array($object) ? ($object['content'] ?? null) : null;
                     $objName = is_array($object) ? ($object['name'] ?? null) : null;
