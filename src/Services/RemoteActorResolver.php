@@ -7,6 +7,7 @@ use DanielPetrica\LaravelActivityPub\Jobs\FetchRemoteActor;
 use DanielPetrica\LaravelActivityPub\Models\Actor;
 use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
 use DanielPetrica\LaravelActivityPub\Traits\LogsActivityPub;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 final class RemoteActorResolver
@@ -14,6 +15,9 @@ final class RemoteActorResolver
     use LogsActivityPub;
 
     private array $cache = [];
+
+    /** Cache failed resolutions for 1 hour to avoid spamming dead actor URLs. */
+    private const FAILURE_CACHE_TTL = 3600;
 
     public function __construct(
         private HttpSignatureService $httpSignatureService,
@@ -24,6 +28,14 @@ final class RemoteActorResolver
         $data = $preFetchedData;
 
         if ($data === null) {
+            // Check if we recently failed to resolve this actor (e.g. 410 Gone)
+            $failureKey = 'actor-resolve-fail:'.md5($actorUri);
+            if (Cache::has($failureKey)) {
+                $this->activityPubLog('info', 'Skipping recently failed actor resolution', ['actorUri' => $actorUri]);
+
+                return null;
+            }
+
             $this->activityPubLog('info', 'Resolving remote actor', ['actorUri' => $actorUri]);
 
             $data = $this->fetchActorData(actorUri: $actorUri);
@@ -98,11 +110,20 @@ final class RemoteActorResolver
                 ->get(url: $actorUri);
 
             if (! $response->successful()) {
+                $statusCode = $response->status();
+
                 $this->activityPubLog('warning', 'Remote actor HTTP fetch failed', [
                     'actorUri' => $actorUri,
-                    'statusCode' => $response->status(),
+                    'statusCode' => $statusCode,
                     'responseBody' => mb_strcut($response->body(), 0, 500),
                 ]);
+
+                // Cache 410 (Gone) and 404 (Not Found) to avoid repeated fetches
+                // for deleted or fake accounts
+                if ($statusCode === 410 || $statusCode === 404) {
+                    $failureKey = 'actor-resolve-fail:'.md5($actorUri);
+                    Cache::put(key: $failureKey, value: true, ttl: now()->addSeconds(seconds: self::FAILURE_CACHE_TTL));
+                }
 
                 return null;
             }
