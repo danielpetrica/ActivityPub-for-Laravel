@@ -87,19 +87,35 @@ final class ActivityPubService
         }
     }
 
-    public function sendCreateForActor(FederatableContentContract $content, Actor $actor): Activity
+    public function sendCreateForActor(FederatableContentContract $content, Actor $actor, ?RemoteActor $target = null, ?string $to = null): Activity
     {
         $object = $this->buildObject(content: $content);
+
+        if ($to !== null) {
+            $object['to'] = [$to];
+        }
+
         $activity = $this->buildActivity(type: 'Create', actor: $actor, object: $object);
 
         $record = $this->recordActivity(
             localActor: $actor,
             type: ActivityType::Create,
-            remoteActor: null,
+            remoteActor: $target,
             payload: $activity,
         );
 
-        $this->deliverToFollowers(actor: $actor, activity: $activity, activityId: $record->id);
+        if ($target !== null) {
+            $inboxUrl = $target->shared_inbox_url ?? $target->inbox_url;
+            if (config('activitypub.federation.enabled')) {
+                DeliverActivity::dispatch(
+                    inboxUrl: $inboxUrl,
+                    activityModelId: $record->id,
+                    actorId: $actor->id,
+                );
+            }
+        } else {
+            $this->deliverToFollowers(actor: $actor, activity: $activity, activityId: $record->id);
+        }
 
         return $record;
     }

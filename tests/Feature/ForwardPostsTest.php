@@ -144,6 +144,11 @@ class TestUser extends Authenticatable implements ActorContract
         return null;
     }
 
+    public function getProfileUrl(): string
+    {
+        return url('/users/'.$this->getPreferredUsername());
+    }
+
     public function getActorId(): string
     {
         return url('/users/'.$this->getPreferredUsername());
@@ -233,7 +238,7 @@ it('does nothing when no federatable models are configured', function (): void {
     Bus::assertNotDispatched(DeliverActivity::class);
 });
 
-it('forwards oldest published posts to new follower', function (): void {
+it('forwards newest published posts to new follower', function (): void {
     config()->set('activitypub.federatable_models', [FederatablePost::class]);
 
     $remoteActor = RemoteActor::query()->create([
@@ -268,6 +273,44 @@ it('forwards oldest published posts to new follower', function (): void {
     $afterCount = Activity::query()->where('actor_id', $this->actor->id)->where('type', 'Create')->where('is_incoming', false)->count();
 
     expect($afterCount - $beforeCount)->toBe(3);
+});
+
+it('forwards newest posts when more than maxPosts exist', function (): void {
+    config()->set('activitypub.federatable_models', [FederatablePost::class]);
+    config()->set('activitypub.federation.enabled', true);
+
+    $remoteActor = RemoteActor::query()->create([
+        'actor_url' => 'https://mastodon.social/users/dave',
+        'inbox_url' => 'https://mastodon.social/users/dave/inbox',
+        'username' => 'dave',
+        'domain' => 'mastodon.social',
+    ]);
+
+    // Create 5 posts: oldest (5 days ago) to newest (1 day ago)
+    for ($i = 0; $i < 5; $i++) {
+        Activity::query()->create([
+            'actor_id' => $this->actor->id,
+            'type' => 'Create',
+            'object_type' => 'Note',
+            'object_id' => url('/posts/'.$i),
+            'payload' => ['@context' => 'https://www.w3.org/ns/activitystreams', 'type' => 'Create'],
+            'status' => 'delivered',
+            'is_incoming' => false,
+            'created_at' => now()->subDays(5 - $i),
+        ]);
+    }
+
+    Bus::fake();
+
+    $job = new ForwardPostsToNewServerJob(
+        remoteActorId: $remoteActor->id,
+        actorId: $this->actor->id,
+    );
+
+    $job->handle(app(ActivityPubService::class));
+
+    // Should forward 3 posts (newest)
+    Bus::assertDispatched(DeliverActivity::class, 3);
 });
 
 it('forwards only 3 posts by default', function (): void {

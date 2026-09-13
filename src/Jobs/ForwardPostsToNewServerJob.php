@@ -66,7 +66,7 @@ final class ForwardPostsToNewServerJob implements ShouldBeUnique, ShouldQueue
                 continue;
             }
 
-            // Query published posts, oldest first, limited by maxPosts
+            // Query published posts, newest first, limited by maxPosts
             $query = $model->newQuery()
                 ->where(function ($query) use ($modelClass) {
                     // If the model has a 'published_at' column, use it
@@ -75,7 +75,7 @@ final class ForwardPostsToNewServerJob implements ShouldBeUnique, ShouldQueue
                         $query->whereNotNull('published_at');
                     }
                 })
-                ->orderBy('created_at', 'asc')
+                ->orderByDesc('created_at')
                 ->limit($this->maxPosts - $posts->count());
 
             $results = $query->get()
@@ -102,6 +102,8 @@ final class ForwardPostsToNewServerJob implements ShouldBeUnique, ShouldQueue
                 $activityPubService->sendCreateForActor(
                     content: $post,
                     actor: $actor,
+                    target: $remoteActor,
+                    to: 'https://www.w3.org/ns/activitystreams#Public',
                 );
 
                 Log::info('ForwardPostsToNewServerJob: forwarded post', [
