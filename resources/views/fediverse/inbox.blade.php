@@ -3,7 +3,7 @@
 @section('content')
     <h2 class="h2 mb-6">Inbox</h2>
 
-    @if ($activities->isEmpty())
+    @if ($activities->isEmpty() && ($rejectedLogs === null || $rejectedLogs->isEmpty()))
         <div class="card p-8 text-center">
             <p class="text-muted">No incoming activities yet. When someone follows you or interacts with your content, it will appear here.</p>
         </div>
@@ -62,6 +62,60 @@
 
         <div class="mt-6">
             {{ $activities->links() }}
+        </div>
+    @endif
+
+    {{-- Rejected requests (debug mode only) --}}
+    @if (config('activitypub.debug_display') && $rejectedLogs !== null && ! $rejectedLogs->isEmpty())
+        <h2 class="h2 mt-8 mb-4">Rejected Requests</h2>
+        <div class="card">
+            @foreach ($rejectedLogs as $log)
+                <div class="p-4 flex items-start gap-4 border-bottom">
+                    <span class="badge badge-red">{{ $log->status_code }}</span>
+
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-1">
+                            @if ($log->actor_url)
+                                <span class="text-sm">{{ $log->actor_url }}</span>
+                            @else
+                                <span class="text-sm text-muted">Unknown actor</span>
+                            @endif
+
+                            @if ($log->key_id)
+                                <span class="text-xs text-muted truncate" title="{{ $log->key_id }}">{{ Str::afterLast($log->key_id, '/') }}</span>
+                            @endif
+                        </div>
+
+                        <p class="text-sm font-semibold text-red-700 mt-1">{{ $log->reason }}</p>
+
+                        @if ($log->headers)
+                            <details class="mt-2">
+                                <summary class="text-xs text-muted">Request details</summary>
+                                <div class="mt-1 text-xs text-muted">
+                                    @if ($log->ip)
+                                        <p>IP: {{ $log->ip }}</p>
+                                    @endif
+                                    @if ($log->method && $log->path)
+                                        <p>{{ $log->method }} /{{ $log->path }}</p>
+                                    @endif
+                                    @foreach ($log->headers as $key => $value)
+                                        <p>{{ $key }}: {{ Str::limit($value, 80) }}</p>
+                                    @endforeach
+                                    @if ($log->body_summary)
+                                        <pre class="mt-1 p-2 rounded overflow-auto max-h-32">{{ Str::limit($log->body_summary, 500) }}</pre>
+                                    @endif
+                                </div>
+                            </details>
+                        @endif
+
+                        <p class="text-xs text-muted mt-1">{{ $log->created_at->diffForHumans() }}</p>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        <div class="mt-6">
+            {{ $rejectedLogs->links() }}
         </div>
     @endif
 @endsection

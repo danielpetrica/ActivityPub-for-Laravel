@@ -3,6 +3,7 @@
 namespace DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse;
 
 use DanielPetrica\LaravelActivityPub\Models\Activity;
+use DanielPetrica\LaravelActivityPub\Models\InboxLog;
 use DanielPetrica\LaravelActivityPub\Traits\ResolvesLocalActor;
 use Illuminate\Routing\Controller;
 use Illuminate\View\View;
@@ -23,8 +24,17 @@ final class InboxController extends Controller
             ->latest()
             ->paginate(perPage: 20);
 
+        $rejectedLogs = null;
+        if (config('activitypub.debug_display')) {
+            $rejectedLogs = InboxLog::query()
+                ->where('actor_id', $localActor->id)
+                ->latest()
+                ->paginate(perPage: 20);
+        }
+
         return view(view: 'activitypub::fediverse.inbox', data: [
             'activities' => $activities,
+            'rejectedLogs' => $rejectedLogs,
             'actor' => $user,
         ]);
     }

@@ -2,7 +2,10 @@
 
 namespace DanielPetrica\LaravelActivityPub\Http\Requests;
 
+use DanielPetrica\LaravelActivityPub\Helpers\InboxLogger;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\ValidationException;
 
 class InboxRequest extends FormRequest
 {
@@ -31,5 +34,17 @@ class InboxRequest extends FormRequest
             'object.required' => 'Activity object is required.',
             '@context.present' => 'Activity @context must be present.',
         ];
+    }
+
+    protected function failedValidation(Validator $validator): void
+    {
+        $errors = $validator->errors()->first();
+        InboxLogger::logRejected(
+            request: $this,
+            statusCode: 422,
+            reason: 'Validation failed: '.$errors,
+        );
+
+        throw ValidationException::withMessages($validator->errors()->toArray());
     }
 }

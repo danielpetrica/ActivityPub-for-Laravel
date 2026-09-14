@@ -3,6 +3,7 @@
 namespace DanielPetrica\LaravelActivityPub\Http\Middleware;
 
 use Closure;
+use DanielPetrica\LaravelActivityPub\Helpers\InboxLogger;
 use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
 use DanielPetrica\LaravelActivityPub\Services\RemoteActorResolver;
 use Illuminate\Http\Request;
@@ -29,19 +30,13 @@ final class VerifyHttpSignature
         $signatureHeader = $request->header(key: 'signature');
 
         if ($signatureHeader === null) {
-            return response()->json(
-                data: ['error' => 'Signature header required.'],
-                status: 401,
-            );
+            return $this->reject(request: $request, error: 'Signature header required.');
         }
 
         $parsed = $this->parseDraftCavageHeader(header: $signatureHeader);
 
         if ($parsed === null) {
-            return response()->json(
-                data: ['error' => 'Invalid Signature header format.'],
-                status: 401,
-            );
+            return $this->reject(request: $request, error: 'Invalid Signature header format.');
         }
 
         $keyId = $parsed['keyId'];
@@ -107,10 +102,7 @@ final class VerifyHttpSignature
                 );
 
                 if (! hash_equals(known_string: $normalizedDigest, user_string: $computedDigest)) {
-                    return response()->json(
-                        data: ['error' => 'Digest header does not match body.'],
-                        status: 401,
-                    );
+                    return $this->reject(request: $request, error: 'Digest header does not match body.');
                 }
             }
         }
@@ -128,10 +120,7 @@ final class VerifyHttpSignature
         $remoteActor = $this->resolveRemoteActor(actorUrl: $actorUrl);
 
         if ($remoteActor === null) {
-            return response()->json(
-                data: ['error' => 'Unknown remote actor.'],
-                status: 401,
-            );
+            return $this->reject(request: $request, error: 'Unknown remote actor.');
         }
 
         $verified = $this->verifyDraftCavageSignature(
@@ -141,10 +130,7 @@ final class VerifyHttpSignature
         );
 
         if (! $verified) {
-            return response()->json(
-                data: ['error' => 'Signature verification failed.'],
-                status: 401,
-            );
+            return $this->reject(request: $request, error: 'Signature verification failed.');
         }
 
         $request->attributes->set(key: 'remote_actor', value: $remoteActor);
@@ -161,19 +147,13 @@ final class VerifyHttpSignature
         $parsed = $this->parseRfc9421SignatureInput(header: $signatureInputHeader);
 
         if ($parsed === null) {
-            return response()->json(
-                data: ['error' => 'Invalid Signature-Input header format.'],
-                status: 401,
-            );
+            return $this->reject(request: $request, error: 'Invalid Signature-Input header format.');
         }
 
         $keyId = $parsed['keyId'];
 
         if ($keyId === null) {
-            return response()->json(
-                data: ['error' => 'Missing keyid in Signature-Input.'],
-                status: 401,
-            );
+            return $this->reject(request: $request, error: 'Missing keyid in Signature-Input.');
         }
 
         // Validate algorithm is RSA-SHA256
@@ -204,19 +184,13 @@ final class VerifyHttpSignature
         $signatureHeader = $request->header(key: 'signature');
 
         if ($signatureHeader === null) {
-            return response()->json(
-                data: ['error' => 'Signature header required.'],
-                status: 401,
-            );
+            return $this->reject(request: $request, error: 'Signature header required.');
         }
 
         $signatureValue = $this->extractRfc9421Signature(header: $signatureHeader, label: $parsed['label']);
 
         if ($signatureValue === null) {
-            return response()->json(
-                data: ['error' => 'Invalid Signature header format for RFC 9421.'],
-                status: 401,
-            );
+            return $this->reject(request: $request, error: 'Invalid Signature header format for RFC 9421.');
         }
 
         // Replay check
@@ -242,10 +216,7 @@ final class VerifyHttpSignature
         $remoteActor = $this->resolveRemoteActor(actorUrl: $actorUrl);
 
         if ($remoteActor === null) {
-            return response()->json(
-                data: ['error' => 'Unknown remote actor.'],
-                status: 401,
-            );
+            return $this->reject(request: $request, error: 'Unknown remote actor.');
         }
 
         // Build RFC 9421 signing string and verify
@@ -256,10 +227,7 @@ final class VerifyHttpSignature
         if ($signature === false) {
             Log::debug('VerifyHttpSignature: invalid base64 signature (RFC 9421)');
 
-            return response()->json(
-                data: ['error' => 'Invalid base64 signature.'],
-                status: 401,
-            );
+            return $this->reject(request: $request, error: 'Invalid base64 signature.');
         }
 
         $verified = openssl_verify(
@@ -276,10 +244,7 @@ final class VerifyHttpSignature
                 'opensslError' => openssl_error_string(),
             ]);
 
-            return response()->json(
-                data: ['error' => 'Signature verification failed.'],
-                status: 401,
-            );
+            return $this->reject(request: $request, error: 'Signature verification failed.');
         }
 
         $request->attributes->set(key: 'remote_actor', value: $remoteActor);
@@ -534,6 +499,16 @@ final class VerifyHttpSignature
         }
 
         return rtrim(string: $signingString);
+    }
+
+    protected function reject(Request $request, string $error, int $status = 401): Response
+    {
+        InboxLogger::logRejected(request: $request, statusCode: $status, reason: $error);
+
+        return response()->json(
+            data: ['error' => $error],
+            status: $status,
+        );
     }
 
     protected function verifyWithString(string $signingString, string $signature, string $publicKey): bool
