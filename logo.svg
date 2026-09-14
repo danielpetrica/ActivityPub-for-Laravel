@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F97316"/>
+      <stop offset="100%" stop-color="#EA580C"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#g)"/>
+  <!-- Network nodes -->
+  <circle cx="60" cy="40" r="10" fill="white" opacity="0.95"/>
+  <circle cx="32" cy="72" r="8" fill="white" opacity="0.85"/>
+  <circle cx="88" cy="72" r="8" fill="white" opacity="0.85"/>
+  <circle cx="60" cy="96" r="6" fill="white" opacity="0.7"/>
+  <!-- Connecting lines -->
+  <line x1="60" y1="50" x2="36" y2="66" stroke="white" stroke-width="2.5" opacity="0.5"/>
+  <line x1="60" y1="50" x2="84" y2="66" stroke="white" stroke-width="2.5" opacity="0.5"/>
+  <line x1="36" y1="78" x2="57" y2="92" stroke="white" stroke-width="2" opacity="0.4"/>
+  <line x1="84" y1="78" x2="63" y2="92" stroke="white" stroke-width="2" opacity="0.4"/>
+  <line x1="36" y1="72" x2="84" y2="72" stroke="white" stroke-width="2" opacity="0.35"/>
+</svg>
