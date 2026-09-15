@@ -30,6 +30,16 @@ A self-hosted ActivityPub server for Laravel 13 that enables federation with the
 - `reject()` method in ActivityBuilder
 - `Activity` model tracks all federated activities with backed `ActivityStatus` enum (pending, delivered, received, failed)
 
+**Interaction Tracking**
+- Polymorphic `Interaction` model for likes, boosts, bookmarks, quotes, comments
+- `InteractionType` enum (Like, Announce, Bookmark, Quote, Comment)
+- `InteractionStatus` enum (Active, Undone) for undo support
+- Incoming Like/Announce automatically tracked as interactions
+- Incoming Undo(Like)/Undo(Announce) properly reverses interactions
+- Deduplication with reactivation for undone interactions
+- Static `ActivityInteractions` API for integrating clients (count, check, mutate, query)
+- Favorites tab in the Fediverse UI
+
 **HTTP Signatures**
 - RSA-SHA256 incoming verification and outbound signing
 - Digest header required for non-empty POST bodies
@@ -59,7 +69,7 @@ A self-hosted ActivityPub server for Laravel 13 that enables federation with the
 - Skip data query on paginated collection pages > 1
 
 **Web UI**
-- Blade-based Fediverse dashboard with 11 views (dashboard, timeline, inbox, discover, profile, outbox, following, followers, servers, status, layout)
+- Blade-based Fediverse dashboard with 12 views (dashboard, timeline, inbox, discover, profile, outbox, following, followers, servers, status, favorites, layout)
 - Federated servers page (/fediverse/servers) showing all remote domains with follower counts
 - Block/unblock servers and users from the UI
 - Status/diagnostics page (/fediverse/status) showing queue health, federation status, activity counts
@@ -71,7 +81,7 @@ A self-hosted ActivityPub server for Laravel 13 that enables federation with the
 **Content Forwarding**
 - Automatic post forwarding to new servers on first follow from a domain
 - Configurable via `federatable_models` config option
-- Delivers 3 oldest published posts from registered content models
+- Delivers 3 newest published posts from registered content models
 - `isActivityPubPinned()` method on FederatableContentContract
 
 **Blocking**
@@ -234,9 +244,90 @@ ActivityPub::sendUpdate($post);
 ActivityPub::sendDelete($post->getActivityPubId(), $post->activityPubActor());
 ```
 
+### Activity Interactions
+
+The package tracks likes, boosts, bookmarks, and other interactions via a polymorphic `Interaction` model. This data is available for both the Fediverse UI and integrating clients (e.g., your blog's frontend).
+
+#### Static API
+
+```php
+use DanielPetrica\LaravelActivityPub\Services\ActivityInteractions;
+use DanielPetrica\LaravelActivityPub\Enums\InteractionType;
+
+// ── Counts ──
+ActivityInteractions::likeCount($post);      // int
+ActivityInteractions::boostCount($post);     // int
+ActivityInteractions::bookmarkCount($post);  // int
+ActivityInteractions::commentCount($post);   // int
+ActivityInteractions::quoteCount($post);     // int
+
+// ── Boolean checks ──
+ActivityInteractions::hasLiked($post, $user);    // bool
+ActivityInteractions::hasBoosted($post, $user);   // bool
+ActivityInteractions::hasBookmarked($post, $user); // bool
+
+// ── Mutations ──
+ActivityInteractions::like($user, $post);      // Interaction
+ActivityInteractions::unlike($user, $post);    // void
+ActivityInteractions::boost($user, $post);     // Interaction
+ActivityInteractions::unboost($user, $post);   // void
+ActivityInteractions::bookmark($user, $post);  // Interaction
+ActivityInteractions::unbookmark($user, $post); // void
+
+// ── Queries ──
+ActivityInteractions::likers($post);           // Collection<Actor>
+ActivityInteractions::boosters($post);          // Collection<Actor>
+ActivityInteractions::bookmarks($user);         // Collection<Interaction>
+ActivityInteractions::recentForModel($post, InteractionType::Like, 20); // Collection
+```
+
+#### Displaying counts in your app
+
+```blade
+{{-- In a Blade view for a blog post --}}
+@php
+    use DanielPetrica\LaravelActivityPub\Services\ActivityInteractions;
+@endphp
+
+<button>
+    ❤️ {{ ActivityInteractions::likeCount($post) }}
+</button>
+<button>
+    🔁 {{ ActivityInteractions::boostCount($post) }}
+</button>
+<button>
+    🔖 {{ ActivityInteractions::bookmarkCount($post) }}
+</button>
+```
+
+#### How incoming interactions work
+
+When a remote user likes or boosts your content, the package:
+1. Receives the Like/Announce activity via the inbox
+2. Resolves the remote actor
+3. Creates an `Interaction` record (type=Like/Announce, status=Active)
+4. Stores it alongside the Activity log record
+
+When a remote user undoes a like/boost:
+1. Receives the Undo activity
+2. Finds the matching active Interaction
+3. Sets its status to `Undone` (soft undo, preserves history)
+
+#### Object linking
+
+Interactions link to content via polymorphic columns:
+- `object_type` — the model class (e.g., `App\Models\Post`) for local content, or `'remote_url'` for remote content
+- `object_id` — the model's primary key for local content, or the full URL string for remote content
+
+This means `likeCount($post)` works for both local models and remote URLs referenced in the timeline.
+
+#### Favorites
+
+The Fediverse UI includes a `/fediverse/favorites` page that shows all bookmarked posts. Use `ActivityInteractions::bookmarks($user)` to build custom favorites views.
+
 ### Post Forwarding
 
-When the first user from a remote server follows your account, the plugin can automatically forward your oldest posts to populate their server with your content.
+When the first user from a remote server follows your account, the plugin can automatically forward your newest posts to populate their server with your content.
 
 #### Setup
 
@@ -260,7 +351,7 @@ ACTIVITYPUB_FEDERATION_ENABLED=true
 #### How it works
 
 - When the first follower from a domain follows you, `ForwardPostsToNewServerJob` is dispatched
-- It queries your registered `federatable_models` for the 3 oldest published posts (`shouldFederate() == true`)
+- It queries your registered `federatable_models` for the 3 newest published posts (`shouldFederate() == true`)
 - Recreates fresh `Create` activities and delivers them to the remote server's inbox
 - Only fires once per domain (first follower trigger)
 
@@ -296,7 +387,7 @@ src/
   |                                ActivityBuilderContract, ActorProfileContract,
   |                                FederatedActorContract
   Enums/                        -- ActivityStatus, ActivityType, ActivityObjectType,
-  |                                FollowerStatus
+  |                                FollowerStatus, InteractionType, InteractionStatus
   Events/                       -- 6 event classes
     Http/
     Controllers/                -- Actor, Inbox, Outbox, Followers, Following,
@@ -318,6 +409,7 @@ src/
     Follower.php                -- Follower relationships
     Following.php               -- Outbound follow tracking
     Activity.php                -- Federated activity log
+    Interaction.php             -- Polymorphic interaction tracking
     BlockedDomain.php           -- Domain blocklist
     BlockedRemoteActor.php      -- Actor blocklist
   Services/
@@ -327,6 +419,7 @@ src/
     RemoteActorResolver.php     -- Fetch/upsert remote actors
     WebFingerService.php        -- Remote WebFinger resolution
     ActivityBuilder.php         -- Build ActivityStreams payloads
+    ActivityInteractions.php    -- Static API for interaction queries
   Traits/
     FederatesContent.php        -- Model event hooks for auto-federation
     ResolvesLocalActor.php
@@ -339,7 +432,7 @@ src/
 vendor/bin/pest
 ```
 
-119+ Pest tests across 12 test files covering actors, inbox processing, WebFinger, console commands, content delivery, Mastodon spec compliance, HTTP signatures, blocking, post forwarding, and unit-tested activity building.
+139+ Pest tests across 13 test files covering actors, inbox processing, WebFinger, console commands, content delivery, Mastodon spec compliance, HTTP signatures, blocking, post forwarding, and unit-tested activity building.
 
 ## Roadmap
 
