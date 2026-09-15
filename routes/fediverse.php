@@ -1,6 +1,7 @@
 <?php
 
 use DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse\DashboardController;
+use DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse\FavoritesController;
 use DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse\DiscoverController;
 use DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse\FederatedServersController;
 use DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse\FollowersController;
@@ -20,6 +21,7 @@ Route::get(uri: '/timeline', action: TimelineController::class)->name(name: 'tim
 Route::get(uri: '/inbox', action: InboxController::class)->name(name: 'inbox');
 
 Route::get(uri: '/following', action: FollowingController::class)->name(name: 'following');
+Route::post(uri: '/following/correct-status', action: [FollowingController::class, 'correctStatus'])->name(name: 'following.correct-status')->middleware('throttle:fediverse-interact');
 
 Route::get(uri: '/followers', action: FollowersController::class)->name(name: 'followers');
 
@@ -49,3 +51,5 @@ Route::post(uri: '/status/reschedule', action: [StatusController::class, 'resche
 Route::post(uri: '/status/refresh-accounts', action: [StatusController::class, 'refreshFollowedAccounts'])->name(name: 'status.refresh-accounts')->middleware('throttle:fediverse-interact');
 Route::post(uri: '/status/prune', action: [StatusController::class, 'pruneOldActivities'])->name(name: 'status.prune')->middleware('throttle:fediverse-interact');
 Route::post(uri: '/status/forward-posts', action: [StatusController::class, 'forwardPosts'])->name(name: 'status.forward-posts')->middleware('throttle:fediverse-interact');
+
+Route::get(uri: '/favorites', action: FavoritesController::class)->name(name: 'favorites');

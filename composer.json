@@ -28,8 +28,10 @@
         }
     },
     "require-dev": {
+        "larastan/larastan": "^3.12",
         "orchestra/testbench": "*",
-        "pestphp/pest": "*"
+        "pestphp/pest": "*",
+        "phpstan/phpstan": "^2.2"
     },
     "config": {
         "sort-packages": true,

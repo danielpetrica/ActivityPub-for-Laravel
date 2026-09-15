@@ -3,7 +3,10 @@
 namespace DanielPetrica\LaravelActivityPub\Actions\Handlers;
 
 use DanielPetrica\LaravelActivityPub\Enums\ActivityType;
+use DanielPetrica\LaravelActivityPub\Enums\InteractionStatus;
+use DanielPetrica\LaravelActivityPub\Enums\InteractionType;
 use DanielPetrica\LaravelActivityPub\Models\Actor;
+use DanielPetrica\LaravelActivityPub\Models\Interaction;
 use DanielPetrica\LaravelActivityPub\Services\ActivityPubService;
 use DanielPetrica\LaravelActivityPub\Services\RemoteActorResolver;
 
@@ -19,6 +22,7 @@ final class HandleAnnounceAction implements ActivityHandler
         return 'Announce';
     }
 
+    /** @param array<string, mixed> $payload */
     public function handle(Actor $actor, array $payload): void
     {
         $remoteActor = $this->remoteActorResolver->resolveFromPayload(payload: $payload);
@@ -30,5 +34,17 @@ final class HandleAnnounceAction implements ActivityHandler
             payload: $payload,
             isIncoming: true,
         );
+
+        $objectUrl = $payload['object'] ?? null;
+        if (is_string($objectUrl)) {
+            Interaction::create([
+                'type' => InteractionType::Announce,
+                'actor_id' => $actor->id,
+                'remote_actor_id' => $remoteActor->id,
+                'object_type' => 'remote_url',
+                'object_id' => $objectUrl,
+                'status' => InteractionStatus::Active,
+            ]);
+        }
     }
 }
