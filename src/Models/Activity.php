@@ -5,8 +5,10 @@ namespace DanielPetrica\LaravelActivityPub\Models;
 use Carbon\CarbonInterface;
 use DanielPetrica\LaravelActivityPub\Enums\ActivityStatus;
 use DanielPetrica\LaravelActivityPub\Enums\ActivityType;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
@@ -23,6 +25,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property CarbonInterface $updated_at
  * @property-read Actor $actor
  * @property-read RemoteActor|null $remoteActor
+ * @property-read Collection<int, ActivityDelivery> $deliveries
  */
 final class Activity extends Model
 {
@@ -53,11 +56,19 @@ final class Activity extends Model
 
     public function actor(): BelongsTo
     {
-        return $this->belongsTo(related: Actor::class);
+        return $this->belongsTo(Actor::class);
     }
 
     public function remoteActor(): BelongsTo
     {
-        return $this->belongsTo(related: RemoteActor::class);
+        return $this->belongsTo(RemoteActor::class);
+    }
+
+    /**
+     * @return HasMany<ActivityDelivery, $this>
+     */
+    public function deliveries(): HasMany
+    {
+        return $this->hasMany(ActivityDelivery::class);
     }
 }
