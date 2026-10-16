@@ -8,10 +8,10 @@ This guide is self-contained: you can upgrade by following it without reading
 [`CHANGELOG.md`](CHANGELOG.md) first. Where a change has a migration, a
 verification step, or a rollback caveat, it is called out explicitly.
 
-## v0.10.0 (Unreleased)
+## v0.15.0 (Unreleased)
 
-`v0.10.0` is a large hardening and federation-correctness release on top of the
-`v0.9.x` line. It adds a required platform dependency (`ext-curl`), a batch of
+`v0.15.0` is a large hardening and federation-correctness release on top of the
+`v0.14.x` line. It adds a required platform dependency (`ext-curl`), a batch of
 new migrations, an always-on inbox audit log, inbox admission control, queued
 inbox handling by default, an admin ability for mutating Fediverse routes, and
 a number of strict-but-correct wire-format changes (collections, actor IRIs,
@@ -36,7 +36,7 @@ OAuth remain out of scope** for this package and are not covered by this guide.
 
 ```text
 [ ] Back up the database and APP_KEY.
-[ ] composer require "danielpetrica/activitypub-for-laravel:^0.10"
+[ ] composer require "danielpetrica/activitypub-for-laravel:^0.15"
     (or: composer update danielpetrica/activitypub-for-laravel)
 [ ] Confirm ext-curl is loaded:  php -m | grep -i curl
 [ ] Run a queue worker (inbox processing is queued by default).
@@ -60,7 +60,7 @@ OAuth remain out of scope** for this package and are not covered by this guide.
 | `laravel/framework` | `^13.0` | unchanged |
 | `ext-openssl` | any | unchanged (HTTP signatures) |
 | `ext-json` | any | unchanged |
-| `ext-curl` | any | **new in v0.10.0** |
+| `ext-curl` | any | **new in v0.15.0** |
 
 `ext-curl` is now declared in `composer.json` (`"ext-curl": "*"`) and is what
 backs:
@@ -96,7 +96,7 @@ install otherwise.
 2. **Require the new version.**
 
    ```bash
-   composer require "danielpetrica/activitypub-for-laravel:^0.10"
+   composer require "danielpetrica/activitypub-for-laravel:^0.15"
    # or, if you track it loosely:
    composer update danielpetrica/activitypub-for-laravel
    ```
