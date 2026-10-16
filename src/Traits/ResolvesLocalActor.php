@@ -15,16 +15,16 @@ trait ResolvesLocalActor
 
         if (! ($user instanceof ActorContract)) {
             throw new ModelNotFoundException(
-                message: 'The authenticated user must implement '.ActorContract::class,
+                'The authenticated user must implement '.ActorContract::class,
             );
         }
 
         return Actor::query()
-            ->where(column: 'username', operator: '=', value: $user->getPreferredUsername())
+            ->where('username', '=', $user->getPreferredUsername())
             ->firstOr(function () use ($user): Actor {
                 $keyPair = app(KeyPairService::class)->generate();
 
-                return Actor::query()->create(attributes: [
+                return Actor::query()->create([
                     'username' => $user->getPreferredUsername(),
                     'name' => $user->getDisplayName(),
                     'public_key_pem' => $keyPair['public'],

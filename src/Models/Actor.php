@@ -23,10 +23,12 @@ use Illuminate\Database\Eloquent\Model;
  * @property \Carbon\CarbonInterface|null $last_active_at
  * @property bool $discoverable
  * @property \Carbon\CarbonInterface|null $published
+ * @property array<int, string>|null $also_known_as
+ * @property string|null $moved_to
  * @property CarbonInterface $created_at
  * @property CarbonInterface $updated_at
  */
-final class Actor extends Model implements ActorContract
+class Actor extends Model implements ActorContract
 {
     protected $fillable = [
         'username',
@@ -44,6 +46,8 @@ final class Actor extends Model implements ActorContract
         'last_active_at',
         'discoverable',
         'published',
+        'also_known_as',
+        'moved_to',
     ];
 
     protected function casts(): array
@@ -55,6 +59,7 @@ final class Actor extends Model implements ActorContract
             'last_active_at' => 'datetime',
             'discoverable' => 'boolean',
             'published' => 'datetime',
+            'also_known_as' => 'array',
         ];
     }
 
@@ -81,6 +86,19 @@ final class Actor extends Model implements ActorContract
     public function getHeaderImageUrl(): ?string
     {
         return $this->image_url;
+    }
+
+    /**
+     * The public profile URL for this actor.
+     *
+     * The actor IRI doubles as the content-negotiated profile document (an
+     * HTML `Accept` header returns the human-readable page), so it is the
+     * default value for both the actor `url` field and the WebFinger
+     * `profile-page` link. Override to return a distinct HTML page URL.
+     */
+    public function getProfileUrl(): string
+    {
+        return $this->actor_id;
     }
 
     public function getActorId(): string
@@ -123,6 +141,42 @@ final class Actor extends Model implements ActorContract
         return $this->private_key_pem;
     }
 
+    /**
+     * ActivityStreams `alsoKnownAs`: the additional actor IRIs this account is
+     * known by. Consumed by ActorResource automatically. Always a list of
+     * non-empty strings.
+     *
+     * @return array<int, string>
+     */
+    public function getActivityPubAlsoKnownAs(): array
+    {
+        $value = $this->also_known_as;
+
+        if (! is_array($value)) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            $value,
+            static fn (string $entry): bool => $entry !== '',
+        ));
+    }
+
+    /**
+     * Alias so consumer models exposing `getAlsoKnownAs()` keep working.
+     *
+     * @return array<int, string>
+     */
+    public function getAlsoKnownAs(): array
+    {
+        return $this->getActivityPubAlsoKnownAs();
+    }
+
+    public function getActivityPubMovedTo(): ?string
+    {
+        return is_string($this->moved_to) && $this->moved_to !== '' ? $this->moved_to : null;
+    }
+
     public function getInboxUrlAttribute(?string $value): string
     {
         return $value ?? $this->buildUrl(suffix: '/inbox');
@@ -155,7 +209,7 @@ final class Actor extends Model implements ActorContract
 
     protected function buildUrl(?string $suffix = null): string
     {
-        $domain = rtrim(string: config('activitypub.domain'), characters: '/');
+        $domain = rtrim(config('activitypub.domain'), '/');
 
         $url = $domain.'/users/'.$this->username;
 

@@ -2,13 +2,16 @@
 
 namespace DanielPetrica\LaravelActivityPub;
 
+use DanielPetrica\LaravelActivityPub\Actions\Handlers\ActivityHandler;
 use DanielPetrica\LaravelActivityPub\Actions\Handlers\HandleAcceptAction;
 use DanielPetrica\LaravelActivityPub\Actions\Handlers\HandleAnnounceAction;
 use DanielPetrica\LaravelActivityPub\Actions\Handlers\HandleBlockAction;
 use DanielPetrica\LaravelActivityPub\Actions\Handlers\HandleCreateAction;
 use DanielPetrica\LaravelActivityPub\Actions\Handlers\HandleDeleteAction;
+use DanielPetrica\LaravelActivityPub\Actions\Handlers\HandleFlagAction;
 use DanielPetrica\LaravelActivityPub\Actions\Handlers\HandleFollowAction;
 use DanielPetrica\LaravelActivityPub\Actions\Handlers\HandleLikeAction;
+use DanielPetrica\LaravelActivityPub\Actions\Handlers\HandleMoveAction;
 use DanielPetrica\LaravelActivityPub\Actions\Handlers\HandleRejectAction;
 use DanielPetrica\LaravelActivityPub\Actions\Handlers\HandleUndoAction;
 use DanielPetrica\LaravelActivityPub\Actions\Handlers\HandleUpdateAction;
@@ -17,7 +20,10 @@ use DanielPetrica\LaravelActivityPub\Console\Commands\CreateActorCommand;
 use DanielPetrica\LaravelActivityPub\Console\Commands\DeliverContentCommand;
 use DanielPetrica\LaravelActivityPub\Console\Commands\PruneActivitiesCommand;
 use DanielPetrica\LaravelActivityPub\Contracts\ActorContract;
+use DanielPetrica\LaravelActivityPub\Contracts\ActorProfileContract;
 use DanielPetrica\LaravelActivityPub\Contracts\ActivityBuilderContract;
+use DanielPetrica\LaravelActivityPub\Contracts\FederatedActorContract;
+use DanielPetrica\LaravelActivityPub\Handlers\HandlerRegistry;
 use DanielPetrica\LaravelActivityPub\Http\Middleware\VerifyHttpSignature;
 use DanielPetrica\LaravelActivityPub\Models\Actor;
 use DanielPetrica\LaravelActivityPub\Services\ActivityBuilder;
@@ -25,6 +31,7 @@ use DanielPetrica\LaravelActivityPub\Services\ActivityPubService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schedule;
 use Illuminate\Support\ServiceProvider;
 
 final class ActivityPubServiceProvider extends ServiceProvider
@@ -32,23 +39,33 @@ final class ActivityPubServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(
-            path: __DIR__.'/../config/activitypub.php',
-            key: 'activitypub',
+            __DIR__.'/../config/activitypub.php',
+            'activitypub',
         );
 
         $this->app->bind(
-            abstract: ActorContract::class,
-            concrete: Actor::class,
+            ActorContract::class,
+            fn (): ActorContract => $this->resolveActorContract(),
         );
 
         $this->app->bind(
-            abstract: ActivityBuilderContract::class,
-            concrete: ActivityBuilder::class,
+            ActorProfileContract::class,
+            fn (): ActorProfileContract => $this->resolveActorContract(),
+        );
+
+        $this->app->bind(
+            FederatedActorContract::class,
+            fn (): FederatedActorContract => $this->resolveActorContract(),
+        );
+
+        $this->app->bind(
+            ActivityBuilderContract::class,
+            ActivityBuilder::class,
         );
 
         $this->app->singleton(
-            abstract: 'activitypub',
-            concrete: ActivityPubService::class,
+            'activitypub',
+            ActivityPubService::class,
         );
 
         $this->app->tag([
@@ -62,99 +79,189 @@ final class ActivityPubServiceProvider extends ServiceProvider
             HandleBlockAction::class,
             HandleAcceptAction::class,
             HandleRejectAction::class,
+            HandleFlagAction::class,
+            HandleMoveAction::class,
         ], 'activitypub.activity-handlers');
 
-        $this->app->bind(InboxProcessor::class, function ($app) {
+        $this->app->singleton(HandlerRegistry::class, function ($app): HandlerRegistry {
+            $registry = new HandlerRegistry();
+
+            // Bootstrap the container-tagged handlers. Consumers that have
+            // already registered or replaced a handler keep precedence.
+            foreach ($app->tagged('activitypub.activity-handlers') as $handler) {
+                if ($handler instanceof ActivityHandler) {
+                    $registry->registerIfTypeAbsent(handler: $handler);
+                }
+            }
+
+            return $registry;
+        });
+
+        $this->app->bind(InboxProcessor::class, function ($app): InboxProcessor {
             return new InboxProcessor(
-                handlers: iterator_to_array($app->tagged('activitypub.activity-handlers')),
+                handlerRegistry: $app->make(HandlerRegistry::class),
             );
         });
     }
 
     public function boot(): void
     {
-        RateLimiter::for(name: 'activitypub-inbox', callback: fn ($request) => Limit::perMinute(
-            maxAttempts: 60,
+        RateLimiter::for('activitypub-inbox', fn ($request) => Limit::perMinute(
+            60,
         )->by($request->ip() ?? 'global'));
 
-        RateLimiter::for(name: 'fediverse-interact', callback: fn () => Limit::perMinute(maxAttempts: 30));
+        RateLimiter::for('fediverse-interact', fn () => Limit::perMinute(30));
 
         $this->publishes(
-            paths: [
-                __DIR__.'/../config/activitypub.php' => $this->app->configPath(path: 'activitypub.php'),
+            [
+                __DIR__.'/../config/activitypub.php' => $this->app->configPath('activitypub.php'),
             ],
-            groups: 'activitypub-config',
+            'activitypub-config',
         );
 
         $this->publishes(
-            paths: [
-                __DIR__.'/../database/migrations' => $this->app->databasePath(path: 'migrations'),
+            [
+                __DIR__.'/../database/migrations' => $this->app->databasePath('migrations'),
             ],
-            groups: 'activitypub-migrations',
+            'activitypub-migrations',
         );
 
         Route::aliasMiddleware(
-            name: 'activitypub.verify-signature',
-            class: VerifyHttpSignature::class,
+            'activitypub.verify-signature',
+            VerifyHttpSignature::class,
         );
 
         Route::aliasMiddleware(
-            name: 'activitypub.authorize-fediverse',
-            class: \DanielPetrica\LaravelActivityPub\Http\Middleware\AuthorizeFediverse::class,
+            'activitypub.authorize-fediverse',
+            \DanielPetrica\LaravelActivityPub\Http\Middleware\AuthorizeFediverse::class,
         );
 
-        $this->loadMigrationsFrom(paths: __DIR__.'/../database/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
-        if (config(key: 'activitypub.routes.enabled', default: true)) {
+        // Resolve {actor:username} through the configured actor model instead
+        // of the hardcoded Actor class, so swapping config('activitypub.actor_model')
+        // changes both DI and route binding.
+        Route::bind('actor', function (string $value) {
+            $model = $this->actorModelClass();
+
+            return $model::query()
+                ->where('username', '=', $value)
+                ->firstOrFail();
+        });
+
+        // Ensure the inbox rate limiter runs before signature verification so
+        // invalid-signature floods are throttled instead of verified.
+        $this->registerSignatureMiddlewarePriority();
+
+        if (config('activitypub.routes.enabled', true)) {
             Route::group(
-                attributes: [
-                    'prefix' => config(key: 'activitypub.routes.prefix', default: ''),
-                    'middleware' => config(key: 'activitypub.routes.middleware', default: ['api']),
+                [
+                    'prefix' => config('activitypub.routes.prefix', ''),
+                    'middleware' => config('activitypub.routes.middleware', ['api']),
                 ],
-                routes: function (): void {
-                    $this->loadRoutesFrom(path: __DIR__.'/../routes/activitypub.php');
+                function (): void {
+                    $this->loadRoutesFrom(__DIR__.'/../routes/activitypub.php');
                 },
             );
         }
 
         if ($this->app->runningInConsole()) {
-            $this->commands(commands: [
+            $this->commands([
                 CreateActorCommand::class,
                 DeliverContentCommand::class,
                 PruneActivitiesCommand::class,
             ]);
+
+            $this->registerPruneSchedule();
         }
 
-        if (config(key: 'activitypub.fediverse.enabled', default: true)) {
+        if (config('activitypub.fediverse.enabled', true)) {
             Route::group(
-                attributes: [
-                    'prefix' => config(key: 'activitypub.fediverse.prefix', default: 'fediverse'),
+                [
+                    'prefix' => config('activitypub.fediverse.prefix', 'fediverse'),
                     'middleware' => array_merge(
-                        config(key: 'activitypub.fediverse.middleware', default: ['web', 'auth']),
+                        config('activitypub.fediverse.middleware', ['web', 'auth']),
                         ['activitypub.authorize-fediverse'],
                     ),
                     'as' => 'fediverse.',
                 ],
-                routes: function (): void {
-                    $this->loadRoutesFrom(path: __DIR__.'/../routes/fediverse.php');
+                function (): void {
+                    $this->loadRoutesFrom(__DIR__.'/../routes/fediverse.php');
                 },
             );
         }
 
         $this->loadViewsFrom(
-            path: __DIR__.'/../resources/views',
-            namespace: 'activitypub',
+            __DIR__.'/../resources/views',
+            'activitypub',
         );
 
         $this->publishes(
-            paths: [
-                __DIR__.'/../resources/views' => $this->app->resourcePath(path: 'views/vendor/activitypub'),
+            [
+                __DIR__.'/../resources/views' => $this->app->resourcePath('views/vendor/activitypub'),
             ],
-            groups: 'activitypub-views',
+            'activitypub-views',
         );
 
         \Illuminate\Support\Facades\Blade::directive('sanitize', function (string $expression) {
             return "<?php echo \\DanielPetrica\\LaravelActivityPub\\Helpers\\ActivityPubHelper::sanitizeContent({$expression}); ?>";
         });
+    }
+
+    /**
+     * Register the retention command on Laravel's scheduler.
+     *
+     * Runs daily and is guarded by `withoutOverlapping()` so a slow prune
+     * cannot stack on the next run. The retention windows themselves default
+     * to 30 days and stay overridable through `activitypub.retention.*`.
+     */
+    protected function registerPruneSchedule(): void
+    {
+        Schedule::command('activitypub:prune-activities')
+            ->daily()
+            ->withoutOverlapping();
+    }
+
+    /**
+     * Resolve the configured actor model class, falling back to the bundled
+     * Actor model when the configured class does not extend it.
+     *
+     * @return class-string<Actor>
+     */
+    protected function actorModelClass(): string
+    {
+        $model = config('activitypub.actor_model', Actor::class);
+
+        if (is_string($model) && is_a($model, Actor::class, true)) {
+            return $model;
+        }
+
+        return Actor::class;
+    }
+
+    protected function resolveActorContract(): ActorContract
+    {
+        return $this->app->make($this->actorModelClass());
+    }
+
+    /**
+     * Register VerifyHttpSignature after the framework throttle middleware in
+     * the HTTP kernel's middleware priority list. This guarantees the rate
+     * limiter runs first even if a consumer reorders the route middleware.
+     */
+    protected function registerSignatureMiddlewarePriority(): void
+    {
+        if (! $this->app->bound(\Illuminate\Contracts\Http\Kernel::class)) {
+            return;
+        }
+
+        $kernel = $this->app->make(\Illuminate\Contracts\Http\Kernel::class);
+
+        if ($kernel instanceof \Illuminate\Foundation\Http\Kernel) {
+            $kernel->addToMiddlewarePriorityAfter(
+                \Illuminate\Routing\Middleware\ThrottleRequests::class,
+                VerifyHttpSignature::class,
+            );
+        }
     }
 }
