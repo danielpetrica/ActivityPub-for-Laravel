@@ -20,9 +20,9 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $public_key_pem
  * @property string $private_key_pem
  * @property bool $manually_approves_followers
- * @property \Carbon\CarbonInterface|null $last_active_at
+ * @property CarbonInterface|null $last_active_at
  * @property bool $discoverable
- * @property \Carbon\CarbonInterface|null $published
+ * @property CarbonInterface|null $published
  * @property array<int, string>|null $also_known_as
  * @property string|null $moved_to
  * @property CarbonInterface $created_at

@@ -1,8 +1,8 @@
 <?php
 
 use DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse\DashboardController;
-use DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse\FavoritesController;
 use DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse\DiscoverController;
+use DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse\FavoritesController;
 use DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse\FederatedServersController;
 use DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse\FollowersController;
 use DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse\FollowingController;

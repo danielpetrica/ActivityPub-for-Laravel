@@ -15,7 +15,6 @@ use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
  * must not be read as proof that routing works end to end. The final test in
  * this file asserts the real end-to-end effect.
  */
-
 function createInboundActor(string $username = 'target'): Actor
 {
     $keys = generateTestKeyPair();

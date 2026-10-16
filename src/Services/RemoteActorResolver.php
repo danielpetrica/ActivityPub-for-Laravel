@@ -8,6 +8,7 @@ use DanielPetrica\LaravelActivityPub\Jobs\FetchRemoteActor;
 use DanielPetrica\LaravelActivityPub\Models\Actor;
 use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
 use DanielPetrica\LaravelActivityPub\Traits\LogsActivityPub;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
@@ -287,7 +288,7 @@ final class RemoteActorResolver
     /**
      * Enforce size and content-type caps on a remote fetch response.
      */
-    protected function responseWithinLimits(\Illuminate\Http\Client\Response $response): bool
+    protected function responseWithinLimits(Response $response): bool
     {
         $body = $response->body();
         $contentLength = $response->header('Content-Length');

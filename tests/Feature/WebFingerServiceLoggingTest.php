@@ -1,5 +1,7 @@
 <?php
 
+use DanielPetrica\LaravelActivityPub\Services\WebFingerService;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function (): void {
@@ -29,7 +31,7 @@ it('resolves WebFinger successfully with logging enabled', function (): void {
         ),
     ]);
 
-    $service = app(\DanielPetrica\LaravelActivityPub\Services\WebFingerService::class);
+    $service = app(WebFingerService::class);
     $result = $service->resolve('acct:user@mastodon.social');
 
     expect($result)->not->toBeNull();
@@ -44,7 +46,7 @@ it('returns null on non-successful HTTP response with logging', function (): voi
         ),
     ]);
 
-    $service = app(\DanielPetrica\LaravelActivityPub\Services\WebFingerService::class);
+    $service = app(WebFingerService::class);
     $result = $service->resolve('acct:user@mastodon.social');
 
     expect($result)->toBeNull();
@@ -59,7 +61,7 @@ it('returns null when response has no links with logging', function (): void {
         ),
     ]);
 
-    $service = app(\DanielPetrica\LaravelActivityPub\Services\WebFingerService::class);
+    $service = app(WebFingerService::class);
     $result = $service->resolve('acct:user@mastodon.social');
 
     expect($result)->toBeNull();
@@ -83,7 +85,7 @@ it('returns null when no activity+json link found with logging', function (): vo
         ),
     ]);
 
-    $service = app(\DanielPetrica\LaravelActivityPub\Services\WebFingerService::class);
+    $service = app(WebFingerService::class);
     $result = $service->resolve('acct:user@mastodon.social');
 
     expect($result)->toBeNull();
@@ -91,10 +93,10 @@ it('returns null when no activity+json link found with logging', function (): vo
 
 it('returns null on HTTP exception with logging', function (): void {
     Http::fake(function () {
-        throw new \Illuminate\Http\Client\ConnectionException('DNS resolution failed');
+        throw new ConnectionException('DNS resolution failed');
     });
 
-    $service = app(\DanielPetrica\LaravelActivityPub\Services\WebFingerService::class);
+    $service = app(WebFingerService::class);
     $result = $service->resolve('acct:user@mastodon.social');
 
     expect($result)->toBeNull();
@@ -119,7 +121,7 @@ it('works identically when logging is disabled', function (): void {
         ),
     ]);
 
-    $service = app(\DanielPetrica\LaravelActivityPub\Services\WebFingerService::class);
+    $service = app(WebFingerService::class);
     $result = $service->resolve('acct:user@mastodon.social');
 
     expect($result)->not->toBeNull();

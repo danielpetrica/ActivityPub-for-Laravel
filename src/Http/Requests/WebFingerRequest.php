@@ -3,6 +3,7 @@
 namespace DanielPetrica\LaravelActivityPub\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class WebFingerRequest extends FormRequest
 {
@@ -25,9 +26,9 @@ class WebFingerRequest extends FormRequest
         ];
     }
 
-    public function withValidator(\Illuminate\Validation\Validator $validator): void
+    public function withValidator(Validator $validator): void
     {
-        $validator->after(function (\Illuminate\Validation\Validator $validator) {
+        $validator->after(function (Validator $validator) {
             $resource = $this->query('resource');
 
             if ($resource === null) {

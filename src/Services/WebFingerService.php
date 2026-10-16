@@ -4,12 +4,14 @@ namespace DanielPetrica\LaravelActivityPub\Services;
 
 use DanielPetrica\LaravelActivityPub\Helpers\SsrfGuard;
 use DanielPetrica\LaravelActivityPub\Traits\LogsActivityPub;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 final class WebFingerService
 {
     use LogsActivityPub;
+
     public function resolve(string $resource): ?array
     {
         if (str_starts_with($resource, 'acct:')) {
@@ -115,7 +117,7 @@ final class WebFingerService
     /**
      * Enforce size and content-type caps on a remote fetch response.
      */
-    protected function responseWithinLimits(\Illuminate\Http\Client\Response $response): bool
+    protected function responseWithinLimits(Response $response): bool
     {
         $body = $response->body();
         $contentLength = $response->header('Content-Length');

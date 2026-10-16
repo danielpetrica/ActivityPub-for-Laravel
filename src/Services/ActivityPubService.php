@@ -3,8 +3,8 @@
 namespace DanielPetrica\LaravelActivityPub\Services;
 
 use DanielPetrica\LaravelActivityPub\Actions\InboxProcessor;
-use DanielPetrica\LaravelActivityPub\Contracts\ActorContract;
 use DanielPetrica\LaravelActivityPub\Contracts\ActivityBuilderContract;
+use DanielPetrica\LaravelActivityPub\Contracts\ActorContract;
 use DanielPetrica\LaravelActivityPub\Contracts\FederatableContentContract;
 use DanielPetrica\LaravelActivityPub\Enums\ActivityType;
 use DanielPetrica\LaravelActivityPub\Enums\FollowerStatus;

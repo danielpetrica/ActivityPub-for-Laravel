@@ -1,13 +1,16 @@
 <?php
 
+use DanielPetrica\LaravelActivityPub\Http\Middleware\VerifyHttpSignature;
 use DanielPetrica\LaravelActivityPub\Jobs\FetchRemoteActor;
 use DanielPetrica\LaravelActivityPub\Models\Actor;
 use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
 use DanielPetrica\LaravelActivityPub\Services\DeliveryClient;
 use DanielPetrica\LaravelActivityPub\Services\HttpSignatureService;
 use Illuminate\Http\Client\Request;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Testing\TestResponse;
 
 function buildSignatureHeader(
     string $actorUrl,
@@ -22,10 +25,10 @@ function buildSignatureHeader(
 
     $signatureBase64 = base64_encode($signature);
 
-    return 'keyId="' . $actorUrl . '#main-key",'
-        . 'algorithm="rsa-sha256",'
-        . 'headers="' . $headers . '",'
-        . 'signature="' . $signatureBase64 . '"';
+    return 'keyId="'.$actorUrl.'#main-key",'
+        .'algorithm="rsa-sha256",'
+        .'headers="'.$headers.'",'
+        .'signature="'.$signatureBase64.'"';
 }
 
 function buildSigningString(array $lines): string
@@ -35,7 +38,7 @@ function buildSigningString(array $lines): string
 
 function extractSignatureParam(string $header, string $param): ?string
 {
-    return preg_match('/' . $param . '="([^"]*)"/', $header, $matches) === 1
+    return preg_match('/'.$param.'="([^"]*)"/', $header, $matches) === 1
         ? $matches[1]
         : null;
 }
@@ -56,9 +59,9 @@ function buildRfc9421Headers(
     string $alg = 'rsa-v1_5-sha256',
     string $label = 'sig1',
 ): array {
-    $digest = 'sha-256=:' . base64_encode(hash('sha256', $body, binary: true)) . ':';
-    $componentsQuoted = implode(' ', array_map(static fn (string $c): string => '"' . $c . '"', $components));
-    $params = '(' . $componentsQuoted . ');created=' . $created . ';keyid="' . $keyId . '";alg="' . $alg . '"';
+    $digest = 'sha-256=:'.base64_encode(hash('sha256', $body, binary: true)).':';
+    $componentsQuoted = implode(' ', array_map(static fn (string $c): string => '"'.$c.'"', $components));
+    $params = '('.$componentsQuoted.');created='.$created.';keyid="'.$keyId.'";alg="'.$alg.'"';
 
     $lines = [];
     foreach ($components as $component) {
@@ -68,9 +71,9 @@ function buildRfc9421Headers(
             'content-digest' => $digest,
             default => '',
         };
-        $lines[] = '"' . $component . '": ' . $value;
+        $lines[] = '"'.$component.'": '.$value;
     }
-    $lines[] = '"("@signature-params)": ' . $params;
+    $lines[] = '"("@signature-params)": '.$params;
 
     $base = implode("\n", $lines);
 
@@ -79,8 +82,8 @@ function buildRfc9421Headers(
     openssl_pkey_free($keyResource);
 
     return [
-        'Signature-Input' => $label . '=' . $params,
-        'Signature' => $label . '=:' . base64_encode($signature) . ':',
+        'Signature-Input' => $label.'='.$params,
+        'Signature' => $label.'=:'.base64_encode($signature).':',
         'Content-Digest' => $digest,
     ];
 }
@@ -88,12 +91,12 @@ function buildRfc9421Headers(
 /**
  * Send a raw-body POST request with the given header map.
  */
-function sendRawPost(string $uri, string $body, array $headers): \Illuminate\Testing\TestResponse
+function sendRawPost(string $uri, string $body, array $headers): TestResponse
 {
     $server = ['CONTENT_TYPE' => 'application/activity+json'];
 
     foreach ($headers as $name => $value) {
-        $server['HTTP_' . strtoupper(str_replace('-', '_', $name))] = $value;
+        $server['HTTP_'.strtoupper(str_replace('-', '_', $name))] = $value;
     }
 
     return test()->call(
@@ -187,12 +190,12 @@ it('rejects incoming requests with expired date', function (): void {
 
     $body = json_encode(['type' => 'Create', 'actor' => $remoteActor->actor_url]);
     $date = gmdate('D, d M Y H:i:s T', now()->subMinutes(20)->timestamp);
-    $digest = 'SHA-256=' . base64_encode(hash('sha256', $body, binary: true));
+    $digest = 'SHA-256='.base64_encode(hash('sha256', $body, binary: true));
 
     $signingString = buildSigningString([
         '(request-target): post /inbox',
         'host: localhost',
-        'date: ' . $date,
+        'date: '.$date,
     ]);
 
     $signatureHeader = buildSignatureHeader(
@@ -231,13 +234,13 @@ it('rejects incoming requests with invalid digest', function (): void {
 
     $body = json_encode(['type' => 'Create', 'actor' => $remoteActor->actor_url]);
     $date = gmdate('D, d M Y H:i:s T');
-    $wrongDigest = 'SHA-256=' . base64_encode(hash('sha256', 'tampered-body', binary: true));
+    $wrongDigest = 'SHA-256='.base64_encode(hash('sha256', 'tampered-body', binary: true));
 
     $signingString = buildSigningString([
         '(request-target): post /inbox',
         'host: localhost',
-        'date: ' . $date,
-        'digest: ' . $wrongDigest,
+        'date: '.$date,
+        'digest: '.$wrongDigest,
     ]);
 
     $signatureHeader = buildSignatureHeader(
@@ -281,13 +284,13 @@ it('accepts valid incoming signature', function (): void {
         'object' => ['type' => 'Note', 'content' => 'Hello'],
     ]);
     $date = gmdate('D, d M Y H:i:s T');
-    $digest = 'SHA-256=' . base64_encode(hash('sha256', $body, binary: true));
+    $digest = 'SHA-256='.base64_encode(hash('sha256', $body, binary: true));
 
     $signingString = buildSigningString([
         '(request-target): post /inbox',
         'host: localhost',
-        'date: ' . $date,
-        'digest: ' . $digest,
+        'date: '.$date,
+        'digest: '.$digest,
     ]);
 
     $signatureHeader = buildSignatureHeader(
@@ -324,7 +327,7 @@ it('runs the inbox rate limiter before signature verification', function (): voi
     $middleware = $router->gatherRouteMiddleware($route);
 
     $verifyIndex = array_search(
-        \DanielPetrica\LaravelActivityPub\Http\Middleware\VerifyHttpSignature::class,
+        VerifyHttpSignature::class,
         $middleware,
         true,
     );
@@ -332,7 +335,7 @@ it('runs the inbox rate limiter before signature verification', function (): voi
     $throttleIndex = null;
 
     foreach ($middleware as $index => $resolved) {
-        if (is_string($resolved) && str_contains($resolved, \Illuminate\Routing\Middleware\ThrottleRequests::class)) {
+        if (is_string($resolved) && str_contains($resolved, ThrottleRequests::class)) {
             $throttleIndex = $index;
             break;
         }
@@ -346,7 +349,7 @@ it('runs the inbox rate limiter before signature verification', function (): voi
 it('signs outbound requests with a spec-correct signing string', function (): void {
     $service = app(HttpSignatureService::class);
     $date = 'Mon, 01 Jan 2024 00:00:00 GMT';
-    $digest = 'SHA-256=' . base64_encode(hash('sha256', '{}', binary: true));
+    $digest = 'SHA-256='.base64_encode(hash('sha256', '{}', binary: true));
 
     $headers = $service->sign(
         method: 'POST',
@@ -371,8 +374,8 @@ it('signs outbound requests with a spec-correct signing string', function (): vo
     $signingString = implode("\n", [
         '(request-target): post /users/follower/inbox?foo=bar',
         'host: remote.example.com:8443',
-        'date: ' . $date,
-        'digest: ' . $digest,
+        'date: '.$date,
+        'digest: '.$digest,
         'content-type: application/activity+json',
     ]);
 
@@ -391,7 +394,7 @@ it('rejects draft-cavage signatures that cover only date', function (): void {
     $body = json_encode(['type' => 'Create', 'actor' => $this->remoteActor->actor_url]);
     $date = gmdate('D, d M Y H:i:s T');
 
-    $signingString = 'date: ' . $date;
+    $signingString = 'date: '.$date;
 
     $signatureHeader = buildSignatureHeader(
         $this->remoteActor->actor_url,
@@ -408,7 +411,7 @@ it('rejects draft-cavage signatures that cover only date', function (): void {
             'Date' => $date,
             'Host' => 'localhost',
             'Signature' => $signatureHeader,
-            'Digest' => 'SHA-256=' . base64_encode(hash('sha256', $body, binary: true)),
+            'Digest' => 'SHA-256='.base64_encode(hash('sha256', $body, binary: true)),
             'Content-Type' => 'application/activity+json',
         ],
     );
@@ -424,7 +427,7 @@ it('rejects draft-cavage POST signatures that do not cover the digest', function
     $signingString = buildSigningString([
         '(request-target): post /inbox',
         'host: localhost',
-        'date: ' . $date,
+        'date: '.$date,
     ]);
 
     $signatureHeader = buildSignatureHeader(
@@ -442,7 +445,7 @@ it('rejects draft-cavage POST signatures that do not cover the digest', function
             'Date' => $date,
             'Host' => 'localhost',
             'Signature' => $signatureHeader,
-            'Digest' => 'SHA-256=' . base64_encode(hash('sha256', $body, binary: true)),
+            'Digest' => 'SHA-256='.base64_encode(hash('sha256', $body, binary: true)),
             'Content-Type' => 'application/activity+json',
         ],
     );
@@ -462,13 +465,13 @@ it('rejects unknown remote actors and queues a background fetch', function (): v
         'object' => ['type' => 'Note', 'content' => 'Hello'],
     ]);
     $date = gmdate('D, d M Y H:i:s T');
-    $digest = 'SHA-256=' . base64_encode(hash('sha256', $body, binary: true));
+    $digest = 'SHA-256='.base64_encode(hash('sha256', $body, binary: true));
 
     $signingString = buildSigningString([
         '(request-target): post /inbox',
         'host: localhost',
-        'date: ' . $date,
-        'digest: ' . $digest,
+        'date: '.$date,
+        'digest: '.$digest,
     ]);
 
     $signatureHeader = buildSignatureHeader(
@@ -509,7 +512,7 @@ it('accepts a valid RFC 9421 signed request', function (): void {
     ]);
 
     $headers = buildRfc9421Headers(
-        keyId: $this->remoteActor->actor_url . '#main-key',
+        keyId: $this->remoteActor->actor_url.'#main-key',
         privateKey: $this->remoteKeys['private'],
         targetUri: $targetUri,
         body: $body,
@@ -528,7 +531,7 @@ it('rejects RFC 9421 signatures that omit method and target components', functio
     $body = json_encode(['type' => 'Create', 'actor' => $this->remoteActor->actor_url]);
 
     $headers = buildRfc9421Headers(
-        keyId: $this->remoteActor->actor_url . '#main-key',
+        keyId: $this->remoteActor->actor_url.'#main-key',
         privateKey: $this->remoteKeys['private'],
         targetUri: $targetUri,
         body: $body,
@@ -553,7 +556,7 @@ it('rejects a tampered RFC 9421 body via content digest', function (): void {
     ]);
 
     $headers = buildRfc9421Headers(
-        keyId: $this->remoteActor->actor_url . '#main-key',
+        keyId: $this->remoteActor->actor_url.'#main-key',
         privateKey: $this->remoteKeys['private'],
         targetUri: $targetUri,
         body: $signedBody,
@@ -584,7 +587,7 @@ it('rejects replayed RFC 9421 requests', function (): void {
     ]);
 
     $headers = buildRfc9421Headers(
-        keyId: $this->remoteActor->actor_url . '#main-key',
+        keyId: $this->remoteActor->actor_url.'#main-key',
         privateKey: $this->remoteKeys['private'],
         targetUri: $targetUri,
         body: $body,
@@ -640,4 +643,3 @@ it('does not consume the replay slot for a request rejected before verification'
     $second = sendRawPost(uri: $targetUri, body: $body, headers: $headers);
     $second->assertStatus(status: 202);
 });
-

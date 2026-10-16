@@ -19,16 +19,20 @@ use DanielPetrica\LaravelActivityPub\Actions\InboxProcessor;
 use DanielPetrica\LaravelActivityPub\Console\Commands\CreateActorCommand;
 use DanielPetrica\LaravelActivityPub\Console\Commands\DeliverContentCommand;
 use DanielPetrica\LaravelActivityPub\Console\Commands\PruneActivitiesCommand;
+use DanielPetrica\LaravelActivityPub\Contracts\ActivityBuilderContract;
 use DanielPetrica\LaravelActivityPub\Contracts\ActorContract;
 use DanielPetrica\LaravelActivityPub\Contracts\ActorProfileContract;
-use DanielPetrica\LaravelActivityPub\Contracts\ActivityBuilderContract;
 use DanielPetrica\LaravelActivityPub\Contracts\FederatedActorContract;
 use DanielPetrica\LaravelActivityPub\Handlers\HandlerRegistry;
+use DanielPetrica\LaravelActivityPub\Http\Middleware\AuthorizeFediverse;
 use DanielPetrica\LaravelActivityPub\Http\Middleware\VerifyHttpSignature;
 use DanielPetrica\LaravelActivityPub\Models\Actor;
 use DanielPetrica\LaravelActivityPub\Services\ActivityBuilder;
 use DanielPetrica\LaravelActivityPub\Services\ActivityPubService;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Routing\Middleware\ThrottleRequests;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schedule;
@@ -84,7 +88,7 @@ final class ActivityPubServiceProvider extends ServiceProvider
         ], 'activitypub.activity-handlers');
 
         $this->app->singleton(HandlerRegistry::class, function ($app): HandlerRegistry {
-            $registry = new HandlerRegistry();
+            $registry = new HandlerRegistry;
 
             // Bootstrap the container-tagged handlers. Consumers that have
             // already registered or replaced a handler keep precedence.
@@ -133,7 +137,7 @@ final class ActivityPubServiceProvider extends ServiceProvider
 
         Route::aliasMiddleware(
             'activitypub.authorize-fediverse',
-            \DanielPetrica\LaravelActivityPub\Http\Middleware\AuthorizeFediverse::class,
+            AuthorizeFediverse::class,
         );
 
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
@@ -203,7 +207,7 @@ final class ActivityPubServiceProvider extends ServiceProvider
             'activitypub-views',
         );
 
-        \Illuminate\Support\Facades\Blade::directive('sanitize', function (string $expression) {
+        Blade::directive('sanitize', function (string $expression) {
             return "<?php echo \\DanielPetrica\\LaravelActivityPub\\Helpers\\ActivityPubHelper::sanitizeContent({$expression}); ?>";
         });
     }
@@ -251,15 +255,15 @@ final class ActivityPubServiceProvider extends ServiceProvider
      */
     protected function registerSignatureMiddlewarePriority(): void
     {
-        if (! $this->app->bound(\Illuminate\Contracts\Http\Kernel::class)) {
+        if (! $this->app->bound(Kernel::class)) {
             return;
         }
 
-        $kernel = $this->app->make(\Illuminate\Contracts\Http\Kernel::class);
+        $kernel = $this->app->make(Kernel::class);
 
         if ($kernel instanceof \Illuminate\Foundation\Http\Kernel) {
             $kernel->addToMiddlewarePriorityAfter(
-                \Illuminate\Routing\Middleware\ThrottleRequests::class,
+                ThrottleRequests::class,
                 VerifyHttpSignature::class,
             );
         }

@@ -1,5 +1,6 @@
 <?php
 
+use Carbon\Carbon;
 use DanielPetrica\LaravelActivityPub\Models\Actor;
 use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
 use DanielPetrica\LaravelActivityPub\Services\ActivityBuilder;
@@ -228,7 +229,7 @@ it('includes published timestamp', function (): void {
     expect($json['published'])->not->toBeNull();
 
     // Verify it is valid ISO8601 by parsing it back
-    $parsed = \Carbon\Carbon::parse($json['published']);
+    $parsed = Carbon::parse($json['published']);
     expect($parsed->isValid())->toBeTrue();
 });
 
@@ -247,7 +248,7 @@ it('builds Accept activity wrapping original Follow', function (): void {
         'id' => 'https://mastodon.social/users/remoteuser#follow/12345',
     ];
 
-    $accept = (new ActivityBuilder())->accept(
+    $accept = (new ActivityBuilder)->accept(
         actor: $this->actor,
         originalPayload: $followPayload,
     );
@@ -269,7 +270,7 @@ it('Accept activity has to field pointing to remote actor', function (): void {
         'id' => 'https://mastodon.social/users/remoteuser#follow/12345',
     ];
 
-    $accept = (new ActivityBuilder())->accept(
+    $accept = (new ActivityBuilder)->accept(
         actor: $this->actor,
         originalPayload: $followPayload,
     );
@@ -288,7 +289,7 @@ it('Accept activity has actor set to local actor', function (): void {
         'id' => 'https://mastodon.social/users/remoteuser#follow/12345',
     ];
 
-    $accept = (new ActivityBuilder())->accept(
+    $accept = (new ActivityBuilder)->accept(
         actor: $this->actor,
         originalPayload: $followPayload,
     );
@@ -332,12 +333,12 @@ it('Accept activity has unique id', function (): void {
         'id' => 'https://mastodon.social/users/remoteuser#follow/12345',
     ];
 
-    $accept1 = (new ActivityBuilder())->accept(
+    $accept1 = (new ActivityBuilder)->accept(
         actor: $this->actor,
         originalPayload: $followPayload,
     );
 
-    $accept2 = (new ActivityBuilder())->accept(
+    $accept2 = (new ActivityBuilder)->accept(
         actor: $this->actor,
         originalPayload: $followPayload,
     );

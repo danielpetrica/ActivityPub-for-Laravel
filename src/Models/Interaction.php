@@ -54,8 +54,8 @@ final class Interaction extends Model
     }
 
     /**
-     * @param \Illuminate\Database\Eloquent\Builder<Interaction> $query
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<Interaction>  $query
+     * @return Builder<static>
      */
     public function scopeActive(Builder $query): Builder
     {
@@ -63,8 +63,8 @@ final class Interaction extends Model
     }
 
     /**
-     * @param \Illuminate\Database\Eloquent\Builder<Interaction> $query
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<Interaction>  $query
+     * @return Builder<static>
      */
     public function scopeOfType(Builder $query, InteractionType $type): Builder
     {
@@ -72,8 +72,8 @@ final class Interaction extends Model
     }
 
     /**
-     * @param \Illuminate\Database\Eloquent\Builder<Interaction> $query
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<Interaction>  $query
+     * @return Builder<static>
      */
     public function scopeForObject(Builder $query, string $objectType, string $objectId): Builder
     {
@@ -83,8 +83,8 @@ final class Interaction extends Model
     }
 
     /**
-     * @param \Illuminate\Database\Eloquent\Builder<Interaction> $query
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<Interaction>  $query
+     * @return Builder<static>
      */
     public function scopeForActor(Builder $query, int $actorId): Builder
     {

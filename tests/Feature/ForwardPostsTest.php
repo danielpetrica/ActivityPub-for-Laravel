@@ -12,17 +12,16 @@ use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
 use DanielPetrica\LaravelActivityPub\Services\ActivityPubService;
 use DanielPetrica\LaravelActivityPub\Traits\FederatesContent;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Bus;
-use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Schema;
 
 class FederatablePost extends Model implements FederatableContentContract
 {
     use FederatesContent;
 
     protected $table = 'activities';
+
     protected $fillable = [
         'actor_id', 'type', 'object_type', 'object_id', 'payload',
         'status', 'delivered_at', 'remote_actor_id', 'is_incoming', 'debug',
@@ -40,7 +39,7 @@ class FederatablePost extends Model implements FederatableContentContract
         return false;
     }
 
-    public function activityPubActor(): \DanielPetrica\LaravelActivityPub\Contracts\ActorContract
+    public function activityPubActor(): ActorContract
     {
         return Actor::first();
     }
@@ -117,6 +116,7 @@ class NeverFederatePost extends FederatablePost
 class TestUser extends Authenticatable implements ActorContract
 {
     protected $table = 'users';
+
     protected $fillable = ['name', 'email', 'password', 'username'];
 
     public function getPreferredUsername(): string
@@ -603,7 +603,7 @@ it('shows empty state when no followers', function (): void {
 });
 
 it('isActivityPubPinned returns false by default', function (): void {
-    $post = new FederatablePost();
+    $post = new FederatablePost;
 
     expect($post->isActivityPubPinned())->toBeFalse();
 });

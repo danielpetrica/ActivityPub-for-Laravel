@@ -350,7 +350,7 @@ it('links local model interactions by morph class and primary key', function ():
 
 it('resolves remote url interactions through the query api', function (): void {
     $url = 'https://remote.example/notes/42';
-    $remote = (new InteractionRemoteUrl())->withUrl($url);
+    $remote = (new InteractionRemoteUrl)->withUrl($url);
 
     Interaction::query()->create([
         'type' => InteractionType::Like,
@@ -369,7 +369,7 @@ it('resolves remote url interactions through the query api', function (): void {
 
 it('writes remote url interactions through the mutation api', function (): void {
     $url = 'https://remote.example/notes/43';
-    $remote = (new InteractionRemoteUrl())->withUrl($url);
+    $remote = (new InteractionRemoteUrl)->withUrl($url);
 
     $interaction = ActivityInteractions::like($this->actor, $remote);
 
@@ -409,7 +409,7 @@ it('creates a Like interaction when a Like is received on the inbox', function (
         'status' => 'Active',
     ]);
 
-    expect(ActivityInteractions::likeCount((new InteractionRemoteUrl())->withUrl($url)))->toBe(1);
+    expect(ActivityInteractions::likeCount((new InteractionRemoteUrl)->withUrl($url)))->toBe(1);
 });
 
 it('reverses a Like interaction when Undo(Like) is received', function (): void {
@@ -453,7 +453,7 @@ it('reverses a Like interaction when Undo(Like) is received', function (): void 
     ]);
 
     expect(Interaction::query()->count())->toBe(1)
-        ->and(ActivityInteractions::likeCount((new InteractionRemoteUrl())->withUrl($url)))->toBe(0);
+        ->and(ActivityInteractions::likeCount((new InteractionRemoteUrl)->withUrl($url)))->toBe(0);
 });
 
 it('creates an Announce interaction when a boost is received', function (): void {
@@ -479,7 +479,7 @@ it('creates an Announce interaction when a boost is received', function (): void
         'status' => 'Active',
     ]);
 
-    expect(ActivityInteractions::boostCount((new InteractionRemoteUrl())->withUrl($url)))->toBe(1);
+    expect(ActivityInteractions::boostCount((new InteractionRemoteUrl)->withUrl($url)))->toBe(1);
 });
 
 it('reverses an Announce interaction when Undo(Announce) is received', function (): void {
@@ -519,5 +519,5 @@ it('reverses an Announce interaction when Undo(Announce) is received', function 
         'status' => 'Undone',
     ]);
 
-    expect(ActivityInteractions::boostCount((new InteractionRemoteUrl())->withUrl($url)))->toBe(0);
+    expect(ActivityInteractions::boostCount((new InteractionRemoteUrl)->withUrl($url)))->toBe(0);
 });

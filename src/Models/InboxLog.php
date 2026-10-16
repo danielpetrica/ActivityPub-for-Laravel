@@ -2,6 +2,7 @@
 
 namespace DanielPetrica\LaravelActivityPub\Models;
 
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -17,8 +18,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $reason
  * @property string|null $body_summary
  * @property array|null $headers
- * @property \Carbon\CarbonInterface $created_at
- * @property \Carbon\CarbonInterface $updated_at
+ * @property CarbonInterface $created_at
+ * @property CarbonInterface $updated_at
  * @property-read Actor $actor
  */
 final class InboxLog extends Model

@@ -4,6 +4,8 @@ use DanielPetrica\LaravelActivityPub\Models\Activity;
 use DanielPetrica\LaravelActivityPub\Models\Actor;
 use DanielPetrica\LaravelActivityPub\Models\InboxLog;
 use DanielPetrica\LaravelActivityPub\Models\Interaction;
+use Illuminate\Console\Scheduling\Event;
+use Illuminate\Console\Scheduling\Schedule;
 
 it('creates an actor with valid options', function (): void {
     $this->artisan(command: 'activitypub:create-actor', parameters: [
@@ -43,10 +45,10 @@ it('fails when username contains invalid characters', function (): void {
 });
 
 it('registers the prune command on the daily scheduler without overlapping', function (): void {
-    $schedule = app(\Illuminate\Console\Scheduling\Schedule::class);
+    $schedule = app(Schedule::class);
 
     $event = collect($schedule->events())
-        ->first(fn (\Illuminate\Console\Scheduling\Event $event): bool => str_contains(
+        ->first(fn (Event $event): bool => str_contains(
             (string) $event->command,
             'activitypub:prune-activities',
         ));

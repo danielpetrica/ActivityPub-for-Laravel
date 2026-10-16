@@ -50,6 +50,7 @@ final class ForwardPostsToNewServerJob implements ShouldBeUnique, ShouldQueue
 
         if (empty($models)) {
             Log::info('ForwardPostsToNewServerJob: no federatable models configured');
+
             return;
         }
 
@@ -60,7 +61,7 @@ final class ForwardPostsToNewServerJob implements ShouldBeUnique, ShouldQueue
                 continue;
             }
 
-            $model = new $modelClass();
+            $model = new $modelClass;
 
             if (! ($model instanceof FederatableContentContract)) {
                 continue;
@@ -70,7 +71,7 @@ final class ForwardPostsToNewServerJob implements ShouldBeUnique, ShouldQueue
             $query = $model->newQuery()
                 ->where(function ($query) use ($modelClass) {
                     // If the model has a 'published_at' column, use it
-                    $instance = new $modelClass();
+                    $instance = new $modelClass;
                     if (Schema::hasColumn($instance->getTable(), 'published_at')) {
                         $query->whereNotNull('published_at');
                     }
@@ -94,6 +95,7 @@ final class ForwardPostsToNewServerJob implements ShouldBeUnique, ShouldQueue
                 'actor' => $actor->username,
                 'remote_actor' => $remoteActor->actor_url,
             ]);
+
             return;
         }
 

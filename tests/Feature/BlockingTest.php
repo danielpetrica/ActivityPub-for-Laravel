@@ -1,5 +1,6 @@
 <?php
 
+use DanielPetrica\LaravelActivityPub\Contracts\ActorContract;
 use DanielPetrica\LaravelActivityPub\Enums\FollowerStatus;
 use DanielPetrica\LaravelActivityPub\Jobs\DeliverActivity;
 use DanielPetrica\LaravelActivityPub\Models\Activity;
@@ -8,16 +9,16 @@ use DanielPetrica\LaravelActivityPub\Models\BlockedDomain;
 use DanielPetrica\LaravelActivityPub\Models\BlockedRemoteActor;
 use DanielPetrica\LaravelActivityPub\Models\Follower;
 use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 
-class BlockingTestUser extends Authenticatable implements \DanielPetrica\LaravelActivityPub\Contracts\ActorContract
+class BlockingTestUser extends Authenticatable implements ActorContract
 {
     protected $table = 'users';
+
     protected $fillable = ['name', 'email', 'password', 'username'];
 
     public function getPreferredUsername(): string

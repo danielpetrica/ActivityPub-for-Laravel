@@ -9,7 +9,6 @@ use DanielPetrica\LaravelActivityPub\Models\Following;
 use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
 use DanielPetrica\LaravelActivityPub\Services\ActivityBuilder;
 use Illuminate\Support\Facades\Bus;
-use Illuminate\Support\Facades\Queue;
 
 beforeEach(function (): void {
     $keys = generateTestKeyPair();
@@ -35,7 +34,7 @@ it('builds Accept activity with to field for Mastodon', function (): void {
         'id' => 'https://infosec.exchange/users/mastodonuser#follow/12345',
     ];
 
-    $accept = (new ActivityBuilder())->accept(
+    $accept = (new ActivityBuilder)->accept(
         actor: $actor,
         originalPayload: $followPayload,
     );
@@ -64,7 +63,7 @@ it('builds Accept with nested actor object from Mastodon payload', function (): 
         'object' => $actor->actor_id,
     ];
 
-    $accept = (new ActivityBuilder())->accept(
+    $accept = (new ActivityBuilder)->accept(
         actor: $actor,
         originalPayload: $followPayload,
     );

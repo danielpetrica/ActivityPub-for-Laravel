@@ -238,9 +238,6 @@ final class DeliverActivity implements ShouldBeUnique, ShouldQueue
         );
     }
 
-    /**
-     * @param  CarbonInterface|null  $deliveredAt
-     */
     private function markDelivery(
         ActivityDelivery $delivery,
         string $status,

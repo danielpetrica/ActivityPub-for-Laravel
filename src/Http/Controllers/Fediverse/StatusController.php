@@ -7,7 +7,6 @@ use DanielPetrica\LaravelActivityPub\Jobs\FetchRemoteActor;
 use DanielPetrica\LaravelActivityPub\Jobs\ForwardPostsToNewServerJob;
 use DanielPetrica\LaravelActivityPub\Models\Activity;
 use DanielPetrica\LaravelActivityPub\Models\ActivityDelivery;
-use DanielPetrica\LaravelActivityPub\Models\Actor;
 use DanielPetrica\LaravelActivityPub\Models\Follower;
 use DanielPetrica\LaravelActivityPub\Models\Following;
 use DanielPetrica\LaravelActivityPub\Models\Report;
@@ -17,7 +16,6 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Redis;
 use Illuminate\View\View;
 
 final class StatusController extends Controller

@@ -51,6 +51,7 @@ final class FollowingController extends Controller
             if ($remoteActor === null) {
                 $following->update(['status' => FollowerStatus::Accepted]);
                 $corrected++;
+
                 continue;
             }
 

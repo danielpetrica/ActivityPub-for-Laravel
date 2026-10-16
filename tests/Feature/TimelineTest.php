@@ -1,36 +1,94 @@
 <?php
 
+use DanielPetrica\LaravelActivityPub\Contracts\ActorContract;
 use DanielPetrica\LaravelActivityPub\Enums\FollowerStatus;
 use DanielPetrica\LaravelActivityPub\Models\Activity;
 use DanielPetrica\LaravelActivityPub\Models\Actor;
 use DanielPetrica\LaravelActivityPub\Models\Follower;
 use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\Schema;
 
-class TimelineTestUser extends Authenticatable implements \DanielPetrica\LaravelActivityPub\Contracts\ActorContract
+class TimelineTestUser extends Authenticatable implements ActorContract
 {
     protected $table = 'users';
+
     protected $fillable = ['name', 'email', 'password', 'username'];
 
-    public function getPreferredUsername(): string { return $this->username ?? $this->name; }
-    public function getDisplayName(): string { return $this->name; }
-    public function getSummary(): ?string { return null; }
-    public function getIconUrl(): ?string { return null; }
-    public function getHeaderImageUrl(): ?string { return null; }
-    public function getProfileUrl(): string { return ''; }
-    public function getActorId(): string { return url('/users/'.$this->getPreferredUsername()); }
-    public function getInboxUrl(): string { return $this->getActorId().'/inbox'; }
-    public function getOutboxUrl(): string { return $this->getActorId().'/outbox'; }
-    public function getFollowersUrl(): string { return $this->getActorId().'/followers'; }
-    public function getFollowingUrl(): string { return $this->getActorId().'/following'; }
-    public function getPublicKey(): string { return ''; }
-    public function getKeyId(): string { return $this->getActorId().'#main-key'; }
-    public function getPrivateKeyPem(): ?string { return null; }
+    public function getPreferredUsername(): string
+    {
+        return $this->username ?? $this->name;
+    }
+
+    public function getDisplayName(): string
+    {
+        return $this->name;
+    }
+
+    public function getSummary(): ?string
+    {
+        return null;
+    }
+
+    public function getIconUrl(): ?string
+    {
+        return null;
+    }
+
+    public function getHeaderImageUrl(): ?string
+    {
+        return null;
+    }
+
+    public function getProfileUrl(): string
+    {
+        return '';
+    }
+
+    public function getActorId(): string
+    {
+        return url('/users/'.$this->getPreferredUsername());
+    }
+
+    public function getInboxUrl(): string
+    {
+        return $this->getActorId().'/inbox';
+    }
+
+    public function getOutboxUrl(): string
+    {
+        return $this->getActorId().'/outbox';
+    }
+
+    public function getFollowersUrl(): string
+    {
+        return $this->getActorId().'/followers';
+    }
+
+    public function getFollowingUrl(): string
+    {
+        return $this->getActorId().'/following';
+    }
+
+    public function getPublicKey(): string
+    {
+        return '';
+    }
+
+    public function getKeyId(): string
+    {
+        return $this->getActorId().'#main-key';
+    }
+
+    public function getPrivateKeyPem(): ?string
+    {
+        return null;
+    }
 }
 
 beforeEach(function (): void {
-    if (! \Illuminate\Support\Facades\Schema::hasTable('users')) {
-        \Illuminate\Support\Facades\Schema::create('users', function ($table) {
+    if (! Schema::hasTable('users')) {
+        Schema::create('users', function ($table) {
             $table->id();
             $table->string('name');
             $table->string('email')->unique();

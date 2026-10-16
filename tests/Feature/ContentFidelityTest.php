@@ -242,7 +242,7 @@ beforeEach(function (): void {
 });
 
 it('omits sensitive and emoji tags by default', function (): void {
-    $object = (new ActivityBuilder())->buildObject(
+    $object = (new ActivityBuilder)->buildObject(
         content: new ContentFidelityContent(actor: $this->actor),
     );
 
@@ -253,7 +253,7 @@ it('omits sensitive and emoji tags by default', function (): void {
 it('emits sensitive when the content exposes it as a method', function (): void {
     $content = new ContentFidelityRichContent(actor: $this->actor, sensitive: true);
 
-    $object = (new ActivityBuilder())->buildObject(content: $content);
+    $object = (new ActivityBuilder)->buildObject(content: $content);
 
     expect($object['sensitive'] ?? null)->toBeTrue();
 });
@@ -261,7 +261,7 @@ it('emits sensitive when the content exposes it as a method', function (): void 
 it('does not emit sensitive when the content exposes it as false', function (): void {
     $content = new ContentFidelityRichContent(actor: $this->actor, sensitive: false);
 
-    $object = (new ActivityBuilder())->buildObject(content: $content);
+    $object = (new ActivityBuilder)->buildObject(content: $content);
 
     expect($object)->not->toHaveKey('sensitive');
 });
@@ -279,7 +279,7 @@ it('emits custom emoji tags merged after existing tags', function (): void {
         ],
     );
 
-    $object = (new ActivityBuilder())->buildObject(content: $content);
+    $object = (new ActivityBuilder)->buildObject(content: $content);
 
     expect($object['tag'])->toHaveCount(3)
         ->and($object['tag'][0]['type'])->toBe('Hashtag')
@@ -307,7 +307,7 @@ it('skips malformed emoji entries without throwing', function (): void {
         ],
     );
 
-    $object = (new ActivityBuilder())->buildObject(content: $content);
+    $object = (new ActivityBuilder)->buildObject(content: $content);
 
     $names = array_column($object['tag'] ?? [], 'name');
 
@@ -321,15 +321,15 @@ it('reads sensitive and emoji from attributes', function (): void {
         'activitypub_emoji' => ['wave' => 'https://example.com/emoji/wave.png'],
     ]);
 
-    $object = (new ActivityBuilder())->buildObject(content: $content);
+    $object = (new ActivityBuilder)->buildObject(content: $content);
 
     expect($object['sensitive'] ?? null)->toBeTrue()
         ->and($object['tag'][0]['name'])->toBe(':wave:');
 });
 
 it('emits sensitive on a created Note when the actor exposes it', function (): void {
-    $activity = (new ActivityBuilder())->createNote(
-        actor: new ContentFidelitySensitiveActor(),
+    $activity = (new ActivityBuilder)->createNote(
+        actor: new ContentFidelitySensitiveActor,
         content: 'Content warning',
         inReplyToUrl: 'https://example.com/objects/1',
         to: ['https://www.w3.org/ns/activitystreams#Public'],
@@ -339,7 +339,7 @@ it('emits sensitive on a created Note when the actor exposes it', function (): v
 });
 
 it('omits sensitive on a created Note for an actor without the opt-in', function (): void {
-    $activity = (new ActivityBuilder())->createNote(
+    $activity = (new ActivityBuilder)->createNote(
         actor: $this->actor,
         content: 'Plain note',
         inReplyToUrl: 'https://example.com/objects/1',

@@ -1,6 +1,8 @@
 <?php
 
 use DanielPetrica\LaravelActivityPub\Models\Actor;
+use DanielPetrica\LaravelActivityPub\Services\RemoteActorResolver;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function (): void {
@@ -35,7 +37,7 @@ it('fetches remote actor data successfully with logging enabled', function (): v
         ),
     ]);
 
-    $resolver = app(\DanielPetrica\LaravelActivityPub\Services\RemoteActorResolver::class);
+    $resolver = app(RemoteActorResolver::class);
     $result = $resolver->fetchActorData('https://mastodon.social/users/user');
 
     expect($result)->not->toBeNull();
@@ -51,7 +53,7 @@ it('returns null on non-successful HTTP response with logging', function (): voi
         ),
     ]);
 
-    $resolver = app(\DanielPetrica\LaravelActivityPub\Services\RemoteActorResolver::class);
+    $resolver = app(RemoteActorResolver::class);
     $result = $resolver->fetchActorData('https://mastodon.social/users/user');
 
     expect($result)->toBeNull();
@@ -66,7 +68,7 @@ it('returns null on empty JSON response with logging', function (): void {
         ),
     ]);
 
-    $resolver = app(\DanielPetrica\LaravelActivityPub\Services\RemoteActorResolver::class);
+    $resolver = app(RemoteActorResolver::class);
     $result = $resolver->fetchActorData('https://mastodon.social/users/user');
 
     expect($result)->toBeNull();
@@ -74,10 +76,10 @@ it('returns null on empty JSON response with logging', function (): void {
 
 it('returns null on HTTP exception with logging', function (): void {
     Http::fake(function () {
-        throw new \Illuminate\Http\Client\ConnectionException('Connection timed out');
+        throw new ConnectionException('Connection timed out');
     });
 
-    $resolver = app(\DanielPetrica\LaravelActivityPub\Services\RemoteActorResolver::class);
+    $resolver = app(RemoteActorResolver::class);
     $result = $resolver->fetchActorData('https://mastodon.social/users/user');
 
     expect($result)->toBeNull();
@@ -97,7 +99,7 @@ it('works identically when logging is disabled', function (): void {
         ),
     ]);
 
-    $resolver = app(\DanielPetrica\LaravelActivityPub\Services\RemoteActorResolver::class);
+    $resolver = app(RemoteActorResolver::class);
     $result = $resolver->fetchActorData('https://mastodon.social/users/user');
 
     expect($result)->not->toBeNull();
@@ -116,7 +118,7 @@ it('resolves remote actor successfully with logging', function (): void {
         ),
     ]);
 
-    $resolver = app(\DanielPetrica\LaravelActivityPub\Services\RemoteActorResolver::class);
+    $resolver = app(RemoteActorResolver::class);
     $result = $resolver->resolve('https://mastodon.social/users/user');
 
     expect($result)->not->toBeNull();
@@ -132,7 +134,7 @@ it('returns null when resolve fails with logging', function (): void {
         ),
     ]);
 
-    $resolver = app(\DanielPetrica\LaravelActivityPub\Services\RemoteActorResolver::class);
+    $resolver = app(RemoteActorResolver::class);
     $result = $resolver->resolve('https://mastodon.social/users/user');
 
     expect($result)->toBeNull();

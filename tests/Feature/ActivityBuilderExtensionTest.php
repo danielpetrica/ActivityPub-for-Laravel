@@ -1,7 +1,7 @@
 <?php
 
-use DanielPetrica\LaravelActivityPub\Contracts\ActorContract;
 use DanielPetrica\LaravelActivityPub\Contracts\ActivityBuilderContract;
+use DanielPetrica\LaravelActivityPub\Contracts\ActorContract;
 use DanielPetrica\LaravelActivityPub\Contracts\FederatableContentContract;
 use DanielPetrica\LaravelActivityPub\Models\Activity;
 use DanielPetrica\LaravelActivityPub\Models\Actor;

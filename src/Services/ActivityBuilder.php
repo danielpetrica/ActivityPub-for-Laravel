@@ -2,8 +2,8 @@
 
 namespace DanielPetrica\LaravelActivityPub\Services;
 
-use DanielPetrica\LaravelActivityPub\Contracts\ActorContract;
 use DanielPetrica\LaravelActivityPub\Contracts\ActivityBuilderContract;
+use DanielPetrica\LaravelActivityPub\Contracts\ActorContract;
 use DanielPetrica\LaravelActivityPub\Contracts\FederatableContentContract;
 use Illuminate\Support\Str;
 

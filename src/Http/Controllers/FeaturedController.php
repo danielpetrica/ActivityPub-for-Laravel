@@ -102,7 +102,7 @@ final class FeaturedController extends Controller
     protected function pinnedActivityPubIdsForModel(string $modelClass, Actor $actor): array
     {
         try {
-            $probe = new $modelClass();
+            $probe = new $modelClass;
             $table = $probe->getTable();
         } catch (Throwable) {
             return [];

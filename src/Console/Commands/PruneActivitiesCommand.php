@@ -7,6 +7,7 @@ use DanielPetrica\LaravelActivityPub\Models\Activity;
 use DanielPetrica\LaravelActivityPub\Models\InboxLog;
 use DanielPetrica\LaravelActivityPub\Models\Interaction;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Builder;
 
 final class PruneActivitiesCommand extends Command
 {
@@ -72,9 +73,9 @@ final class PruneActivitiesCommand extends Command
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Builder<Activity>
+     * @return Builder<Activity>
      */
-    protected function deliveredActivitiesQuery(int $days): \Illuminate\Database\Eloquent\Builder
+    protected function deliveredActivitiesQuery(int $days): Builder
     {
         return Activity::query()
             ->where('status', '=', 'delivered')
@@ -83,9 +84,9 @@ final class PruneActivitiesCommand extends Command
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Builder<Activity>
+     * @return Builder<Activity>
      */
-    protected function receivedActivitiesQuery(int $days): \Illuminate\Database\Eloquent\Builder
+    protected function receivedActivitiesQuery(int $days): Builder
     {
         return Activity::query()
             ->where('is_incoming', '=', true)
@@ -93,18 +94,18 @@ final class PruneActivitiesCommand extends Command
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Builder<InboxLog>
+     * @return Builder<InboxLog>
      */
-    protected function inboxLogsQuery(int $days): \Illuminate\Database\Eloquent\Builder
+    protected function inboxLogsQuery(int $days): Builder
     {
         return InboxLog::query()
             ->where('created_at', '<', now()->subDays($days));
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Builder<Interaction>
+     * @return Builder<Interaction>
      */
-    protected function interactionsQuery(int $days): \Illuminate\Database\Eloquent\Builder
+    protected function interactionsQuery(int $days): Builder
     {
         return Interaction::query()
             ->where('created_at', '<', now()->subDays($days));

@@ -1,6 +1,8 @@
 <?php
 
+use DanielPetrica\LaravelActivityPub\Http\Resources\ActorResource;
 use DanielPetrica\LaravelActivityPub\Models\Actor;
+use Illuminate\Http\Request;
 
 it('returns 404 for a non-existent actor', function (): void {
     $response = $this->getJson(
@@ -169,8 +171,8 @@ it('emits sensitive only when the actor opts in', function (): void {
 
     $actor->sensitive = true;
 
-    $data = (new \DanielPetrica\LaravelActivityPub\Http\Resources\ActorResource(resource: $actor))
-        ->toArray(request: \Illuminate\Http\Request::create(uri: '/'));
+    $data = (new ActorResource(resource: $actor))
+        ->toArray(request: Request::create(uri: '/'));
 
     expect($data['sensitive'])->toBeTrue();
 });
@@ -186,8 +188,8 @@ it('emits alsoKnownAs when the actor exposes it', function (): void {
 
     $actor->also_known_as = ['https://other.example.com/@aliasuser'];
 
-    $data = (new \DanielPetrica\LaravelActivityPub\Http\Resources\ActorResource(resource: $actor))
-        ->toArray(request: \Illuminate\Http\Request::create(uri: '/'));
+    $data = (new ActorResource(resource: $actor))
+        ->toArray(request: Request::create(uri: '/'));
 
     expect($data['alsoKnownAs'])->toBe(['https://other.example.com/@aliasuser']);
 });

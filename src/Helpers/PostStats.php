@@ -4,6 +4,7 @@ namespace DanielPetrica\LaravelActivityPub\Helpers;
 
 use DanielPetrica\LaravelActivityPub\Enums\ActivityType;
 use DanielPetrica\LaravelActivityPub\Models\Activity;
+use DanielPetrica\LaravelActivityPub\Models\Follower;
 use Illuminate\Support\Facades\DB;
 
 final class PostStats
@@ -35,7 +36,7 @@ final class PostStats
      */
     public static function followerCount(int $actorId): int
     {
-        return \DanielPetrica\LaravelActivityPub\Models\Follower::query()
+        return Follower::query()
             ->where('actor_id', '=', $actorId)
             ->where('status', '=', 'accepted')
             ->count();

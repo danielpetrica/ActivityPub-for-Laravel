@@ -17,6 +17,7 @@ use DanielPetrica\LaravelActivityPub\Models\IncomingActivity;
 use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
 use DanielPetrica\LaravelActivityPub\Services\ActivityPubService;
 use DanielPetrica\LaravelActivityPub\Services\RemoteActorResolver;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -478,7 +479,7 @@ final class InboxProcessor
                 ->where('is_incoming', '=', true)
                 ->where('id', '>', $afterId)
                 ->update(['activity_uri' => $activityUri]);
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             // A concurrent worker already stamped this activity id. The unique
             // index did its job; treat this delivery as a duplicate.
             Log::debug(

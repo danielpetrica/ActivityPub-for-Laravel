@@ -9,7 +9,6 @@ use DanielPetrica\LaravelActivityPub\Events\FollowReceived;
 use DanielPetrica\LaravelActivityPub\Jobs\DeliverActivity;
 use DanielPetrica\LaravelActivityPub\Models\Actor;
 use DanielPetrica\LaravelActivityPub\Models\Follower;
-use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
 use DanielPetrica\LaravelActivityPub\Services\ActivityPubService;
 use DanielPetrica\LaravelActivityPub\Services\RemoteActorResolver;
 

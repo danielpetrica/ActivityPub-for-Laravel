@@ -1,5 +1,6 @@
 <?php
 
+use DanielPetrica\LaravelActivityPub\Actions\InboxProcessor;
 use DanielPetrica\LaravelActivityPub\Enums\InteractionStatus;
 use DanielPetrica\LaravelActivityPub\Jobs\ProcessInboxActivity;
 use DanielPetrica\LaravelActivityPub\Models\Activity;
@@ -10,6 +11,7 @@ use DanielPetrica\LaravelActivityPub\Models\Interaction;
 use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Testing\TestResponse;
 
 beforeEach(function (): void {
     $keys = generateTestKeyPair();
@@ -25,7 +27,7 @@ beforeEach(function (): void {
     config()->set('activitypub.federation.enabled', false);
 });
 
-function postToInbox(array $payload): \Illuminate\Testing\TestResponse
+function postToInbox(array $payload): TestResponse
 {
     return test()->postJson(
         uri: route(name: 'activitypub.actor.inbox.store', parameters: ['actor' => 'testuser']),
@@ -311,7 +313,7 @@ it('still rejects an empty payload', function (): void {
 it('queues inbox processing through ProcessInboxActivity', function (): void {
     Queue::fake();
 
-    app(\DanielPetrica\LaravelActivityPub\Actions\InboxProcessor::class)->queue(payload: [
+    app(InboxProcessor::class)->queue(payload: [
         '@context' => 'https://www.w3.org/ns/activitystreams',
         'id' => 'https://remote.example.com/users/remote#likes/4444',
         'type' => 'Like',

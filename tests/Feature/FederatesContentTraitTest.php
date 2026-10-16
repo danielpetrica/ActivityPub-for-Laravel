@@ -13,6 +13,7 @@ class FederatesContentPost extends Model implements FederatableContentContract
     use FederatesContent;
 
     protected $table = 'federates_content_test_posts';
+
     protected $fillable = ['title', 'status', 'should_federate'];
 
     public function shouldFederate(): bool
@@ -152,7 +153,7 @@ it('does not include _was_federatable_before_save in getDirty during update', fu
 });
 
 it('does not include _was_federatable_before_save in getAttributesForInsert during create', function (): void {
-    $post = new FederatesContentPost();
+    $post = new FederatesContentPost;
     $post->title = 'New Post';
 
     $post->save();
