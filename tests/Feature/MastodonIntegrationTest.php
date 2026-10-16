@@ -119,6 +119,7 @@ it('records incoming Follow and builds Accept with to field', function (): void 
 it('dispatches DeliverActivity when federation is enabled', function (): void {
     Bus::fake();
     config()->set('activitypub.federation.enabled', true);
+    config()->set('activitypub.queue.process_inbox', false);
 
     $remoteActor = RemoteActor::query()->create([
         'actor_url' => 'https://infosec.exchange/users/mastodonuser',
@@ -149,6 +150,7 @@ it('dispatches DeliverActivity when federation is enabled', function (): void {
 it('always dispatches Accept delivery even when federation is disabled', function (): void {
     Bus::fake();
     config()->set('activitypub.federation.enabled', false);
+    config()->set('activitypub.queue.process_inbox', false);
 
     $response = $this->postJson(
         uri: route(name: 'activitypub.actor.inbox.store', parameters: ['actor' => $this->actor->username]),
@@ -166,7 +168,7 @@ it('always dispatches Accept delivery even when federation is disabled', functio
     Bus::assertDispatched(DeliverActivity::class);
 });
 
-it('returns actor profile with OrderedCollection inbox and outbox', function (): void {
+it('returns actor profile with inbox and outbox as collection IRIs', function (): void {
     $response = $this->getJson(
         uri: route(name: 'activitypub.actor', parameters: ['actor' => 'daniel']),
         headers: ['Accept' => 'application/activity+json'],
@@ -176,19 +178,9 @@ it('returns actor profile with OrderedCollection inbox and outbox', function ():
 
     $json = $response->json();
 
-    // inbox must be an OrderedCollection
-    expect($json['inbox'])
-        ->toHaveKey('id', $this->actor->inbox_url)
-        ->toHaveKey('type', 'OrderedCollection')
-        ->toHaveKey('totalItems')
-        ->toHaveKey('first');
-
-    // outbox must be an OrderedCollection
-    expect($json['outbox'])
-        ->toHaveKey('id', $this->actor->outbox_url)
-        ->toHaveKey('type', 'OrderedCollection')
-        ->toHaveKey('totalItems')
-        ->toHaveKey('first');
+    // inbox/outbox are collection IRIs; consumers dereference them.
+    expect($json['inbox'])->toBe($this->actor->inbox_url);
+    expect($json['outbox'])->toBe($this->actor->outbox_url);
 });
 
 it('returns followers and following as proper collection URLs', function (): void {
@@ -206,6 +198,7 @@ it('returns followers and following as proper collection URLs', function (): voi
 it('delivers Accept to remote inbox with correct structure', function (): void {
     Bus::fake();
     config()->set('activitypub.federation.enabled', true);
+    config()->set('activitypub.queue.process_inbox', false);
 
     $remoteActor = RemoteActor::query()->create([
         'actor_url' => 'https://mastodon.social/users/testuser',

@@ -5,34 +5,35 @@ namespace DanielPetrica\LaravelActivityPub\Http\Resources;
 final class OrderedCollection
 {
     /**
-     * @param  array<int, mixed>  $items
+     * Build a top-level `OrderedCollection`.
+     *
+     * Per the ActivityStreams 2.0 spec the collection itself carries metadata
+     * only (`totalItems`, `first`, `last`); the actual items live on the
+     * `OrderedCollectionPage` documents reachable through `first`/`last`.
+     * Embedding `orderedItems` here would duplicate (and, when the collection
+     * spans multiple pages, incorrectly truncate) the data.
+     *
      * @return array<string, mixed>
      */
     public static function make(
         string $id,
-        array $items,
         int $totalItems,
         ?string $first = null,
         ?string $last = null,
     ): array {
-        $collection = [
+        return [
             '@context' => 'https://www.w3.org/ns/activitystreams',
             'id' => $id,
             'type' => 'OrderedCollection',
             'totalItems' => $totalItems,
+            'first' => $first ?? $id.'?page=1',
+            'last' => $last ?? $id.'?page=1',
         ];
-
-        if ($items !== []) {
-            $collection['orderedItems'] = $items;
-        }
-
-        $collection['first'] = $first ?? $id.'?page=1';
-        $collection['last'] = $last ?? $id.'?page=1';
-
-        return $collection;
     }
 
     /**
+     * Build an `OrderedCollectionPage` carrying one slice of items.
+     *
      * @param  array<int, mixed>  $items
      * @return array<string, mixed>
      */
@@ -50,11 +51,8 @@ final class OrderedCollection
             'type' => 'OrderedCollectionPage',
             'partOf' => $partOf,
             'totalItems' => $totalItems,
+            'orderedItems' => array_values($items),
         ];
-
-        if ($items !== []) {
-            $page['orderedItems'] = $items;
-        }
 
         if ($next !== null) {
             $page['next'] = $next;

@@ -17,8 +17,8 @@ final class ActorController extends Controller
     {
         if (! $this->wantsJson($request)) {
             return response()->json(
-                data: ['error' => 'This endpoint serves ActivityPub JSON. Use an appropriate Accept header.'],
-                status: 406,
+                ['error' => 'This endpoint serves ActivityPub JSON. Use an appropriate Accept header.'],
+                406,
             );
         }
 

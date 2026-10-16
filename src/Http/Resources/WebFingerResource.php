@@ -16,8 +16,10 @@ final class WebFingerResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $parsedUrl = parse_url(url: $this->resource->actor_id);
-        $domain = $parsedUrl['host'];
+        $parsedUrl = parse_url($this->resource->actor_id);
+        $host = $parsedUrl['host'] ?? '';
+        $scheme = $parsedUrl['scheme'] ?? 'https';
+        $domain = $host;
         if (isset($parsedUrl['port'])) {
             $domain .= ':'.$parsedUrl['port'];
         }
@@ -32,6 +34,18 @@ final class WebFingerResource extends JsonResource
                     'rel' => 'self',
                     'type' => 'application/activity+json',
                     'href' => $this->resource->actor_id,
+                ],
+                [
+                    // Human-readable profile page, per the WebFinger/Pleroma
+                    // convention understood by Mastodon-family clients.
+                    'rel' => 'http://webfinger.net/rel/profile-page',
+                    'type' => 'text/html',
+                    'href' => $this->resource->getProfileUrl(),
+                ],
+                [
+                    // Remote follow / interaction template (OStatus).
+                    'rel' => 'http://ostatus.org/schema/1.0/subscribe',
+                    'template' => $scheme.'://'.$domain.'/authorize_interaction?uri={uri}',
                 ],
             ],
         ];

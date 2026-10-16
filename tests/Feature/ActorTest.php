@@ -64,18 +64,14 @@ it('returns actor JSON-LD with Accept header', function (): void {
         'url' => $baseUrl.'/users/jane',
     ]);
 
-    // Verify URL structure
+    // Verify URL structure. inbox/outbox/followers/following/featured are
+    // plain collection IRIs (not inline collections with stale counts).
     $response->assertJson([
-        'inbox' => [
-            'id' => $baseUrl.'/users/jane/inbox',
-            'type' => 'OrderedCollection',
-        ],
-        'outbox' => [
-            'id' => $baseUrl.'/users/jane/outbox',
-            'type' => 'OrderedCollection',
-        ],
+        'inbox' => $baseUrl.'/users/jane/inbox',
+        'outbox' => $baseUrl.'/users/jane/outbox',
         'followers' => $baseUrl.'/users/jane/followers',
         'following' => $baseUrl.'/users/jane/following',
+        'featured' => $baseUrl.'/users/jane/featured',
         'publicKey' => [
             'id' => $baseUrl.'/users/jane#main-key',
             'owner' => $baseUrl.'/users/jane',
@@ -138,4 +134,60 @@ it('omits optional fields when not set', function (): void {
     $response->assertJsonMissingPath(path: 'summary');
     $response->assertJsonMissingPath(path: 'icon');
     $response->assertJsonMissingPath(path: 'image');
+    $response->assertJsonMissingPath(path: 'sensitive');
+    $response->assertJsonMissingPath(path: 'alsoKnownAs');
+});
+
+it('derives icon and image media types from the URL extension', function (): void {
+    $keys = generateTestKeyPair();
+    Actor::query()->create(attributes: [
+        'username' => 'imagemedia',
+        'name' => 'Image Media',
+        'icon_url' => 'https://cdn.example.com/avatar.png',
+        'image_url' => 'https://cdn.example.com/banner.webp',
+        'public_key_pem' => $keys['public'],
+        'private_key_pem' => $keys['private'],
+    ]);
+
+    $json = $this->getJson(
+        uri: route(name: 'activitypub.actor', parameters: ['actor' => 'imagemedia']),
+        headers: ['Accept' => 'application/activity+json'],
+    )->json();
+
+    expect($json['icon']['mediaType'])->toBe('image/png');
+    expect($json['image']['mediaType'])->toBe('image/webp');
+});
+
+it('emits sensitive only when the actor opts in', function (): void {
+    $keys = generateTestKeyPair();
+    $actor = Actor::query()->create(attributes: [
+        'username' => 'sensitiveuser',
+        'name' => 'Sensitive User',
+        'public_key_pem' => $keys['public'],
+        'private_key_pem' => $keys['private'],
+    ]);
+
+    $actor->sensitive = true;
+
+    $data = (new \DanielPetrica\LaravelActivityPub\Http\Resources\ActorResource(resource: $actor))
+        ->toArray(request: \Illuminate\Http\Request::create(uri: '/'));
+
+    expect($data['sensitive'])->toBeTrue();
+});
+
+it('emits alsoKnownAs when the actor exposes it', function (): void {
+    $keys = generateTestKeyPair();
+    $actor = Actor::query()->create(attributes: [
+        'username' => 'aliasuser',
+        'name' => 'Alias User',
+        'public_key_pem' => $keys['public'],
+        'private_key_pem' => $keys['private'],
+    ]);
+
+    $actor->also_known_as = ['https://other.example.com/@aliasuser'];
+
+    $data = (new \DanielPetrica\LaravelActivityPub\Http\Resources\ActorResource(resource: $actor))
+        ->toArray(request: \Illuminate\Http\Request::create(uri: '/'));
+
+    expect($data['alsoKnownAs'])->toBe(['https://other.example.com/@aliasuser']);
 });

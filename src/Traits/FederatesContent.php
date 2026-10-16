@@ -43,7 +43,7 @@ trait FederatesContent
             }
         });
 
-        static::deleted(callback: function (FederatableContentContract $model): void {
+        static::deleted(function (FederatableContentContract $model): void {
             if (! $model->shouldFederate()) {
                 return;
             }

@@ -19,13 +19,13 @@ final class FollowersController extends Controller
     {
         if (! $this->wantsJson($request)) {
             return response()->json(
-                data: ['error' => 'This endpoint serves ActivityPub JSON. Use an appropriate Accept header.'],
-                status: 406,
+                ['error' => 'This endpoint serves ActivityPub JSON. Use an appropriate Accept header.'],
+                406,
             );
         }
 
         $perPage = min(max((int) $request->query('perPage', 20), 1), 100);
-        $page = max((int) $request->query('page', 1), 1);
+        $requestedPage = $request->query('page');
 
         $baseQuery = Follower::query()
             ->with('remoteActor')
@@ -33,39 +33,37 @@ final class FollowersController extends Controller
             ->where('status', '=', FollowerStatus::Accepted);
 
         $totalItems = (clone $baseQuery)->count();
-        $totalPages = (int) ceil($totalItems / $perPage);
+        $totalPages = max((int) ceil($totalItems / $perPage), 1);
 
-        if ($page === 1) {
-            $firstItems = (clone $baseQuery)
-                ->orderBy('created_at')
-                ->offset(0)
-                ->limit($perPage)
-                ->get();
+        $collectionId = $actor->followers_url;
 
-            $items = $firstItems->map(fn (Follower $f) => $f->remoteActor->actor_url)->toArray();
-        } else {
-            $items = [];
+        if ($requestedPage === null) {
+            return $this->activityPubResponse($request, OrderedCollection::make(
+                id: $collectionId,
+                totalItems: $totalItems,
+                first: $collectionId.'?page=1',
+                last: $collectionId.'?page='.$totalPages,
+            ));
         }
 
-        if ($totalPages > 1) {
-            $collection = OrderedCollection::makePage(
-                id: $actor->followers_url.'?page='.$page,
-                partOf: $actor->followers_url,
-                items: $items,
-                totalItems: $totalItems,
-                next: $page < $totalPages ? $actor->followers_url.'?page='.($page + 1) : null,
-                prev: $page > 1 ? $actor->followers_url.'?page='.($page - 1) : null,
-            );
-        } else {
-            $collection = OrderedCollection::make(
-                id: $actor->followers_url,
-                items: $items,
-                totalItems: $totalItems,
-                first: $actor->followers_url.'?page=1',
-                last: $actor->followers_url.'?page=1',
-            );
-        }
+        $page = min(max((int) $requestedPage, 1), $totalPages);
 
-        return $this->activityPubResponse($request, $collection);
+        $followers = (clone $baseQuery)
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->offset(($page - 1) * $perPage)
+            ->limit($perPage)
+            ->get();
+
+        $items = $followers->map(fn (Follower $f) => $f->remoteActor->actor_url)->toArray();
+
+        return $this->activityPubResponse($request, OrderedCollection::makePage(
+            id: $collectionId.'?page='.$page,
+            partOf: $collectionId,
+            items: $items,
+            totalItems: $totalItems,
+            next: $page < $totalPages ? $collectionId.'?page='.($page + 1) : null,
+            prev: $page > 1 ? $collectionId.'?page='.($page - 1) : null,
+        ));
     }
 }

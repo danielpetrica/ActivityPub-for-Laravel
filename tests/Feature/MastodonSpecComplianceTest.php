@@ -131,7 +131,7 @@ it('returns actor with required ActivityPub properties', function (): void {
     expect($json)->toHaveKey('publicKey');
 });
 
-it('returns inbox and outbox as OrderedCollection', function (): void {
+it('returns inbox and outbox as collection IRIs', function (): void {
     $response = $this->getJson(
         uri: route(name: 'activitypub.actor', parameters: ['actor' => 'daniel']),
         headers: ['Accept' => 'application/activity+json'],
@@ -141,17 +141,10 @@ it('returns inbox and outbox as OrderedCollection', function (): void {
 
     $json = $response->json();
 
-    expect($json['inbox'])
-        ->toHaveKey('type', 'OrderedCollection')
-        ->toHaveKey('id')
-        ->toHaveKey('totalItems')
-        ->toHaveKey('first');
-
-    expect($json['outbox'])
-        ->toHaveKey('type', 'OrderedCollection')
-        ->toHaveKey('id')
-        ->toHaveKey('totalItems')
-        ->toHaveKey('first');
+    // AS2 consumers dereference these collection IRIs; embedding a stale
+    // inline collection is worse than omitting it.
+    expect($json['inbox'])->toBeString()->toBe($this->actor->inbox_url);
+    expect($json['outbox'])->toBeString()->toBe($this->actor->outbox_url);
 });
 
 it('returns publicKey with correct structure', function (): void {

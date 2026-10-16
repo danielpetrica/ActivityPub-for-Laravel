@@ -34,16 +34,21 @@ class WebFingerRequest extends FormRequest
                 return;
             }
 
-            if (! str_starts_with($resource, 'acct:')) {
-                $validator->errors()->add('resource', 'Only "acct:" URI scheme is supported.');
+            if (! is_string($resource)) {
+                $validator->errors()->add('resource', 'Invalid resource format.');
+
                 return;
             }
 
-            $account = substr($resource, 5);
-            $parts = explode('@', $account);
+            $isAcct = preg_match('/^acct:[^@ ]+@[^@ ]+$/', $resource) === 1;
+            $isUrl = preg_match('#^https?://\S+$#i', $resource) === 1;
+            $isAccount = preg_match('/^[^@ ]+@[^@ ]+$/', $resource) === 1;
 
-            if (count($parts) !== 2 || $parts[0] === '' || $parts[1] === '') {
-                $validator->errors()->add('resource', 'Invalid acct URI format. Expected acct:user@domain.');
+            if (! $isAcct && ! $isUrl && ! $isAccount) {
+                $validator->errors()->add(
+                    'resource',
+                    'Unsupported resource format. Expected acct:user@domain, https://... or user@domain.',
+                );
             }
         });
     }

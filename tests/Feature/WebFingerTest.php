@@ -10,10 +10,10 @@ it('returns 422 when resource parameter is missing', function (): void {
     $response->assertStatus(status: 422);
 });
 
-it('returns 422 when resource is not an acct URI', function (): void {
+it('returns 422 when resource format is unsupported', function (): void {
     $response = $this->getJson(
         uri: route(name: 'activitypub.webfinger', parameters: [
-            'resource' => 'https://example.com/user',
+            'resource' => 'not-a-resource',
         ]),
     );
 
@@ -97,4 +97,83 @@ it('returns valid JRD for an existing actor', function (): void {
     ]);
 
     $response->assertHeader('Content-Type', 'application/jrd+json');
+});
+
+it('exposes profile-page and subscribe links', function (): void {
+    $keys = generateTestKeyPair();
+    $actor = Actor::query()->create(attributes: [
+        'username' => 'linkuser',
+        'name' => 'Link User',
+        'public_key_pem' => $keys['public'],
+        'private_key_pem' => $keys['private'],
+    ]);
+
+    $response = $this->getJson(
+        uri: route(name: 'activitypub.webfinger', parameters: [
+            'resource' => 'acct:linkuser@localhost',
+        ]),
+    );
+
+    $response->assertStatus(status: 200);
+
+    $links = collect($response->json('links'))->keyBy('rel');
+
+    expect($links)->toHaveKey('self');
+    expect($links['self']['href'])->toBe($actor->actor_id);
+
+    expect($links)->toHaveKey('http://webfinger.net/rel/profile-page');
+    expect($links['http://webfinger.net/rel/profile-page']['type'])->toBe('text/html');
+    expect($links['http://webfinger.net/rel/profile-page']['href'])->toBe($actor->actor_id);
+
+    expect($links)->toHaveKey('http://ostatus.org/schema/1.0/subscribe');
+    expect($links['http://ostatus.org/schema/1.0/subscribe']['template'])
+        ->toBe('http://localhost/authorize_interaction?uri={uri}');
+});
+
+it('sets a permissive CORS header on WebFinger responses', function (): void {
+    $response = $this->getJson(
+        uri: route(name: 'activitypub.webfinger', parameters: [
+            'resource' => 'acct:anyone@localhost',
+        ]),
+    );
+
+    $response->assertHeader('Access-Control-Allow-Origin', '*');
+});
+
+it('accepts an actor https URL as the resource', function (): void {
+    $keys = generateTestKeyPair();
+    $actor = Actor::query()->create(attributes: [
+        'username' => 'urluser',
+        'name' => 'URL User',
+        'public_key_pem' => $keys['public'],
+        'private_key_pem' => $keys['private'],
+    ]);
+
+    $response = $this->getJson(
+        uri: route(name: 'activitypub.webfinger', parameters: [
+            'resource' => $actor->actor_id,
+        ]),
+    );
+
+    $response->assertStatus(status: 200);
+    $response->assertJson(['subject' => 'acct:urluser@localhost']);
+});
+
+it('accepts a bare username@domain resource', function (): void {
+    $keys = generateTestKeyPair();
+    Actor::query()->create(attributes: [
+        'username' => 'bareuser',
+        'name' => 'Bare User',
+        'public_key_pem' => $keys['public'],
+        'private_key_pem' => $keys['private'],
+    ]);
+
+    $response = $this->getJson(
+        uri: route(name: 'activitypub.webfinger', parameters: [
+            'resource' => 'bareuser@localhost',
+        ]),
+    );
+
+    $response->assertStatus(status: 200);
+    $response->assertJson(['subject' => 'acct:bareuser@localhost']);
 });
