@@ -17,10 +17,14 @@ class InboxRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'type' => ['required', 'string'],
+            'type' => ['required', 'string', 'min:1'],
             'actor' => ['required', 'string', 'url'],
-            'object' => ['required'],
-            '@context' => ['present'],
+            // `object` and `@context` are optional: several legitimate
+            // activity shapes omit them (e.g. object-less activities), and
+            // rejecting them here would drop valid federated traffic. The
+            // 1 MB payload cap is still enforced in the controller.
+            'object' => ['nullable'],
+            '@context' => ['nullable'],
             'id' => ['nullable', 'string'],
         ];
     }
@@ -31,8 +35,7 @@ class InboxRequest extends FormRequest
             'type.required' => 'Activity type is required.',
             'actor.required' => 'Activity actor is required.',
             'actor.url' => 'Activity actor must be a valid URL.',
-            'object.required' => 'Activity object is required.',
-            '@context.present' => 'Activity @context must be present.',
+            'type.min' => 'Activity type must not be empty.',
         ];
     }
 

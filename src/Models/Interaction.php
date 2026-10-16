@@ -44,13 +44,13 @@ final class Interaction extends Model
     /** @phpstan-ignore missingType.generics */
     public function actor(): BelongsTo
     {
-        return $this->belongsTo(related: Actor::class);
+        return $this->belongsTo(Actor::class);
     }
 
     /** @phpstan-ignore missingType.generics */
     public function remoteActor(): BelongsTo
     {
-        return $this->belongsTo(related: RemoteActor::class);
+        return $this->belongsTo(RemoteActor::class);
     }
 
     /**
@@ -59,7 +59,7 @@ final class Interaction extends Model
      */
     public function scopeActive(Builder $query): Builder
     {
-        return $query->where(column: 'status', operator: '=', value: InteractionStatus::Active);
+        return $query->where('status', '=', InteractionStatus::Active);
     }
 
     /**
@@ -68,7 +68,7 @@ final class Interaction extends Model
      */
     public function scopeOfType(Builder $query, InteractionType $type): Builder
     {
-        return $query->where(column: 'type', operator: '=', value: $type);
+        return $query->where('type', '=', $type);
     }
 
     /**
@@ -78,8 +78,8 @@ final class Interaction extends Model
     public function scopeForObject(Builder $query, string $objectType, string $objectId): Builder
     {
         return $query
-            ->where(column: 'object_type', operator: '=', value: $objectType)
-            ->where(column: 'object_id', operator: '=', value: $objectId);
+            ->where('object_type', '=', $objectType)
+            ->where('object_id', '=', $objectId);
     }
 
     /**
@@ -88,7 +88,7 @@ final class Interaction extends Model
      */
     public function scopeForActor(Builder $query, int $actorId): Builder
     {
-        return $query->where(column: 'actor_id', operator: '=', value: $actorId);
+        return $query->where('actor_id', '=', $actorId);
     }
 
     public function isUndone(): bool

@@ -37,14 +37,18 @@ final class HandleLikeAction implements ActivityHandler
 
         $objectUrl = $payload['object'] ?? null;
         if (is_string($objectUrl)) {
-            Interaction::create([
-                'type' => InteractionType::Like,
-                'actor_id' => $actor->id,
-                'remote_actor_id' => $remoteActor->id,
-                'object_type' => 'remote_url',
-                'object_id' => $objectUrl,
-                'status' => InteractionStatus::Active,
-            ]);
+            Interaction::query()->updateOrCreate(
+                [
+                    'type' => InteractionType::Like,
+                    'actor_id' => $actor->id,
+                    'remote_actor_id' => $remoteActor->id,
+                    'object_type' => 'remote_url',
+                    'object_id' => $objectUrl,
+                ],
+                [
+                    'status' => InteractionStatus::Active,
+                ],
+            );
         }
     }
 }

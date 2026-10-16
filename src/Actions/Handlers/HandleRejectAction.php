@@ -30,8 +30,8 @@ final class HandleRejectAction implements ActivityHandler
 
             if ($remoteActor !== null) {
                 Follower::query()
-                    ->where(column: 'actor_id', operator: '=', value: $actor->id)
-                    ->where(column: 'remote_actor_id', operator: '=', value: $remoteActor->id)
+                    ->where('actor_id', '=', $actor->id)
+                    ->where('remote_actor_id', '=', $remoteActor->id)
                     ->delete();
 
                 Following::query()

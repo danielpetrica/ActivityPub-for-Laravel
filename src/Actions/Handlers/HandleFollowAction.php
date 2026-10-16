@@ -7,10 +7,7 @@ use DanielPetrica\LaravelActivityPub\Enums\ActivityType;
 use DanielPetrica\LaravelActivityPub\Enums\FollowerStatus;
 use DanielPetrica\LaravelActivityPub\Events\FollowReceived;
 use DanielPetrica\LaravelActivityPub\Jobs\DeliverActivity;
-use DanielPetrica\LaravelActivityPub\Jobs\ForwardPostsToNewServerJob;
 use DanielPetrica\LaravelActivityPub\Models\Actor;
-use DanielPetrica\LaravelActivityPub\Models\BlockedDomain;
-use DanielPetrica\LaravelActivityPub\Models\BlockedRemoteActor;
 use DanielPetrica\LaravelActivityPub\Models\Follower;
 use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
 use DanielPetrica\LaravelActivityPub\Services\ActivityPubService;
@@ -31,76 +28,11 @@ final class HandleFollowAction implements ActivityHandler
 
     public function handle(Actor $actor, array $payload): void
     {
-        // Extract actor URL and domain from payload before resolving
-        $actorUrl = $payload['actor'] ?? null;
-        if (! is_string($actorUrl)) {
-            return;
-        }
-
-        $domain = parse_url($actorUrl, PHP_URL_HOST);
-        if ($domain === null) {
-            return;
-        }
-
-        // Auto-reject if domain is blocked (before any HTTP fetch)
-        if (BlockedDomain::where('domain', $domain)->exists()) {
-            $remoteActor = RemoteActor::firstOrCreate(
-                ['actor_url' => $actorUrl],
-                [
-                    'inbox_url' => $actorUrl.'/inbox',
-                    'username' => basename($actorUrl),
-                    'domain' => $domain,
-                ]
-            );
-
-            $rejectActivity = $this->activityBuilder->reject(
-                actor: $actor,
-                originalPayload: $payload,
-            );
-
-            $rejectRecord = $this->activityPubService->recordActivity(
-                localActor: $actor,
-                type: ActivityType::Reject,
-                remoteActor: $remoteActor,
-                payload: $rejectActivity,
-            );
-
-            DeliverActivity::dispatch(
-                inboxUrl: $remoteActor->inbox_url,
-                activityModelId: $rejectRecord->id,
-                actorId: $actor->id,
-            );
-
-            return;
-        }
-
-        // Now resolve the remote actor (may trigger HTTP fetch)
+        // Blocked senders are rejected/ignored centrally by InboxProcessor
+        // before this handler (and before any outbound fetch) runs.
         $remoteActor = $this->remoteActorResolver->resolveFromPayload(payload: $payload);
 
         if ($remoteActor === null) {
-            return;
-        }
-
-        // Auto-reject if actor is blocked
-        if (BlockedRemoteActor::where('remote_actor_id', $remoteActor->id)->exists()) {
-            $rejectActivity = $this->activityBuilder->reject(
-                actor: $actor,
-                originalPayload: $payload,
-            );
-
-            $rejectRecord = $this->activityPubService->recordActivity(
-                localActor: $actor,
-                type: ActivityType::Reject,
-                remoteActor: $remoteActor,
-                payload: $rejectActivity,
-            );
-
-            DeliverActivity::dispatch(
-                inboxUrl: $remoteActor->inbox_url,
-                activityModelId: $rejectRecord->id,
-                actorId: $actor->id,
-            );
-
             return;
         }
 
@@ -109,11 +41,11 @@ final class HandleFollowAction implements ActivityHandler
             : FollowerStatus::Accepted;
 
         Follower::query()->updateOrCreate(
-            attributes: [
+            [
                 'actor_id' => $actor->id,
                 'remote_actor_id' => $remoteActor->id,
             ],
-            values: [
+            [
                 'status' => $status,
             ],
         );
@@ -149,20 +81,13 @@ final class HandleFollowAction implements ActivityHandler
                 activityModelId: $acceptRecord->id,
                 actorId: $actor->id,
             );
-        }
 
-        // Forward posts to new server on first follower from domain
-        $existingFollowersFromDomain = Follower::query()
-            ->where('actor_id', $actor->id)
-            ->whereHas('remoteActor', function ($query) use ($remoteActor) {
-                $query->where('domain', $remoteActor->domain);
-            })
-            ->count();
-
-        if ($existingFollowersFromDomain <= 1) {
-            ForwardPostsToNewServerJob::dispatch(
-                remoteActorId: $remoteActor->id,
-                actorId: $actor->id,
+            // Forward posts to the new server on the first accepted follower
+            // from that domain. A pending request on a locked account must not
+            // receive any posts before it is explicitly approved.
+            $this->activityPubService->forwardRecentPostsToNewFollower(
+                actor: $actor,
+                remoteActor: $remoteActor,
             );
         }
     }
