@@ -36,7 +36,7 @@ final class DiscoverController extends Controller
         $domain = null;
         $isFollowing = false;
 
-        $parts = explode(separator: '@', string: self::DEFAULT_HANDLE);
+        $parts = explode('@', self::DEFAULT_HANDLE);
         $username = $parts[0];
         $domain = $parts[1];
         $resource = 'acct:'.$username.'@'.$domain;
@@ -58,16 +58,16 @@ final class DiscoverController extends Controller
 
                 if ($localActor && $remoteActorModel) {
                     $isFollowing = Activity::query()
-                        ->where(column: 'actor_id', operator: '=', value: $localActor->id)
-                        ->where(column: 'type', operator: '=', value: ActivityType::Follow)
-                        ->where(column: 'remote_actor_id', operator: '=', value: $remoteActorModel->id)
-                        ->where(column: 'is_incoming', operator: '=', value: false)
+                        ->where('actor_id', '=', $localActor->id)
+                        ->where('type', '=', ActivityType::Follow)
+                        ->where('remote_actor_id', '=', $remoteActorModel->id)
+                        ->where('is_incoming', '=', false)
                         ->exists();
                 }
             }
         }
 
-        return view(view: 'activitypub::fediverse.discover', data: [
+        return view('activitypub::fediverse.discover', [
             'actor' => $user,
             'remoteActor' => $remoteActor,
             'remoteActorUrl' => $remoteActorUrl,
@@ -79,28 +79,28 @@ final class DiscoverController extends Controller
 
     public function resolve(Request $request): RedirectResponse|View
     {
-        $request->validate(rules: [
+        $request->validate([
             'handle' => ['required', 'string', 'max:255'],
         ]);
 
         $user = auth()->user();
         $localActor = $this->resolveLocalActor();
 
-        $handle = ltrim(string: $request->input(key: 'handle'), characters: '@');
+        $handle = ltrim($request->input('handle'), '@');
 
-        if (! str_contains(haystack: $handle, needle: '@')) {
+        if (! str_contains($handle, '@')) {
             return redirect()
-                ->route(route: 'fediverse.discover')
+                ->route('fediverse.discover')
                 ->withErrors(['handle' => 'Enter a Fediverse address like user@domain.com']);
         }
 
-        $parts = explode(separator: '@', string: $handle);
+        $parts = explode('@', $handle);
         $username = $parts[0];
         $domain = $parts[1] ?? null;
 
         if ($domain === null) {
             return redirect()
-                ->route(route: 'fediverse.discover')
+                ->route('fediverse.discover')
                 ->withErrors(['handle' => 'Could not parse domain from the address']);
         }
 
@@ -113,7 +113,7 @@ final class DiscoverController extends Controller
             $this->activityPubLog('warning', 'WebFinger resolution failed', ['handle' => $handle, 'resource' => $resource]);
 
             return redirect()
-                ->route(route: 'fediverse.discover')
+                ->route('fediverse.discover')
                 ->withErrors(['handle' => 'Could not find that Fediverse account']);
         }
 
@@ -127,7 +127,7 @@ final class DiscoverController extends Controller
             $this->activityPubLog('warning', 'Could not fetch remote actor profile', ['handle' => $handle, 'actorUrl' => $actorUrl]);
 
             return redirect()
-                ->route(route: 'fediverse.discover')
+                ->route('fediverse.discover')
                 ->withErrors(['handle' => 'Could not fetch the remote actor profile']);
         }
 
@@ -139,13 +139,13 @@ final class DiscoverController extends Controller
         );
 
         $isFollowing = Activity::query()
-            ->where(column: 'actor_id', operator: '=', value: $localActor->id)
-            ->where(column: 'type', operator: '=', value: ActivityType::Follow)
-            ->where(column: 'remote_actor_id', operator: '=', value: $remoteActorModel->id)
-            ->where(column: 'is_incoming', operator: '=', value: false)
+            ->where('actor_id', '=', $localActor->id)
+            ->where('type', '=', ActivityType::Follow)
+            ->where('remote_actor_id', '=', $remoteActorModel->id)
+            ->where('is_incoming', '=', false)
             ->exists();
 
-        return view(view: 'activitypub::fediverse.discover', data: [
+        return view('activitypub::fediverse.discover', [
             'actor' => $user,
             'remoteActor' => $data,
             'remoteActorUrl' => $actorUrl,

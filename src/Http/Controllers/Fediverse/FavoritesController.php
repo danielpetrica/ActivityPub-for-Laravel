@@ -18,7 +18,7 @@ final class FavoritesController extends Controller
 
         $bookmarks = ActivityInteractions::bookmarks(actor: $localActor);
 
-        return view(view: 'activitypub::fediverse.favorites', data: [
+        return view('activitypub::fediverse.favorites', [
             'bookmarks' => $bookmarks,
             'actor' => $user,
         ]);

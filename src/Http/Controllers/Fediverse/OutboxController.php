@@ -18,12 +18,12 @@ final class OutboxController extends Controller
 
         $activities = Activity::query()
             ->with(['remoteActor', 'actor'])
-            ->where(column: 'actor_id', operator: '=', value: $localActor->id)
-            ->where(column: 'is_incoming', operator: '=', value: false)
+            ->where('actor_id', '=', $localActor->id)
+            ->where('is_incoming', '=', false)
             ->latest()
-            ->paginate(perPage: 20);
+            ->paginate(20);
 
-        return view(view: 'activitypub::fediverse.outbox', data: [
+        return view('activitypub::fediverse.outbox', [
             'activities' => $activities,
             'actor' => $user,
         ]);

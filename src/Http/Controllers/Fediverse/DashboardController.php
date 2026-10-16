@@ -20,46 +20,46 @@ final class DashboardController extends Controller
         $localActor = $this->resolveLocalActor();
 
         $followerCount = Follower::query()
-            ->where(column: 'actor_id', operator: '=', value: $localActor->id)
-            ->where(column: 'status', operator: '=', value: FollowerStatus::Accepted)
+            ->where('actor_id', '=', $localActor->id)
+            ->where('status', '=', FollowerStatus::Accepted)
             ->count();
 
         $followingCount = Activity::query()
-            ->where(column: 'actor_id', operator: '=', value: $localActor->id)
-            ->where(column: 'type', operator: '=', value: ActivityType::Follow)
-            ->where(column: 'is_incoming', operator: '=', value: false)
+            ->where('actor_id', '=', $localActor->id)
+            ->where('type', '=', ActivityType::Follow)
+            ->where('is_incoming', '=', false)
             ->distinct()
-            ->count(columns: 'remote_actor_id');
+            ->count('remote_actor_id');
 
         $incomingCount = Activity::query()
-            ->where(column: 'actor_id', operator: '=', value: $localActor->id)
-            ->where(column: 'is_incoming', operator: '=', value: true)
+            ->where('actor_id', '=', $localActor->id)
+            ->where('is_incoming', '=', true)
             ->count();
 
         $outgoingCount = Activity::query()
-            ->where(column: 'actor_id', operator: '=', value: $localActor->id)
-            ->where(column: 'is_incoming', operator: '=', value: false)
+            ->where('actor_id', '=', $localActor->id)
+            ->where('is_incoming', '=', false)
             ->count();
 
         $recentInbox = Activity::query()
-            ->with(relations: 'remoteActor')
-            ->where(column: 'actor_id', operator: '=', value: $localActor->id)
-            ->where(column: 'is_incoming', operator: '=', value: true)
+            ->with('remoteActor')
+            ->where('actor_id', '=', $localActor->id)
+            ->where('is_incoming', '=', true)
             ->latest()
-            ->limit(value: 5)
+            ->limit(5)
             ->get();
 
         $recentOutbox = Activity::query()
-            ->with(relations: 'remoteActor')
-            ->where(column: 'actor_id', operator: '=', value: $localActor->id)
-            ->where(column: 'is_incoming', operator: '=', value: false)
+            ->with('remoteActor')
+            ->where('actor_id', '=', $localActor->id)
+            ->where('is_incoming', '=', false)
             ->latest()
-            ->limit(value: 5)
+            ->limit(5)
             ->get();
 
-        $parsedUrl = parse_url(url: $localActor->actor_id);
+        $parsedUrl = parse_url($localActor->actor_id);
 
-        return view(view: 'activitypub::fediverse.dashboard', data: [
+        return view('activitypub::fediverse.dashboard', [
             'followerCount' => $followerCount,
             'followingCount' => $followingCount,
             'incomingCount' => $incomingCount,

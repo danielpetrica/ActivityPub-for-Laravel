@@ -25,17 +25,18 @@ final class InteractController extends Controller
 
     public function __construct(
         private ActivityBuilderContract $activityBuilder,
+        private RemoteActorResolver $remoteActorResolver,
     ) {}
 
     public function follow(Request $request): RedirectResponse
     {
-        $request->validate(rules: [
+        $request->validate([
             'remote_actor_url' => ['required', 'string', 'max:2048'],
         ]);
 
         $localActor = $this->resolveLocalActor();
 
-        $remoteActorUrl = $request->input(key: 'remote_actor_url');
+        $remoteActorUrl = $request->input('remote_actor_url');
 
         $this->activityPubLog('info', 'Follow request initiated', [
             'localActor' => $localActor->username,
@@ -63,7 +64,7 @@ final class InteractController extends Controller
 
         $activity = $this->activityBuilder->follow(actor: $localActor, objectUrl: $remoteActorUrl);
 
-        $record = Activity::query()->create(attributes: [
+        $record = Activity::query()->create([
             'actor_id' => $localActor->id,
             'type' => ActivityType::Follow,
             'payload' => $activity,
@@ -71,7 +72,7 @@ final class InteractController extends Controller
             'remote_actor_id' => $remoteActor->id,
         ]);
 
-        if (config(key: 'activitypub.federation.enabled')) {
+        if (config('activitypub.federation.enabled')) {
             DeliverActivity::dispatch(
                 inboxUrl: $remoteActor->inbox_url,
                 activityModelId: $record->id,
@@ -79,10 +80,14 @@ final class InteractController extends Controller
             );
         }
 
+        // Check if remote actor manually approves followers
+        $actorData = $this->remoteActorResolver->fetchActorData(actorUri: $remoteActorUrl);
+        $manuallyApproves = $actorData['manuallyApprovesFollowers'] ?? true;
+
         Following::query()->create([
             'actor_id' => $localActor->id,
             'remote_actor_id' => $remoteActor->id,
-            'status' => FollowerStatus::Pending,
+            'status' => $manuallyApproves ? FollowerStatus::Pending : FollowerStatus::Accepted,
         ]);
 
         $this->activityPubLog('info', 'Follow activity dispatched', [
@@ -91,22 +96,22 @@ final class InteractController extends Controller
         ]);
 
         return redirect()
-            ->route(route: 'fediverse.following')
-            ->with(key: 'success', value: 'Follow request sent!');
+            ->route('fediverse.following')
+            ->with('success', $manuallyApproves ? 'Follow request sent!' : 'Following!');
     }
 
     public function unfollow(Request $request): RedirectResponse
     {
-        $request->validate(rules: [
+        $request->validate([
             'remote_actor_url' => ['required', 'string', 'max:2048'],
         ]);
 
         $localActor = $this->resolveLocalActor();
 
-        $remoteActorUrl = $request->input(key: 'remote_actor_url');
+        $remoteActorUrl = $request->input('remote_actor_url');
 
         $remoteActor = RemoteActor::query()
-            ->where(column: 'actor_url', operator: '=', value: $remoteActorUrl)
+            ->where('actor_url', '=', $remoteActorUrl)
             ->first();
 
         if ($remoteActor === null) {
@@ -117,7 +122,7 @@ final class InteractController extends Controller
 
         $undoActivity = $this->activityBuilder->undoFollow(actor: $localActor, objectUrl: $remoteActorUrl);
 
-        $undoRecord = Activity::query()->create(attributes: [
+        $undoRecord = Activity::query()->create([
             'actor_id' => $localActor->id,
             'type' => ActivityType::Undo,
             'payload' => $undoActivity,
@@ -125,7 +130,7 @@ final class InteractController extends Controller
             'remote_actor_id' => $remoteActor->id,
         ]);
 
-        if (config(key: 'activitypub.federation.enabled')) {
+        if (config('activitypub.federation.enabled')) {
             DeliverActivity::dispatch(
                 inboxUrl: $remoteActor->inbox_url,
                 activityModelId: $undoRecord->id,
@@ -134,9 +139,9 @@ final class InteractController extends Controller
         }
 
         Activity::query()
-            ->where(column: 'actor_id', operator: '=', value: $localActor->id)
-            ->where(column: 'type', operator: '=', value: ActivityType::Follow)
-            ->where(column: 'remote_actor_id', operator: '=', value: $remoteActor->id)
+            ->where('actor_id', '=', $localActor->id)
+            ->where('type', '=', ActivityType::Follow)
+            ->where('remote_actor_id', '=', $remoteActor->id)
             ->delete();
 
         Following::query()
@@ -145,29 +150,29 @@ final class InteractController extends Controller
             ->delete();
 
         return redirect()
-            ->route(route: 'fediverse.following')
-            ->with(key: 'success', value: 'Unfollowed successfully');
+            ->route('fediverse.following')
+            ->with('success', 'Unfollowed successfully');
     }
 
     public function like(Request $request): RedirectResponse
     {
-        $request->validate(rules: [
+        $request->validate([
             'remote_object_url' => ['required', 'string', 'max:2048'],
             'remote_actor_url' => ['required', 'string', 'max:2048'],
         ]);
 
         $localActor = $this->resolveLocalActor();
 
-        $remoteObjectUrl = $request->input(key: 'remote_object_url');
-        $remoteActorUrl = $request->input(key: 'remote_actor_url');
+        $remoteObjectUrl = $request->input('remote_object_url');
+        $remoteActorUrl = $request->input('remote_actor_url');
 
         $remoteActor = RemoteActor::query()
-            ->where(column: 'actor_url', operator: '=', value: $remoteActorUrl)
+            ->where('actor_url', '=', $remoteActorUrl)
             ->first();
 
         $likeActivity = $this->activityBuilder->like(actor: $localActor, objectUrl: $remoteObjectUrl);
 
-        $likeRecord = Activity::query()->create(attributes: [
+        $likeRecord = Activity::query()->create([
             'actor_id' => $localActor->id,
             'type' => ActivityType::Like,
             'payload' => $likeActivity,
@@ -175,7 +180,7 @@ final class InteractController extends Controller
             'remote_actor_id' => $remoteActor?->id,
         ]);
 
-        if ($remoteActor !== null && config(key: 'activitypub.federation.enabled')) {
+        if ($remoteActor !== null && config('activitypub.federation.enabled')) {
             DeliverActivity::dispatch(
                 inboxUrl: $remoteActor->inbox_url,
                 activityModelId: $likeRecord->id,
@@ -185,28 +190,28 @@ final class InteractController extends Controller
 
         return redirect()
             ->back()
-            ->with(key: 'success', value: 'Liked!');
+            ->with('success', 'Liked!');
     }
 
     public function boost(Request $request): RedirectResponse
     {
-        $request->validate(rules: [
+        $request->validate([
             'remote_object_url' => ['required', 'string', 'max:2048'],
             'remote_actor_url' => ['required', 'string', 'max:2048'],
         ]);
 
         $localActor = $this->resolveLocalActor();
 
-        $remoteObjectUrl = $request->input(key: 'remote_object_url');
-        $remoteActorUrl = $request->input(key: 'remote_actor_url');
+        $remoteObjectUrl = $request->input('remote_object_url');
+        $remoteActorUrl = $request->input('remote_actor_url');
 
         $remoteActor = RemoteActor::query()
-            ->where(column: 'actor_url', operator: '=', value: $remoteActorUrl)
+            ->where('actor_url', '=', $remoteActorUrl)
             ->first();
 
         $announceActivity = $this->activityBuilder->announce(actor: $localActor, objectUrl: $remoteObjectUrl);
 
-        $announceRecord = Activity::query()->create(attributes: [
+        $announceRecord = Activity::query()->create([
             'actor_id' => $localActor->id,
             'type' => ActivityType::Announce,
             'payload' => $announceActivity,
@@ -214,7 +219,7 @@ final class InteractController extends Controller
             'remote_actor_id' => $remoteActor?->id,
         ]);
 
-        if ($remoteActor !== null && config(key: 'activitypub.federation.enabled')) {
+        if ($remoteActor !== null && config('activitypub.federation.enabled')) {
             DeliverActivity::dispatch(
                 inboxUrl: $remoteActor->inbox_url,
                 activityModelId: $announceRecord->id,
@@ -224,12 +229,12 @@ final class InteractController extends Controller
 
         return redirect()
             ->back()
-            ->with(key: 'success', value: 'Boosted!');
+            ->with('success', 'Boosted!');
     }
 
     public function reply(Request $request): RedirectResponse
     {
-        $request->validate(rules: [
+        $request->validate([
             'remote_object_url' => ['required', 'string', 'max:2048'],
             'remote_actor_url' => ['required', 'string', 'max:2048'],
             'content' => ['required', 'string', 'max:50000'],
@@ -237,12 +242,12 @@ final class InteractController extends Controller
 
         $localActor = $this->resolveLocalActor();
 
-        $remoteObjectUrl = $request->input(key: 'remote_object_url');
-        $remoteActorUrl = $request->input(key: 'remote_actor_url');
-        $content = $request->input(key: 'content');
+        $remoteObjectUrl = $request->input('remote_object_url');
+        $remoteActorUrl = $request->input('remote_actor_url');
+        $content = $request->input('content');
 
         $remoteActor = RemoteActor::query()
-            ->where(column: 'actor_url', operator: '=', value: $remoteActorUrl)
+            ->where('actor_url', '=', $remoteActorUrl)
             ->first();
 
         $createActivity = $this->activityBuilder->createNote(
@@ -252,7 +257,7 @@ final class InteractController extends Controller
             to: [$remoteActorUrl],
         );
 
-        $createRecord = Activity::query()->create(attributes: [
+        $createRecord = Activity::query()->create([
             'actor_id' => $localActor->id,
             'type' => ActivityType::Create,
             'object_type' => ActivityObjectType::Note->value,
@@ -261,7 +266,7 @@ final class InteractController extends Controller
             'remote_actor_id' => $remoteActor?->id,
         ]);
 
-        if ($remoteActor !== null && config(key: 'activitypub.federation.enabled')) {
+        if ($remoteActor !== null && config('activitypub.federation.enabled')) {
             DeliverActivity::dispatch(
                 inboxUrl: $remoteActor->inbox_url,
                 activityModelId: $createRecord->id,
@@ -271,11 +276,11 @@ final class InteractController extends Controller
 
         return redirect()
             ->back()
-            ->with(key: 'success', value: 'Reply sent!');
+            ->with('success', 'Reply sent!');
     }
 
     protected function resolveRemoteActor(string $actorUrl, Actor $localActor): ?RemoteActor
     {
-        return app(RemoteActorResolver::class)->resolve(actorUri: $actorUrl);
+        return $this->remoteActorResolver->resolve(actorUri: $actorUrl);
     }
 }

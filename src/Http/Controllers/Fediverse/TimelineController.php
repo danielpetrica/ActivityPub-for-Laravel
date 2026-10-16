@@ -26,12 +26,12 @@ final class TimelineController extends Controller
         $activities = Activity::query()
             ->with(['remoteActor', 'actor'])
             ->whereIn('remote_actor_id', $followedActorIds)
-            ->where(column: 'is_incoming', operator: '=', value: true)
+            ->where('is_incoming', '=', true)
             ->whereIn('type', ['Create', 'Announce'])
             ->latest()
-            ->paginate(perPage: 20);
+            ->paginate(20);
 
-        return view(view: 'activitypub::fediverse.timeline', data: [
+        return view('activitypub::fediverse.timeline', [
             'activities' => $activities,
             'actor' => $user,
         ]);

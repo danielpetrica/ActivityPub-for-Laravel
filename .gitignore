@@ -6,4 +6,6 @@
 *.log
 .env
 .phpunit.result.cache
+# Keep only the committed phpunit.xml.dist as the canonical test config.
+/phpunit.xml
 session-*.md

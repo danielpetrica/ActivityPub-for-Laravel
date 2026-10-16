@@ -2,7 +2,25 @@
 
 [![LaraPlugins.io: danielpetrica/activitypub-for-laravel info card](https://laraplugins.io/api/infocard/danielpetrica/activitypub-for-laravel?design=facts&theme=light)](https://laraplugins.io/plugins/danielpetrica/activitypub-for-laravel)
 
-A self-hosted ActivityPub server for Laravel 13 that enables federation with the Fediverse (Mastodon, Pleroma/Akkoma, Misskey, Pixelfed, PeerTube, etc.).
+A **server-to-server (S2S)** ActivityPub federation implementation for Laravel 13. It lets your Laravel application publish actors, inboxes, and outboxes that federate with the wider Fediverse (Mastodon, Pleroma/Akkoma, Misskey, Pixelfed, PeerTube, etc.).
+
+> **Scope:** This package implements the ActivityPub **server-to-server (S2S)** profile only. Client-to-server (C2S) and OAuth 2.0 authorization are explicitly **out of scope**. Mobile and desktop clients such as Tusky or Elk authenticate against an instance using the C2S API and OAuth, neither of which this package provides, so they cannot log into your application through it.
+
+---
+
+## Requirements / Support policy
+
+| Requirement | Version |
+| --- | --- |
+| PHP | `^8.5` |
+| Laravel | `^13.0` |
+| PHP extension | `ext-curl`, `ext-openssl`, `ext-json` |
+
+`ext-curl` is required: it backs the outbound federation transport and the
+`SsrfGuard` connection pin (`CURLOPT_RESOLVE`) that closes the DNS-rebinding
+window between the pre-flight SSRF check and the actual connect.
+
+The PHP 8.5 and Laravel 13 floor is **intentional**, not an oversight. This package targets current language and framework features and does not backport to older releases. Older PHP and Laravel versions are **unsupported**: bug reports and pull requests whose only purpose is to re-enable older runtimes will not be accepted.
 
 ---
 
@@ -11,24 +29,27 @@ A self-hosted ActivityPub server for Laravel 13 that enables federation with the
 ## Features
 
 **Protocol**
-- Actor profiles (Person, ActivityStreams JSON-LD)
-- Inbox/Outbox with OrderedCollection pagination
-- WebFinger discovery (JRD format)
-- NodeInfo 2.0 and host-meta endpoints
+- Actor profiles (Person, ActivityStreams JSON-LD) with stable, absolute actor IRIs
+- Collection endpoints (inbox, outbox, followers, following, featured) return a top-level `OrderedCollection`; the items live on `OrderedCollectionPage` documents reachable through `?page=N` (real, spec-compliant pagination)
+- WebFinger discovery (JRD format), NodeInfo 2.0 and host-meta endpoints completed (scheme, profile-page/subscribe links)
 - Featured/endorsed collections
 - Mastodon spec compliance (discoverable, published fields)
+- Content fidelity: flat `to`/`cc` addressing, `tag`/mention objects, note `url`, opt-in object-level `sensitive` and custom emoji tags
 - Accept activity always delivered even when federation is disabled
 
 **Federation**
-- Outbound delivery of Create, Update, Delete, Follow, Accept, Reject, Like, Announce, Undo
-- Queue-driven delivery via `DeliverActivity` job with exponential backoff (30s, 2min, 10min) and 3 retries
-- Shared inbox optimization: delivery grouped by `shared_inbox_url`, prefers shared inbox over personal inbox
-- Follower management with Accept/Block/Reject handling
+- Outbound delivery of Create, Update, Delete, Follow, Accept, Reject, Like, Announce, Undo, Block, Undo(Block) and Move
+- Address resolution to the real object author (`deliverToObjectAuthor`) instead of short-circuiting to the shared inbox
+- `@user@host` mentions resolved and delivered to each mention's inbox
+- Queue-driven delivery via the `DeliverActivity` job with exponential backoff and per-inbox `activity_deliveries` tracking (reschedule and dead-letter handling)
+- Shared inbox optimization: delivery grouped by `shared_inbox_url`, prefers the shared inbox over the personal inbox
+- Follower management with Accept/Block/Reject handling and locked-account approval (`approveFollower` / `rejectFollower`)
 - Following model for outbound follows
 - Post forwarding on first follow from a domain (`ForwardPostsToNewServerJob`)
-- Block domains and users with auto-rejection of follows
-- `reject()` method in ActivityBuilder
-- `Activity` model tracks all federated activities with backed `ActivityStatus` enum (pending, delivered, received, failed)
+- Block domains and users with auto-rejection of follows, and outbound `Block` / `Undo(Block)`
+- `Update(Person)` profile federation and `Move` account migration with `alsoKnownAs`
+- `Activity` model tracks all federated activities with a backed `ActivityStatus` enum (pending, delivered, received, failed)
+- Queued inbox processing by default (`ProcessInboxActivity`), central normalized block enforcement and activity-id idempotency
 
 **Interaction Tracking**
 - Polymorphic `Interaction` model for likes, boosts, bookmarks, quotes, comments
@@ -36,29 +57,51 @@ A self-hosted ActivityPub server for Laravel 13 that enables federation with the
 - `InteractionStatus` enum (Active, Undone) for undo support
 - Incoming Like/Announce automatically tracked as interactions
 - Incoming Undo(Like)/Undo(Announce) properly reverses interactions
-- Deduplication with reactivation for undone interactions
+- The `ActivityInteractions` helper deduplicates repeated local like/boost/bookmark calls and reactivates a previously undone interaction
 - Static `ActivityInteractions` API for integrating clients (count, check, mutate, query)
 - Favorites tab in the Fediverse UI
 
 **HTTP Signatures**
 - RSA-SHA256 incoming verification and outbound signing
+- Minimum signed-component enforcement (required covered headers) and RFC 9421 (`signature-input` / structured fields) support
 - Digest header required for non-empty POST bodies
-- Signature replay cache with 120s TTL for idempotency
+- Signature replay cache with 120s TTL for idempotency (constant-time comparison)
 - keyId HTTPS scheme validation
 - Canonical host from config used in signing strings
+- Parsing and verification split into `SignatureParser` and `SignatureVerifier`
 
 **Strategy Pattern Handlers**
-10 handler classes (Follow, Like, Announce, Undo, Create, Delete, Update, Block, Accept, Reject) implement `ActivityHandler`, tagged via the service container, and dispatched by `InboxProcessor`.
+12 handler classes (Follow, Like, Announce, Undo, Create, Delete, Update, Block, Accept, Reject, Flag, Move) implement `ActivityHandler`, tagged via the service container, and dispatched by `InboxProcessor`. Custom handlers can be registered through `HandlerRegistry`.
 
 **Events**
-6 event classes: `ActivityDelivered`, `ActivityDeliveryFailed`, `FollowReceived`, `FollowRemoved`, `BlockReceived`, `InboxActivityReceived`.
+7 event classes: `ActivityDelivered`, `ActivityDeliveryFailed`, `FollowReceived`, `FollowRemoved`, `BlockReceived`, `InboxActivityReceived`, `FlagReceived`.
+
+**Moderation**
+- Incoming `Flag` activities are recorded as `Report` rows and surface on `/fediverse/status`
+- Incoming `Flag` also fires the `FlagReceived` event for application hooks
 
 **Security**
-- SSRF protection via private IP blocking in `WebFingerService` and `RemoteActorResolver`
+- SSRF hardening (`SsrfGuard`): outbound fetches are HTTPS-only and must resolve exclusively to public IPs; `security.allowed_hosts` is the explicit escape hatch
+- Unknown signers are fetched off the verification path (`http_signatures.queue_unknown_actors`)
+- Central normalized block enforcement for every inbound activity (not just follows)
+- Inbox allowlist (normalized domains) and windowed per-actor/per-domain quotas that fail open
+- Always-on rejected-request audit log (`inbox_logs`) with configurable retention
+- Admin gate (`fediverse.admin_gate`) required for mutating Fediverse routes
 - Per-IP rate limiting on inbox endpoints (60 requests/min)
 - Fediverse interaction rate limiting (30 requests/min)
 - Content-Length limit of 1 MB on inbox POST bodies
 - Accept header negotiation via `RespondsToAccept` trait (browsers get 406)
+
+**Operations**
+- Queued inbox processing by default (`queue.process_inbox`): the request returns `202` immediately and remote resolution runs on a worker
+- Per-inbox delivery records (`activity_deliveries`) with reschedule and dead-letter handling from `/fediverse/status`
+- Always-on inbox audit log with configurable retention windows
+- `activitypub:prune-activities` honours `retention.*` for delivered/received activities, inbox logs and interactions
+
+**Extension points**
+- Swap the actor model via `activitypub.actor_model` (bound in the container and used for route binding)
+- Register custom activity handlers through `HandlerRegistry`
+- Swap the activity builder (`ActivityBuilderContract`), dispatcher (`ActivityDispatcher`) and recorder (`ActivityRecorder`) bindings
 
 **Performance**
 - Chunked follower delivery (`chunk(200)`) instead of loading all into memory
@@ -66,7 +109,6 @@ A self-hosted ActivityPub server for Laravel 13 that enables federation with the
 - Subquery-based timeline queries instead of pluck+whereIn
 - Composite indexes for feed performance
 - Eager-loading of `remoteActor` relation on followers (N+1 fix)
-- Skip data query on paginated collection pages > 1
 
 **Web UI**
 - Blade-based Fediverse dashboard with 12 views (dashboard, timeline, inbox, discover, profile, outbox, following, followers, servers, status, favorites, layout)
@@ -85,10 +127,12 @@ A self-hosted ActivityPub server for Laravel 13 that enables federation with the
 - `isActivityPubPinned()` method on FederatableContentContract
 
 **Blocking**
-- Block entire domains — auto-rejects all follows from that domain
-- Block individual remote actors — auto-rejects follows from that actor
-- Reject activity sent to blocked actors
-- Stored in `blocked_domains` and `blocked_remote_actors` database tables
+- Block entire domains — every inbound activity from that domain is dropped centrally by `InboxProcessor`; incoming follow requests are additionally auto-rejected with a `Reject` activity and no follower is created
+- Block individual remote actors — every inbound activity from that actor is dropped centrally; incoming follow requests are auto-rejected
+- Outbound `Block` and `Undo(Block)` activities are delivered to the blocked actor's inbox
+- Blocks are stored in the `blocked_domains` and `blocked_remote_actors` database tables and managed from the Fediverse UI
+
+> Blocking is enforced centrally for **all** inbound activity types, through normalized domain matching (`DomainNormalizer`), so casing, trailing dots, ports, `www.` and IPv4-mapped IPv6 hosts cannot be used to bypass it. It does not retroactively remove existing followers.
 
 **NodeInfo 2.0**
 - Full NodeInfo 2.0 compliance with software name, version, homepage, repository
@@ -99,7 +143,7 @@ A self-hosted ActivityPub server for Laravel 13 that enables federation with the
 **Artisan Commands**
 - `activitypub:create-actor` — creates a local actor with RSA key pair
 - `activitypub:deliver-content` — manually delivers content with `--debug` mode for synchronous delivery with response table
-- `activitypub:prune-activities` — prunes old delivered activities
+- `activitypub:prune-activities` — prunes old federation data (delivered/received activities, the inbox audit log and stale interactions) using the `retention.*` windows (all default to 30 days); per-run overrides via `--days`, `--received-days`, `--inbox-logs-days`, `--interactions-days` and `--dry-run`. Registered on Laravel's scheduler to run **daily** (`withoutOverlapping()`), so it is enforced automatically once `php artisan schedule:run` is wired to cron.
 
 ## Installation
 
@@ -119,19 +163,55 @@ php artisan migrate
 ## Configuration
 
 ```env
-ACTIVITYPUB_DOMAIN=https://your-domain.com          # Actor identifiers domain (defaults to APP_URL)
-ACTIVITYPUB_FEDERATION_ENABLED=true                  # Enable outbound federation
-ACTIVITYPUB_FEDIVERSE_ENABLED=true                   # Enable Blade-based fediverse web UI
-ACTIVITYPUB_CACHE_ENABLED=true                       # Cache-Control headers on ActivityPub responses
-ACTIVITYPUB_LOGGING_ENABLED=true                     # Enable detailed federation logging
-ACTIVITYPUB_LOG_CHANNEL=activitypub                  # Log channel (optional, defaults to app default)
-ACTIVITYPUB_LOG_LEVEL=info                           # Log level: debug, info, warning, error
-ACTIVITYPUB_RESOLVE_TIMEOUT=10                       # Timeout for WebFinger/actor resolution (seconds)
-ACTIVITYPUB_DEBUG_DISPLAY=false                      # Show debug info in inbox/outbox views
-ACTIVITYPUB_QUEUE_CONNECTION=redis                   # Queue connection (null = app default)
-ACTIVITYPUB_QUEUE_NAME=default                       # Queue name for activity delivery
-ACTIVITYPUB_FEDIVERSE_GATE=null                       # Gate name for authorization (null = any authenticated user)
+# Identity / federation
+ACTIVITYPUB_DOMAIN=https://your-domain.com               # Actor identifiers domain (defaults to APP_URL)
+ACTIVITYPUB_FEDERATION_ENABLED=true                      # Enable outbound federation
+ACTIVITYPUB_FEDIVERSE_ENABLED=true                       # Enable Blade-based fediverse web UI
+ACTIVITYPUB_RESOLVE_TIMEOUT=10                           # Timeout for WebFinger/actor resolution (seconds)
+
+# Queue (delivery + inbound processing)
+ACTIVITYPUB_QUEUE_CONNECTION=redis                       # Queue connection (null = app default)
+ACTIVITYPUB_QUEUE_NAME=default                           # Queue name for activity delivery
+ACTIVITYPUB_QUEUE_PROCESS_INBOX=true                     # Process inbox activities on the queue (recommended in production)
+
+# Cache / logging / debug
+ACTIVITYPUB_CACHE_ENABLED=true                           # Cache-Control headers on ActivityPub responses
+ACTIVITYPUB_LOGGING_ENABLED=true                         # Enable detailed federation logging
+ACTIVITYPUB_LOG_CHANNEL=activitypub                      # Log channel (optional, defaults to app default)
+ACTIVITYPUB_LOG_LEVEL=info                               # Log level: debug, info, warning, error
+ACTIVITYPUB_DEBUG_DISPLAY=false                          # Show debug info in inbox/outbox views
+
+# Fediverse dashboard authorization
+ACTIVITYPUB_FEDIVERSE_GATE=null                          # Gate for dashboard access (null = any authenticated user)
+ACTIVITYPUB_FEDIVERSE_ADMIN_GATE=activitypub.fediverse.admin  # Gate required for mutating routes
+
+# Inbox audit log
+ACTIVITYPUB_INBOX_LOG_ENABLED=true                       # Record rejected inbox requests (always-on audit trail)
+
+# Inbox admission control
+ACTIVITYPUB_INBOX_ALLOWLIST_ENABLED=false                # Restrict inbound federation to allowed domains
+ACTIVITYPUB_INBOX_QUOTAS_ENABLED=true                    # Windowed per-actor/per-domain inbox quotas
+ACTIVITYPUB_INBOX_PER_ACTOR_PER_MINUTE=120
+ACTIVITYPUB_INBOX_PER_DOMAIN_PER_MINUTE=600
+ACTIVITYPUB_INBOX_PER_ACTOR_PER_DAY=5000
+ACTIVITYPUB_INBOX_INTERACTIONS_PER_ACTOR_PER_DAY=1000
+
+# Retention (used by activitypub:prune-activities, scheduled daily by default)
+ACTIVITYPUB_RETENTION_DELIVERED_DAYS=30
+ACTIVITYPUB_RETENTION_RECEIVED_DAYS=30
+ACTIVITYPUB_RETENTION_INBOX_LOGS_DAYS=30
+ACTIVITYPUB_RETENTION_INTERACTIONS_DAYS=30
+
+# Outbound fetch hardening
+ACTIVITYPUB_MAX_RESPONSE_BYTES=2000000                   # Max remote fetch response size (bytes)
 ```
+
+A few of the new settings are config-file only (no environment variable), because they are lists or security policy rather than scalars:
+
+- `security.allowed_hosts` — hosts exempt from DNS resolution checks during outbound fetches (private IP literals are still rejected). Intended for trusted internal test targets only.
+- `http_signatures.queue_unknown_actors` (default `true`) — queue a `FetchRemoteActor` job instead of fetching synchronously on the signature-verification request path.
+- `inbox.allowlist.domains` — the allowed domain list, matched through `DomainNormalizer`. Enabling the allowlist with an empty list is treated as "not configured" and allows traffic.
+- `activitypub.actor_model` — the actor model class used for DI and route binding.
 
 The full configuration is published to `config/activitypub.php` and includes settings for routes, HTTP signatures, federation timeouts, and the actor model class.
 
@@ -154,6 +234,17 @@ ACTIVITYPUB_FEDIVERSE_GATE=viewFediverse
 ```
 
 If `ACTIVITYPUB_FEDIVERSE_GATE` is null (default), all authenticated users can access the dashboard.
+
+### Admin gate for mutating routes
+
+Mutating Fediverse routes that change instance-wide state (blocking domains and actors, pruning, rescheduling deliveries, refreshing followed accounts and forwarding posts) require an additional admin authorization. By default the package checks the `activitypub.fediverse.admin` gate:
+
+```php
+// app/Providers/AuthServiceProvider.php
+Gate::define('activitypub.fediverse.admin', fn ($user) => $user->isAdmin());
+```
+
+Configure a different ability with `ACTIVITYPUB_FEDIVERSE_ADMIN_GATE` (config key `fediverse.admin_gate`). When the configured ability is **not defined**, the mutating routes deny by default (`403`), so a fresh install must define the ability before those controls can be used.
 
 ## Debugging
 
@@ -243,6 +334,59 @@ ActivityPub::sendCreate($post);
 ActivityPub::sendUpdate($post);
 ActivityPub::sendDelete($post->getActivityPubId(), $post->activityPubActor());
 ```
+
+The facade also exposes the interaction and moderation surface:
+
+```php
+use DanielPetrica\LaravelActivityPub\ActivityPub;
+
+// Interactions
+ActivityPub::sendLike($actor, $objectUrl);
+ActivityPub::sendAnnounce($actor, $objectUrl);
+ActivityPub::sendNote($actor, $content, $inReplyToUrl);
+
+// Block / unblock (delivered to the target inbox)
+ActivityPub::sendBlock($actor, $remoteActorUrl);
+
+// Locked account: approve or reject a pending follower
+ActivityPub::approveFollower($actor, $follower);
+ActivityPub::rejectFollower($actor, $follower);
+
+// Profile change and account migration
+ActivityPub::updateActorProfile($actor);                 // emits Update(Person) to followers
+ActivityPub::sendMove($actor, $newActorUrl, $alsoKnownAs); // emits Move to followers and target
+```
+
+`@user@host` mentions found in published content are resolved automatically and delivered to each mentioned actor's inbox; no extra call is required.
+
+#### Content fidelity (sensitive and custom emoji)
+
+Object-level `sensitive` (NSFW) and custom emoji are **opt-in**: the built object is unchanged unless your content model (or actor) explicitly exposes them, so existing models keep byte-identical wire output.
+
+```php
+class Post extends Model implements FederatableContentContract
+{
+    // Object-level NSFW flag. Any of these is detected:
+    //   getActivityPubSensitive(): bool
+    //   isActivityPubSensitive(): bool
+    //   the `sensitive` or `activitypub_sensitive` attribute
+    public function isActivityPubSensitive(): bool
+    {
+        return $this->is_nsfw;
+    }
+
+    // Shortcode => URL map. Any of these is detected:
+    //   getActivityPubEmoji(): array
+    //   getActivityPubEmojis(): array
+    //   the `activitypub_emoji` attribute
+    public function getActivityPubEmoji(): array
+    {
+        return ['blobcat' => 'https://example.com/emoji/blobcat.png'];
+    }
+}
+```
+
+Custom emoji are emitted as ActivityStreams `Emoji` tags (`{"type":"Emoji","name":":blobcat:","icon":{"type":"Image","url":"..."}}`) merged after any tags returned by `getActivityPubTags()`. Malformed or empty entries are skipped, never thrown.
 
 ### Activity Interactions
 
@@ -381,27 +525,38 @@ Pinned posts are displayed with a "Pinned" badge in the outbox view.
 ```
 src/
   Actions/
-    InboxProcessor.php          -- Dispatches to handlers by activity type
-    Handlers/                   -- 10 ActivityHandler implementations
+    InboxProcessor.php          -- Central admission control + dispatches to handlers by activity type
+    Handlers/                   -- 12 ActivityHandler implementations
   Contracts/                    -- ActorContract, FederatableContentContract,
   |                                ActivityBuilderContract, ActorProfileContract,
   |                                FederatedActorContract
   Enums/                        -- ActivityStatus, ActivityType, ActivityObjectType,
   |                                FollowerStatus, InteractionType, InteractionStatus
-  Events/                       -- 6 event classes
+  Events/                       -- 7 event classes
+  Handlers/
+    HandlerRegistry.php         -- Registry for activity handlers (extension seam)
+  Helpers/
+    SsrfGuard.php               -- HTTPS/public-IP fetch guard
+    DomainNormalizer.php        -- Normalized domain matching
+    InboxLogger.php             -- Rejected-request audit log
+    PostStats.php               -- Aggregate interaction/activity counts
     Http/
     Controllers/                -- Actor, Inbox, Outbox, Followers, Following,
     |                               WebFinger, NodeInfo, HostMeta, Featured, FederatedServersController
     |   Concerns/RespondsToAccept.php
-    |   Fediverse/              -- 9 Blade UI controllers (StatusController, FollowersController, ...)
+    |   Fediverse/              -- Blade UI controllers (StatusController, FollowersController, ...)
     Middleware/
-      VerifyHttpSignature.php   -- Incoming signature verification
+      VerifyHttpSignature.php   -- Incoming signature verification (Draft Cavage + RFC 9421)
+    Signatures/
+      SignatureParser.php       -- Parse Signature / Signature-Input headers
+      SignatureVerifier.php     -- Build signing strings, verify digests/signatures
     Requests/                   -- InboxRequest, WebFingerRequest, ProfileUpdateRequest
     Resources/                  -- Actor, Activity, WebFinger resources, OrderedCollection
   Jobs/
-    DeliverActivity.php         -- Queued outbound delivery with backoff
+    DeliverActivity.php         -- Queued outbound delivery with backoff + per-inbox records
+    ProcessInboxActivity.php    -- Queued inbound activity processing
     FetchRemoteActor.php        -- Remote actor resolution
-    PruneOldActivities.php      -- Cleanup job
+    PruneOldActivities.php      -- Retention cleanup job
     ForwardPostsToNewServerJob.php -- Forward posts to new follower's server
   Models/
     Actor.php                   -- Local actor with RSA key pair
@@ -409,11 +564,16 @@ src/
     Follower.php                -- Follower relationships
     Following.php               -- Outbound follow tracking
     Activity.php                -- Federated activity log
+    ActivityDelivery.php        -- Per-inbox delivery attempts (reschedule/dead-letter)
     Interaction.php             -- Polymorphic interaction tracking
+    Report.php                  -- Moderation reports (incoming Flag)
+    InboxLog.php                -- Rejected inbox-request audit trail
     BlockedDomain.php           -- Domain blocklist
     BlockedRemoteActor.php      -- Actor blocklist
   Services/
     ActivityPubService.php      -- Main service (facade backed)
+    ActivityDispatcher.php      -- Fan-out + inbox dispatch
+    ActivityRecorder.php        -- Activity persistence + resolution failures
     HttpSignatureService.php    -- Outbound request signing
     DeliveryClient.php          -- Shared HTTP + signing delivery
     RemoteActorResolver.php     -- Fetch/upsert remote actors
@@ -432,11 +592,10 @@ src/
 vendor/bin/pest
 ```
 
-139+ Pest tests across 13 test files covering actors, inbox processing, WebFinger, console commands, content delivery, Mastodon spec compliance, HTTP signatures, blocking, post forwarding, and unit-tested activity building.
+356 Pest tests (1029 assertions) across the `Feature` and `Unit` suites, covering actors, inbox processing, WebFinger, NodeInfo, console commands, content delivery, Mastodon spec compliance, HTTP signatures (including RFC 9421), blocking/moderation, allowlist and quotas, mentions, pagination, post forwarding, and unit-tested activity building. Both suites run by default.
 
 ## Roadmap
 
-- [ ] Account migration (Move / AlsoKnownAs)
 - [ ] Tailwind CSS build step (currently CDN)
 - [ ] JSON-LD compaction for Pleroma/Akkoma compatibility
 - [ ] Filament-based admin dashboard

@@ -23,19 +23,19 @@ final class CreateActorCommand extends Command
         $version = config('activitypub.version');
 
         if ($version) {
-            $this->info(string: 'ActivityPub version: '.$version);
+            $this->info('ActivityPub version: '.$version);
         }
 
-        $username = $this->option(key: 'username')
+        $username = $this->option('username')
             ?? $this->ask(question: 'Enter the actor username (e.g., "daniel")');
 
-        $name = $this->option(key: 'name')
+        $name = $this->option('name')
             ?? $this->ask(question: 'Enter the display name for the actor (optional)', default: $username);
 
         // Validate
         $validator = Validator::make(
-            data: ['username' => $username, 'name' => $name],
-            rules: [
+            ['username' => $username, 'name' => $name],
+            [
                 'username' => ['required', 'string', 'regex:/^[a-zA-Z0-9_]+$/', 'unique:actors,username'],
                 'name' => ['nullable', 'string', 'max:255'],
             ],
@@ -43,35 +43,35 @@ final class CreateActorCommand extends Command
 
         if ($validator->fails()) {
             foreach ($validator->errors()->all() as $error) {
-                $this->error(string: $error);
+                $this->error($error);
             }
 
             return self::FAILURE;
         }
 
         // Verify a matching user exists in the application
-        $userModel = config(key: 'auth.providers.users.model');
+        $userModel = config('auth.providers.users.model');
 
-        if ($userModel !== null && class_exists(class: $userModel) && Schema::hasTable((new $userModel)->getTable())) {
+        if ($userModel !== null && class_exists($userModel) && Schema::hasTable((new $userModel)->getTable())) {
             $user = $userModel::query()
-                ->where(column: 'username', operator: '=', value: $username)
-                ->orWhere(column: 'email', operator: 'like', value: $username.'@%')
+                ->where('username', '=', $username)
+                ->orWhere('email', 'like', $username.'@%')
                 ->first();
 
             if ($user === null) {
-                $this->error(string: "Cannot create actor: no user found with username '{$username}'.");
+                $this->error("Cannot create actor: no user found with username '{$username}'.");
 
                 return self::FAILURE;
             }
         }
 
         // Generate RSA key pair
-        $this->info(string: 'Generating RSA 2048-bit key pair...');
+        $this->info('Generating RSA 2048-bit key pair...');
 
         try {
             $keyPair = app(KeyPairService::class)->generate();
         } catch (Throwable $e) {
-            $this->error(string: 'Failed to generate RSA key pair: '.$e->getMessage());
+            $this->error('Failed to generate RSA key pair: '.$e->getMessage());
 
             Log::error('ActivityPub: failed to generate RSA key pair', [
                 'error' => $e->getMessage(),
@@ -81,7 +81,7 @@ final class CreateActorCommand extends Command
         }
 
         // Create actor
-        $actor = Actor::query()->create(attributes: [
+        $actor = Actor::query()->create([
             'username' => $username,
             'name' => $name,
             'public_key_pem' => $keyPair['public'],
@@ -91,11 +91,11 @@ final class CreateActorCommand extends Command
 
         $actorUrl = $actor->actor_id;
 
-        $this->info(string: 'Actor created successfully!');
-        $this->info(string: '  Username: '.$actor->username);
-        $this->info(string: '  Actor ID: '.$actorUrl);
-        $this->info(string: '  Inbox: '.$actor->inbox_url);
-        $this->info(string: '  Outbox: '.$actor->outbox_url);
+        $this->info('Actor created successfully!');
+        $this->info('  Username: '.$actor->username);
+        $this->info('  Actor ID: '.$actorUrl);
+        $this->info('  Inbox: '.$actor->inbox_url);
+        $this->info('  Outbox: '.$actor->outbox_url);
 
         return self::SUCCESS;
     }

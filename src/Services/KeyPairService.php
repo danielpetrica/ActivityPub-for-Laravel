@@ -11,25 +11,25 @@ final class KeyPairService
      */
     public function generate(): array
     {
-        $keyResource = openssl_pkey_new(options: [
+        $keyResource = openssl_pkey_new([
             'digest_alg' => 'sha256',
             'private_key_bits' => 2048,
             'private_key_type' => OPENSSL_KEYTYPE_RSA,
         ]);
 
         if ($keyResource === false) {
-            throw new RuntimeException(message: 'Failed to generate RSA key pair.');
+            throw new RuntimeException('Failed to generate RSA key pair.');
         }
 
         $privateKey = '';
 
-        $exported = openssl_pkey_export(key: $keyResource, output: $privateKey);
+        $exported = openssl_pkey_export($keyResource, $privateKey);
 
         if ($exported === false) {
-            throw new RuntimeException(message: 'Failed to export private key.');
+            throw new RuntimeException('Failed to export private key.');
         }
 
-        $publicKey = openssl_pkey_get_details(key: $keyResource)['key'];
+        $publicKey = openssl_pkey_get_details($keyResource)['key'];
 
         return [
             'public' => $publicKey,

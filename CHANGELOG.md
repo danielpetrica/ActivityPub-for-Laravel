@@ -2,6 +2,84 @@
 
 ## [Unreleased]
 
+### Added
+
+- **Mentions**: `@user@host` mentions found in published content are resolved and delivered to each mention's inbox; mention `tag` objects and flat `to`/`cc` addressing are emitted on the wire.
+- **Object-level `sensitive` and custom emoji tags (opt-in)**: the built object now carries `sensitive: true` when the content model (or actor) exposes `getActivityPubSensitive()` / `isActivityPubSensitive()` / a `sensitive` or `activitypub_sensitive` attribute, and custom emoji as ActivityStreams `Emoji` tags when it exposes `getActivityPubEmoji()` / `getActivityPubEmojis()` / an `activitypub_emoji` map. Both are absent by default, so existing models keep byte-identical wire output; malformed emoji entries are skipped, never thrown.
+- **Outbound `Block` / `Undo(Block)`**: `ActivityPub::sendBlock()` builds and delivers a `Block` activity to the target inbox; `ActivityPub::sendUnblock($actor, $remoteActor)` records and delivers the matching `Undo(Block)`. Inbound `Block`/`Undo(Block)` handling is symmetric.
+- **`Move` and `Update(Person)`**: `ActivityPub::sendMove($actor, $targetUrl, $alsoKnownAs)` emits a `Move` (delivered to followers and, when known, the target inbox); `ActivityPub::updateActorProfile($actor)` emits an `Update(Person)`. `alsoKnownAs` is exposed on the actor resource.
+- **`Flag`/Report moderation**: inbound `Flag` activities create `Report` rows, surface on `/fediverse/status`, and fire the new `FlagReceived` event.
+- **Inbox admission control**: domain allowlist and windowed per-actor/per-domain quotas enforced centrally, both failing open on infrastructure errors.
+- **Per-inbox delivery tracking**: the new `activity_deliveries` table records every inbox attempt; the Status page can reschedule pending deliveries and shows dead-lettered ones.
+- **Real collection pagination**: inbox/outbox/followers/following/featured return a top-level `OrderedCollection` whose items live on `OrderedCollectionPage` documents at `?page=N`, per the ActivityStreams spec.
+- **Inbox audit log** (`inbox_logs`), always on, recording rejected inbox requests with a configurable retention window.
+- **Retention/pruning**: `activitypub:prune-activities` honours `retention.*` for delivered/received activities, inbox logs and interactions, with per-run command options. The command is also registered on Laravel's scheduler to run **daily** (`withoutOverlapping()`), so retention is enforced automatically once `php artisan schedule:run` is wired to cron.
+- **Real interaction dedup**: a unique index on `(type, object_type, object_id, actor_id, remote_actor_id)` now enforces the interaction dedup semantics at the database level, in addition to the application-level checks. The `interactions.type` column is tightened to 64 characters so the composite key fits within InnoDB's 3072-byte index limit.
+- **Admin gate** (`fediverse.admin_gate`) for mutating Fediverse routes.
+- **Queued inbox processing**: `ProcessInboxActivity` and the `queue.process_inbox` toggle; received activities return `202` immediately and process on a worker.
+- **Extension seams**: configurable `actor_model` binding (also used for route binding), `HandlerRegistry` for custom activity handlers, swappable `ActivityBuilderContract`, `ActivityDispatcher`/`ActivityRecorder`, and `SignatureParser`/`SignatureVerifier`.
+- New helpers: `SsrfGuard`, `DomainNormalizer`, `PostStats`, `InboxLogger`.
+- New `ActivityType` cases `Flag` and `Move`; new `FlagReceived` event.
+- CI workflow, `pint.json`, and a PHPStan baseline.
+
+### Changed
+
+- The public facade now documents **every** current public `ActivityPubService` method (`sendBlock`, `sendMove`, `approveFollower`, `rejectFollower`, `updateActorProfile`, …).
+- Actor `inbox`/`outbox` are resolved to plain IRI strings.
+- Collection endpoints return a top-level `OrderedCollection`; items moved to `OrderedCollectionPage` (`?page=N`).
+- Outbound targeting resolves the real object author (`deliverToObjectAuthor`) instead of short-circuiting to a shared inbox.
+- `sharedInbox` is a delivery optimization, not a resolution shortcut.
+- Inbox processing is queued by default.
+- The inbox audit log is always on and independent of `debug_display`.
+- Third-party API calls use positional arguments; the package's own APIs keep their documented named-argument style.
+- The default `vendor/bin/pest` run now executes the `Unit` suite in addition to `Feature`.
+- **Retention defaults to 30 days for every window** (`delivered_activities_days`, `received_activities_days`, `inbox_logs_days`, `interactions_days`). Previously received activities and interactions defaulted to 90 days. Every window stays overridable per environment/config and per run.
+- `fediverse.followers.approve` / `fediverse.followers.reject` now require the follower to be owned by the authenticated user's actor (or the caller to hold the configured admin ability).
+
+### Fixed
+
+- Delivery retries are tracked per inbox and can be rescheduled or dead-lettered instead of being retried blindly.
+- The synchronous delivery path (`ActivityDispatcher::dispatchToFollowersSync`, used by `activitypub:deliver-content --debug`) now records per-inbox `activity_deliveries` rows and derives the aggregate activity status from them, matching the queued `DeliverActivity` path instead of marking the activity delivered on the first successful inbox. Transient 429/5xx sync attempts stay pending (reschedulable); terminal 4xx/3xx and refused inboxes fail.
+- Activity-id based idempotency is now scoped per local actor and reserved *before* the handler runs, so concurrent redeliveries cannot double-process while the same activity is still handled once for each addressed actor. When the handler throws, the reservation is released before the exception propagates, so the queued retry can reprocess the activity instead of being silently dropped as a duplicate.
+- `followers.approve`/`followers.reject` now reject a follower owned by another actor with an explicit `403` (previously a foreign follower was reported as `404`), closing an authorization gap on the Fediverse followers screen.
+- A `Follow` to a locked (`manually_approves_followers`) account no longer forwards posts to the pending follower: forwarding happens only on `Accepted`, including when a pending follower is later approved.
+- Block enforcement is normalized (casing, trailing dots, ports, `www.`, IPv4-mapped IPv6) and applied to every inbound activity type.
+- Inbound `Block` now also removes any `Following` relationship we held for the blocking actor, not just a local `Follower`.
+- `HostMetaController` derives the WebFinger template scheme and host from the same configured ActivityPub domain (previously the scheme came from `app.url`).
+- The HTTP-signature replay slot is only consumed *after* successful verification, so a request rejected as "Unknown remote actor" (or any pre-verification failure) can be retried byte-identically within the TTL.
+- Mention resolution is defensive: an unresolvable mention is skipped, never thrown.
+- `Update(Person)` is only emitted on explicit profile changes and never on `last_active_at` bookkeeping writes.
+- `ActorProfileContract::getProfileUrl()` documentation now matches the bundled behavior: the bundled `Actor` returns its ActivityPub actor IRI, which doubles as the content-negotiated HTML profile document (an HTML `Accept` header is served the profile page). Overriding it to return a separate HTML URL remains supported.
+
+### Security
+
+- RFC 9421 (`Signature-Input`/structured fields) support plus minimum signed-component enforcement.
+- `SsrfGuard` enforces HTTPS-only, public-IP-only outbound fetches with a `security.allowed_hosts` escape hatch, and now pins the actual connection to a validated IP (`CURLOPT_RESOLVE`) so Guzzle cannot re-resolve the hostname after validation (DNS rebinding). The curl extension is now a hard requirement (`ext-curl`), so the pin is always active instead of silently degrading to the pre-flight resolution check only.
+- Unknown signers are fetched off the verification request path (`http_signatures.queue_unknown_actors`).
+- Central normalized block enforcement for all inbound activities.
+- Inbox allowlist and quotas bound hostile instances.
+- Always-on rejected-request audit log.
+- Mutating Fediverse routes require the admin ability.
+
+### Breaking
+
+- `ActorProfileContract::getProfileUrl()` is now required.
+- `ActivityBuilderContract` gained `undo()`, `block()`, `move()`, `undoBlock()`, `buildObject()`, `buildActivity()`, `updateActor()` and `attachMentions()`, and `undoFollow()` gained an optional `$followId`; custom implementers must add them.
+- New `ActivityType` enum cases: `Flag`, `Move`.
+- Actor `inbox`/`outbox` are now plain IRI strings.
+- Collection endpoints now return a top-level `OrderedCollection`; items are only on `?page=N`.
+- `sharedInbox` no longer short-circuits address resolution.
+- Inbox processing is queued by default.
+- Mutating Fediverse routes require the new admin ability.
+- Stricter inbound HTTP-signature requirements (minimum signed components; unknown actors fetched off-path).
+- `ActivityRecorder::markDelivered()` was removed. It had no in-tree callers; the per-inbox delivery primitives (`recordInboxDelivery()` / `syncAggregateStatus()`) are the supported way to advance activity status.
+- `ext-curl` is now a required platform dependency (see `composer.json`).
+- Retention windows now default to 30 days for received activities and interactions (previously 90). Set the `ACTIVITYPUB_RETENTION_*` env vars to keep longer histories.
+
+---
+
+### Earlier in this cycle
+
 ### Cache headers with config toggle
 - `config/activitypub.php` now has `cache.enabled` and `cache.ttl` settings
 - `RespondsToAccept` trait, WebFinger, NodeInfo, and HostMeta controllers set `Cache-Control` when enabled

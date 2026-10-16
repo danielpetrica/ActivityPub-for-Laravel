@@ -1,0 +1,451 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Actions\\Handlers\\ActivityHandler\:\:handle\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Actions/Handlers/ActivityHandler.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Actions\\Handlers\\HandleAcceptAction\:\:handle\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Actions/Handlers/HandleAcceptAction.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Actions\\Handlers\\HandleBlockAction\:\:handle\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Actions/Handlers/HandleBlockAction.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Actions\\Handlers\\HandleCreateAction\:\:handle\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Actions/Handlers/HandleCreateAction.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Actions\\Handlers\\HandleDeleteAction\:\:handle\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Actions/Handlers/HandleDeleteAction.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Actions\\Handlers\\HandleFollowAction\:\:handle\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Actions/Handlers/HandleFollowAction.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Actions\\Handlers\\HandleRejectAction\:\:handle\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Actions/Handlers/HandleRejectAction.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Actions\\Handlers\\HandleUpdateAction\:\:handle\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Actions/Handlers/HandleUpdateAction.php
+
+		-
+			message: '#^Instanceof between Orchestra\\Testbench\\Http\\Kernel and Illuminate\\Foundation\\Http\\Kernel will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: src/ActivityPubServiceProvider.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Contracts\\ActivityBuilderContract\:\:accept\(\) has parameter \$originalPayload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Contracts/ActivityBuilderContract.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Contracts\\ActivityBuilderContract\:\:reject\(\) has parameter \$originalPayload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Contracts/ActivityBuilderContract.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Contracts\\ActivityBuilderContract\:\:undo\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Contracts/ActivityBuilderContract.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 1
+			path: src/Helpers/SsrfGuard.php
+
+		-
+			message: '#^Parameter \#1 \$view of function view expects view\-string\|null, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Http/Controllers/Fediverse/DashboardController.php
+
+		-
+			message: '#^Left side of && is always true\.$#'
+			identifier: booleanAnd.leftAlwaysTrue
+			count: 1
+			path: src/Http/Controllers/Fediverse/DiscoverController.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Http\\Controllers\\Fediverse\\DiscoverController\:\:activityPubLog\(\) has parameter \$context with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Controllers/Fediverse/DiscoverController.php
+
+		-
+			message: '#^Parameter \#1 \$view of function view expects view\-string\|null, string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Http/Controllers/Fediverse/DiscoverController.php
+
+		-
+			message: '#^Parameter \#1 \$view of function view expects view\-string\|null, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Http/Controllers/Fediverse/FavoritesController.php
+
+		-
+			message: '#^Parameter \#1 \$view of function view expects view\-string\|null, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Http/Controllers/Fediverse/FederatedServersController.php
+
+		-
+			message: '#^Parameter \#1 \$view of function view expects view\-string\|null, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Http/Controllers/Fediverse/FollowersController.php
+
+		-
+			message: '#^Parameter \#1 \$view of function view expects view\-string\|null, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Http/Controllers/Fediverse/FollowingController.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between DanielPetrica\\LaravelActivityPub\\Models\\RemoteActor and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: src/Http/Controllers/Fediverse/FollowingController.php
+
+		-
+			message: '#^Parameter \#1 \$view of function view expects view\-string\|null, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Http/Controllers/Fediverse/InboxController.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Http\\Controllers\\Fediverse\\InteractController\:\:activityPubLog\(\) has parameter \$context with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Controllers/Fediverse/InteractController.php
+
+		-
+			message: '#^Parameter \#1 \$view of function view expects view\-string\|null, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Http/Controllers/Fediverse/OutboxController.php
+
+		-
+			message: '#^Parameter \#1 \$view of function view expects view\-string\|null, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Http/Controllers/Fediverse/ProfileController.php
+
+		-
+			message: '#^Left side of && is always true\.$#'
+			identifier: booleanAnd.leftAlwaysTrue
+			count: 1
+			path: src/Http/Controllers/Fediverse/StatusController.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Http\\Controllers\\Fediverse\\StatusController\:\:checkActivities\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Controllers/Fediverse/StatusController.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Http\\Controllers\\Fediverse\\StatusController\:\:checkDatabase\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Controllers/Fediverse/StatusController.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Http\\Controllers\\Fediverse\\StatusController\:\:checkFederation\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Controllers/Fediverse/StatusController.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Http\\Controllers\\Fediverse\\StatusController\:\:checkHttpSignatures\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Controllers/Fediverse/StatusController.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Http\\Controllers\\Fediverse\\StatusController\:\:checkQueue\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Controllers/Fediverse/StatusController.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Http\\Controllers\\Fediverse\\StatusController\:\:checkRelationships\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Controllers/Fediverse/StatusController.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 1
+			path: src/Http/Controllers/Fediverse/StatusController.php
+
+		-
+			message: '#^Parameter \#1 \$view of function view expects view\-string\|null, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Http/Controllers/Fediverse/StatusController.php
+
+		-
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 1
+			path: src/Http/Controllers/Fediverse/StatusController.php
+
+		-
+			message: '#^Parameter \#1 \$view of function view expects view\-string\|null, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Http/Controllers/Fediverse/TimelineController.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Http\\Requests\\InboxRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Requests/InboxRequest.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Http\\Requests\\ProfileUpdateRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Requests/ProfileUpdateRequest.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Http\\Requests\\WebFingerRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Requests/WebFingerRequest.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between array and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: src/Http/Resources/ActivityResource.php
+
+		-
+			message: '#^Property DanielPetrica\\LaravelActivityPub\\Jobs\\DeliverActivity\:\:\$backoff type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Jobs/DeliverActivity.php
+
+		-
+			message: '#^Call to an undefined method DanielPetrica\\LaravelActivityPub\\Contracts\\FederatableContentContract\:\:newQuery\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Jobs/ForwardPostsToNewServerJob.php
+
+		-
+			message: '#^Property DanielPetrica\\LaravelActivityPub\\Jobs\\ForwardPostsToNewServerJob\:\:\$backoff type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Jobs/ForwardPostsToNewServerJob.php
+
+		-
+			message: '#^Class DanielPetrica\\LaravelActivityPub\\Models\\Activity has PHPDoc tag @property for property \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Models/Activity.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Models\\Activity\:\:actor\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Models/Activity.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Models\\Activity\:\:remoteActor\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Models/Activity.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Models\\BlockedRemoteActor\:\:remoteActor\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Models/BlockedRemoteActor.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Models\\Follower\:\:actor\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Models/Follower.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Models\\Follower\:\:remoteActor\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Models/Follower.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Models\\Following\:\:actor\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Models/Following.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Models\\Following\:\:remoteActor\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Models/Following.php
+
+		-
+			message: '#^Class DanielPetrica\\LaravelActivityPub\\Models\\InboxLog has PHPDoc tag @property for property \$headers with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Models/InboxLog.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Models\\InboxLog\:\:actor\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Models/InboxLog.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Models\\RemoteActor\:\:followers\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Models/RemoteActor.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Services\\ActivityBuilder\:\:accept\(\) has parameter \$originalPayload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Services/ActivityBuilder.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Services\\ActivityBuilder\:\:reject\(\) has parameter \$originalPayload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Services/ActivityBuilder.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Services\\ActivityPubService\:\:handleInbox\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Services/ActivityPubService.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Services\\ActivityPubService\:\:recordActivity\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Services/ActivityPubService.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Services\\ActivityPubService\:\:resolveWebFinger\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Services/ActivityPubService.php
+
+		-
+			message: '#^Property DanielPetrica\\LaravelActivityPub\\Services\\ActivityPubService\:\:\$localActorCache type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Services/ActivityPubService.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between DanielPetrica\\LaravelActivityPub\\Models\\RemoteActor and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: src/Services/ActivityPubService.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Services\\DeliveryClient\:\:deliver\(\) has parameter \$activity with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Services/DeliveryClient.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Services\\HttpSignatureService\:\:sign\(\) has parameter \$headers with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Services/HttpSignatureService.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Services\\HttpSignatureService\:\:sign\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Services/HttpSignatureService.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Services\\RemoteActorResolver\:\:activityPubLog\(\) has parameter \$context with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Services/RemoteActorResolver.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Services\\RemoteActorResolver\:\:fetchActorData\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Services/RemoteActorResolver.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Services\\RemoteActorResolver\:\:resolve\(\) has parameter \$preFetchedData with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Services/RemoteActorResolver.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Services\\RemoteActorResolver\:\:resolveFromPayload\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Services/RemoteActorResolver.php
+
+		-
+			message: '#^Property DanielPetrica\\LaravelActivityPub\\Services\\RemoteActorResolver\:\:\$cache type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Services/RemoteActorResolver.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between string and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: src/Services/RemoteActorResolver.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Services\\WebFingerService\:\:activityPubLog\(\) has parameter \$context with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Services/WebFingerService.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Services\\WebFingerService\:\:fetch\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Services/WebFingerService.php
+
+		-
+			message: '#^Method DanielPetrica\\LaravelActivityPub\\Services\\WebFingerService\:\:resolve\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Services/WebFingerService.php
+
+		-
+			message: '#^Trait DanielPetrica\\LaravelActivityPub\\Traits\\FederatesContent is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/Traits/FederatesContent.php

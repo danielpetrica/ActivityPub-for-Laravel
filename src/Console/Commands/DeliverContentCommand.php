@@ -51,19 +51,19 @@ final class DeliverContentCommand extends Command
 
         if ($actorUsername !== null) {
             $actor = Actor::query()
-                ->where(column: 'username', operator: '=', value: $actorUsername)
+                ->where('username', '=', $actorUsername)
                 ->first();
         } else {
             $actorContract = $content->activityPubActor();
 
             $actor = Actor::query()
-                ->where(column: 'username', operator: '=', value: $actorContract->getPreferredUsername())
+                ->where('username', '=', $actorContract->getPreferredUsername())
                 ->first();
         }
 
         if ($actor === null) {
             throw new ModelNotFoundException(
-                message: 'Could not resolve a local Actor for this content.',
+                'Could not resolve a local Actor for this content.',
             );
         }
 
@@ -91,14 +91,14 @@ final class DeliverContentCommand extends Command
 
             if ($total > 0) {
                 $this->table(
-                    headers: ['Actor', 'Inbox URL', 'Response Code'],
-                    rows: array_map(
-                        callback: fn (array $row): array => [
+                    ['Actor', 'Inbox URL', 'Response Code'],
+                    array_map(
+                        fn (array $row): array => [
                             $row['actor_url'],
                             $row['inbox_url'],
                             $row['response_code'] ?? 'error',
                         ],
-                        array: $result['results'],
+                        $result['results'],
                     ),
                 );
             }

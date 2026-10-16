@@ -1,5 +1,6 @@
 includes:
     - vendor/larastan/larastan/extension.neon
+    - phpstan-baseline.neon
 
 parameters:
     level: 6
@@ -7,3 +8,7 @@ parameters:
         - src
     excludePaths:
         - vendor
+    # The baseline captures pre-existing findings so the gate can go green
+    # immediately. Remove entries from phpstan-baseline.neon as they are fixed
+    # rather than letting the file grow.
+    reportUnmatchedIgnoredErrors: false

@@ -121,8 +121,8 @@ final class ActivityInteractions
                 objectType: $model->getMorphClass(),
                 objectId: (string) $model->getKey(),
             )
-            ->orderByDesc(column: 'created_at')
-            ->limit(value: $limit)
+            ->orderByDesc('created_at')
+            ->limit($limit)
             ->get();
     }
 
@@ -170,7 +170,7 @@ final class ActivityInteractions
             return $existing->refresh();
         }
 
-        return Interaction::create(attributes: [
+        return Interaction::create([
             'type' => $type,
             'status' => InteractionStatus::Active,
             'actor_id' => $actor->id,
@@ -189,7 +189,7 @@ final class ActivityInteractions
                 objectId: (string) $model->getKey(),
             )
             ->forActor(actorId: $actor->id)
-            ->update(values: ['status' => InteractionStatus::Undone]);
+            ->update(['status' => InteractionStatus::Undone]);
     }
 
     /** @return \Illuminate\Support\Collection<int, Actor> */
@@ -202,7 +202,7 @@ final class ActivityInteractions
                 objectType: $model->getMorphClass(),
                 objectId: (string) $model->getKey(),
             )
-            ->with(relations: 'actor')
+            ->with('actor')
             ->get()
             ->map(fn (Interaction $interaction) => $interaction->actor)
             ->filter()
