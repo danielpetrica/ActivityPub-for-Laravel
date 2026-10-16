@@ -9,8 +9,10 @@ enum ActivityType: string
     case Block = 'Block';
     case Create = 'Create';
     case Delete = 'Delete';
+    case Flag = 'Flag';
     case Follow = 'Follow';
     case Like = 'Like';
+    case Move = 'Move';
     case Reject = 'Reject';
     case Undo = 'Undo';
     case Update = 'Update';

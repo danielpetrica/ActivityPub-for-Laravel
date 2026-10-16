@@ -51,7 +51,7 @@
 
                         @if (isset($remoteActor['summary']))
                             <div class="mt-3 text-sm text-muted">
-                                {{ $remoteActor['summary'] }}
+                                {!! \DanielPetrica\LaravelActivityPub\Helpers\ActivityPubHelper::sanitizeContent($remoteActor['summary']) !!}
                             </div>
                         @endif
 

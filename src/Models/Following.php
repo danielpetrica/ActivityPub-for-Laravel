@@ -33,11 +33,11 @@ final class Following extends Model
 
     public function actor(): BelongsTo
     {
-        return $this->belongsTo(related: Actor::class);
+        return $this->belongsTo(Actor::class);
     }
 
     public function remoteActor(): BelongsTo
     {
-        return $this->belongsTo(related: RemoteActor::class);
+        return $this->belongsTo(RemoteActor::class);
     }
 }

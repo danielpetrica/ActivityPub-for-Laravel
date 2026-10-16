@@ -1,7 +1,11 @@
 @extends('activitypub::fediverse.layout')
 
 @section('content')
-    <h2 class="h2 mb-6">Followers</h2>
+    <h2 class="h2 mb-6">Followers
+        @if (($pendingCount ?? 0) > 0)
+            <span class="badge badge-yellow">{{ $pendingCount }} pending</span>
+        @endif
+    </h2>
 
     <div class="card p-4 mb-6">
         <form method="GET" action="{{ route('fediverse.followers') }}" class="flex flex-wrap gap-3 items-end">
@@ -49,13 +53,26 @@
                             <p class="text-sm truncate">{{ $ra->name ?? $ra->username }}</p>
                             <p class="text-xs text-muted truncate">{{ $ra->username }}@ {{ $ra->domain }}</p>
                             <p class="text-xs text-muted mt-1">Following since {{ $follower->created_at->format('M j, Y') }}</p>
-                            <div class="mt-2 flex gap-2">
-                                <form action="{{ route('fediverse.servers.block-actor') }}" method="POST" onsubmit="return confirm('Block {{ addslashes($follower->remoteActor->name ?? $follower->remoteActor->username) }}?')">
+                            <div class="mt-2 flex gap-2 items-center flex-wrap">
+                                @if ($follower->status->value === 'pending')
+                                    <span class="badge badge-yellow">Pending approval</span>
+                                    <form action="{{ route('fediverse.followers.approve', ['follower' => $follower->id]) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="btn btn-primary btn-xs">Approve</button>
+                                    </form>
+                                    <form action="{{ route('fediverse.followers.reject', ['follower' => $follower->id]) }}" method="POST" onsubmit="return confirm('Reject {{ addslashes($ra->name ?? $ra->username) }}?')">
+                                        @csrf
+                                        <button type="submit" class="btn btn-danger btn-xs">Reject</button>
+                                    </form>
+                                @else
+                                    <span class="badge badge-green">Accepted</span>
+                                @endif
+                                <form action="{{ route('fediverse.servers.block-actor') }}" method="POST" onsubmit="return confirm('Block {{ addslashes($ra->name ?? $ra->username) }}?')">
                                     @csrf
                                     <input type="hidden" name="remote_actor_id" value="{{ $follower->remote_actor_id }}">
                                     <button type="submit" class="btn btn-danger btn-xs">Block user</button>
                                 </form>
-                                <a href="{{ route('fediverse.followers', ['domain' => $follower->remoteActor->domain]) }}" class="btn btn-secondary btn-xs">Block server</a>
+                                <a href="{{ route('fediverse.followers', ['domain' => $ra->domain]) }}" class="btn btn-secondary btn-xs">Block server</a>
                             </div>
                         </div>
                     </div>
