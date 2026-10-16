@@ -2,6 +2,7 @@
 
 namespace DanielPetrica\LaravelActivityPub\Services;
 
+use DanielPetrica\LaravelActivityPub\Helpers\SsrfGuard;
 use DanielPetrica\LaravelActivityPub\Traits\LogsActivityPub;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -11,49 +12,52 @@ final class WebFingerService
     use LogsActivityPub;
     public function resolve(string $resource): ?array
     {
-        if (str_starts_with(haystack: $resource, needle: 'acct:')) {
-            $parts = explode(separator: '@', string: substr(string: $resource, offset: 5));
+        if (str_starts_with($resource, 'acct:')) {
+            $parts = explode('@', substr($resource, 5));
             $domain = $parts[1] ?? null;
 
             if ($domain === null) {
                 return null;
             }
 
-            $url = 'https://'.$domain.'/.well-known/webfinger?resource='.urlencode(string: $resource);
+            $url = 'https://'.$domain.'/.well-known/webfinger?resource='.urlencode($resource);
 
             return $this->fetch(url: $url);
         }
 
-        $parsed = parse_url(url: $resource);
+        $parsed = parse_url($resource);
 
         if (! isset($parsed['host'])) {
             return null;
         }
 
         $domain = $parsed['host'];
-        $url = 'https://'.$domain.'/.well-known/webfinger?resource='.urlencode(string: $resource);
+        $url = 'https://'.$domain.'/.well-known/webfinger?resource='.urlencode($resource);
 
         return $this->fetch(url: $url);
     }
 
     protected function fetch(string $url): ?array
     {
-        if ($this->isPrivateDomain(url: $url)) {
-            $this->activityPubLog('warning', 'WebFinger private domain blocked', ['url' => $url]);
+        [$safe, $pinOptions] = SsrfGuard::validateAndPin(url: $url);
+
+        if (! $safe) {
+            $this->activityPubLog('warning', 'WebFinger unsafe URL blocked', ['url' => $url]);
 
             return null;
         }
 
         return Cache::remember(
-            key: md5($url),
-            ttl: 300,
-            callback: function () use ($url): ?array {
+            md5($url),
+            300,
+            function () use ($url, $pinOptions): ?array {
                 try {
                     $this->activityPubLog('info', 'WebFinger lookup', ['url' => $url]);
 
                     $response = Http::timeout(
-                        seconds: config('activitypub.federation.resolve_timeout', 5),
-                    )->get(url: $url);
+                        config('activitypub.federation.resolve_timeout', 5),
+                    )->withOptions(array_merge(['allow_redirects' => false], $pinOptions))
+                        ->get($url);
 
                     if (! $response->successful()) {
                         $this->activityPubLog('warning', 'WebFinger HTTP request failed', [
@@ -62,6 +66,10 @@ final class WebFingerService
                             'responseBody' => mb_strcut($response->body(), 0, 500),
                         ]);
 
+                        return null;
+                    }
+
+                    if (! $this->responseWithinLimits(response: $response)) {
                         return null;
                     }
 
@@ -104,55 +112,33 @@ final class WebFingerService
         );
     }
 
-    protected function isPrivateDomain(string $url): bool
+    /**
+     * Enforce size and content-type caps on a remote fetch response.
+     */
+    protected function responseWithinLimits(\Illuminate\Http\Client\Response $response): bool
     {
-        $host = parse_url(url: $url, component: PHP_URL_HOST);
+        $body = $response->body();
+        $contentLength = $response->header('Content-Length');
+        $declaredBytes = $contentLength !== '' ? (int) $contentLength : null;
 
-        if ($host === null) {
-            return true;
-        }
-
-        $ip = gethostbyname(hostname: $host);
-
-        // If DNS resolution fails (returns hostname unchanged), block the request
-        if ($ip === $host) {
-            return true;
-        }
-
-        if (filter_var(value: $ip, filter: FILTER_VALIDATE_IP, options: FILTER_FLAG_IPV6)) {
-            if ($ip === '::1') {
-                $this->activityPubLog('warning', 'WebFinger private IPv6 loopback blocked', ['url' => $url, 'ip' => $ip]);
-
-                return true;
-            }
+        if (SsrfGuard::responseTooLarge(bodyBytes: strlen($body), declaredBytes: $declaredBytes)) {
+            $this->activityPubLog('warning', 'WebFinger response exceeds size limit', [
+                'url' => $response->effectiveUri(),
+                'bytes' => strlen($body),
+                'declaredBytes' => $declaredBytes,
+            ]);
 
             return false;
         }
 
-        $parts = explode(separator: '.', string: $ip);
+        if (! SsrfGuard::contentTypeAllowed($response->header('Content-Type'), 'json')) {
+            $this->activityPubLog('warning', 'WebFinger response has unsupported content-type', [
+                'contentType' => $response->header('Content-Type'),
+            ]);
 
-        if (count($parts) !== 4) {
             return false;
         }
 
-        $first = (int) $parts[0];
-        $second = (int) $parts[1];
-
-        $isPrivate = (
-            $first === 0
-            || $first === 10
-            || $first === 127
-            || ($first === 169 && $second === 254)
-            || ($first === 172 && $second >= 16 && $second <= 31)
-            || ($first === 192 && $second === 168)
-        );
-
-        if ($isPrivate) {
-            $this->activityPubLog('warning', 'WebFinger private IP blocked', ['url' => $url, 'ip' => $ip]);
-
-            return true;
-        }
-
-        return false;
+        return true;
     }
 }

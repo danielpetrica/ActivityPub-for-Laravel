@@ -3,6 +3,7 @@
 namespace DanielPetrica\LaravelActivityPub\Actions\Handlers;
 
 use DanielPetrica\LaravelActivityPub\Enums\ActivityType;
+use DanielPetrica\LaravelActivityPub\Helpers\SsrfGuard;
 use DanielPetrica\LaravelActivityPub\Models\Actor;
 use DanielPetrica\LaravelActivityPub\Services\ActivityPubService;
 use DanielPetrica\LaravelActivityPub\Services\RemoteActorResolver;
@@ -22,7 +23,7 @@ final class HandleCreateAction implements ActivityHandler
     public function handle(Actor $actor, array $payload): void
     {
         $object = $payload['object'] ?? null;
-        if (is_string($object)) {
+        if (is_string($object) && SsrfGuard::isSafeUrl(url: $object)) {
             $fetched = $this->remoteActorResolver->fetchActorData(actorUri: $object);
             if ($fetched !== null) {
                 $payload['object'] = $fetched;

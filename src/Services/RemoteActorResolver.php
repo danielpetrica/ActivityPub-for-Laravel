@@ -3,6 +3,7 @@
 namespace DanielPetrica\LaravelActivityPub\Services;
 
 use DanielPetrica\LaravelActivityPub\Contracts\ActorContract;
+use DanielPetrica\LaravelActivityPub\Helpers\SsrfGuard;
 use DanielPetrica\LaravelActivityPub\Jobs\FetchRemoteActor;
 use DanielPetrica\LaravelActivityPub\Models\Actor;
 use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
@@ -65,11 +66,11 @@ final class RemoteActorResolver
         $inboxUrl = $this->fetchInboxUrl(actorUrl: $actorUrl) ?? $actorUrl.'/inbox';
 
         $remoteActor = RemoteActor::query()->firstOrCreate(
-            attributes: ['actor_url' => $actorUrl],
-            values: [
+            ['actor_url' => $actorUrl],
+            [
                 'inbox_url' => $inboxUrl,
                 'username' => basename($actorUrl),
-                'domain' => parse_url(url: $actorUrl, component: PHP_URL_HOST) ?: 'unknown',
+                'domain' => parse_url($actorUrl, PHP_URL_HOST) ?: 'unknown',
             ],
         );
 
@@ -84,8 +85,10 @@ final class RemoteActorResolver
 
     public function fetchActorData(string $actorUri): ?array
     {
-        if ($this->isPrivateDomain(url: $actorUri)) {
-            $this->activityPubLog('warning', 'Private domain blocked', ['actorUri' => $actorUri]);
+        [$safe, $pinOptions] = SsrfGuard::validateAndPin(url: $actorUri);
+
+        if (! $safe) {
+            $this->activityPubLog('warning', 'Unsafe remote actor URL blocked', ['actorUri' => $actorUri]);
 
             return null;
         }
@@ -105,9 +108,10 @@ final class RemoteActorResolver
             }
 
             $response = Http::timeout(
-                seconds: config('activitypub.federation.resolve_timeout', 5),
+                config('activitypub.federation.resolve_timeout', 5),
             )->withHeaders($headers)
-                ->get(url: $actorUri);
+                ->withOptions(array_merge(['allow_redirects' => false], $pinOptions))
+                ->get($actorUri);
 
             if (! $response->successful()) {
                 $statusCode = $response->status();
@@ -122,9 +126,13 @@ final class RemoteActorResolver
                 // for deleted or fake accounts
                 if ($statusCode === 410 || $statusCode === 404) {
                     $failureKey = 'actor-resolve-fail:'.md5($actorUri);
-                    Cache::put(key: $failureKey, value: true, ttl: now()->addSeconds(seconds: self::FAILURE_CACHE_TTL));
+                    Cache::put($failureKey, true, now()->addSeconds(self::FAILURE_CACHE_TTL));
                 }
 
+                return null;
+            }
+
+            if (! $this->responseWithinLimits(response: $response)) {
                 return null;
             }
 
@@ -156,24 +164,113 @@ final class RemoteActorResolver
         }
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     */
     public function upsertFromData(string $actorUri, array $data): RemoteActor
     {
-        $parts = parse_url(url: $actorUri);
+        $parts = parse_url($actorUri);
         $domain = $parts['host'] ?? 'unknown';
         $username = $data['preferredUsername'] ?? 'unknown';
 
         return RemoteActor::query()->updateOrCreate(
-            attributes: ['actor_url' => $actorUri],
-            values: [
+            ['actor_url' => $actorUri],
+            [
                 'inbox_url' => $data['inbox'] ?? $actorUri.'/inbox',
                 'shared_inbox_url' => $data['endpoints']['sharedInbox'] ?? null,
-                'public_key_pem' => $data['publicKey']['publicKeyPem'] ?? null,
+                'public_key_pem' => $this->extractPublicKeyPem(data: $data),
                 'username' => $username,
                 'domain' => $domain,
                 'name' => $data['name'] ?? null,
                 'icon_url' => $data['icon']['url'] ?? null,
             ],
         );
+    }
+
+    /**
+     * Extract a PEM public key from the various ActivityPub key shapes.
+     *
+     * Supports the classic `publicKey.publicKeyPem`, a top-level
+     * `publicKeyPem`, and `assertionMethod` (single object, list, or URL
+     * reference) including Multikey `publicKeyMultibase` values that carry a
+     * PEM-encoded key.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    protected function extractPublicKeyPem(array $data): ?string
+    {
+        $candidates = [
+            $data['publicKey']['publicKeyPem'] ?? null,
+            $data['publicKeyPem'] ?? null,
+        ];
+
+        if (isset($data['publicKey']['publicKeyMultibase']) && is_string($data['publicKey']['publicKeyMultibase'])) {
+            $candidates[] = $this->multibaseToPem(value: $data['publicKey']['publicKeyMultibase']);
+        }
+
+        if (isset($data['publicKeyMultibase']) && is_string($data['publicKeyMultibase'])) {
+            $candidates[] = $this->multibaseToPem(value: $data['publicKeyMultibase']);
+        }
+
+        $assertionMethod = $data['assertionMethod'] ?? null;
+
+        if (is_array($assertionMethod)) {
+            if (isset($assertionMethod['publicKeyPem']) && is_string($assertionMethod['publicKeyPem'])) {
+                $candidates[] = $assertionMethod['publicKeyPem'];
+            }
+
+            if (isset($assertionMethod['publicKeyMultibase']) && is_string($assertionMethod['publicKeyMultibase'])) {
+                $candidates[] = $this->multibaseToPem(value: $assertionMethod['publicKeyMultibase']);
+            }
+
+            foreach ($assertionMethod as $method) {
+                if (! is_array($method)) {
+                    continue;
+                }
+
+                if (isset($method['publicKeyPem']) && is_string($method['publicKeyPem'])) {
+                    $candidates[] = $method['publicKeyPem'];
+                }
+
+                if (isset($method['publicKeyMultibase']) && is_string($method['publicKeyMultibase'])) {
+                    $candidates[] = $this->multibaseToPem(value: $method['publicKeyMultibase']);
+                }
+            }
+        }
+
+        foreach ($candidates as $candidate) {
+            if (is_string($candidate) && $candidate !== '') {
+                return $candidate;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Decode a Multibase value that carries a PEM-encoded public key.
+     */
+    protected function multibaseToPem(string $value): ?string
+    {
+        // Multibase base64url encoding is prefixed with 'u'.
+        if (! str_starts_with($value, 'u')) {
+            return null;
+        }
+
+        $base64 = strtr(substr($value, 1), '-_', '+/');
+        $base64 .= str_repeat('=', (4 - (strlen($base64) % 4)) % 4);
+
+        $decoded = base64_decode($base64, true);
+
+        if ($decoded === false) {
+            return null;
+        }
+
+        if (str_contains($decoded, 'BEGIN PUBLIC KEY') || str_contains($decoded, 'BEGIN RSA PUBLIC KEY')) {
+            return $decoded;
+        }
+
+        return null;
     }
 
     protected function fetchInboxUrl(string $actorUrl): ?string
@@ -187,56 +284,33 @@ final class RemoteActorResolver
         return $data['inbox'] ?? null;
     }
 
-    protected function isPrivateDomain(string $url): bool
+    /**
+     * Enforce size and content-type caps on a remote fetch response.
+     */
+    protected function responseWithinLimits(\Illuminate\Http\Client\Response $response): bool
     {
-        $host = parse_url(url: $url, component: PHP_URL_HOST);
+        $body = $response->body();
+        $contentLength = $response->header('Content-Length');
+        $declaredBytes = $contentLength !== '' ? (int) $contentLength : null;
 
-        if ($host === null) {
-            return true;
-        }
-
-        $ip = gethostbyname(hostname: $host);
-
-        // If DNS resolution fails (returns hostname unchanged), block the request
-        if ($ip === $host) {
-            return true;
-        }
-
-        if (filter_var(value: $ip, filter: FILTER_VALIDATE_IP, options: FILTER_FLAG_IPV6)) {
-            if ($ip === '::1') {
-                $this->activityPubLog('warning', 'Private IPv6 loopback blocked', ['url' => $url, 'ip' => $ip]);
-
-                return true;
-            }
+        if (SsrfGuard::responseTooLarge(bodyBytes: strlen($body), declaredBytes: $declaredBytes)) {
+            $this->activityPubLog('warning', 'Remote actor response exceeds size limit', [
+                'bytes' => strlen($body),
+                'declaredBytes' => $declaredBytes,
+            ]);
 
             return false;
         }
 
-        $parts = explode(separator: '.', string: $ip);
+        if (! SsrfGuard::contentTypeAllowed($response->header('Content-Type'), 'json')) {
+            $this->activityPubLog('warning', 'Remote actor response has unsupported content-type', [
+                'contentType' => $response->header('Content-Type'),
+            ]);
 
-        if (count($parts) !== 4) {
             return false;
         }
 
-        $first = (int) $parts[0];
-        $second = (int) $parts[1];
-
-        $isPrivate = (
-            $first === 0
-            || $first === 10
-            || $first === 127
-            || ($first === 169 && $second === 254)
-            || ($first === 172 && $second >= 16 && $second <= 31)
-            || ($first === 192 && $second === 168)
-        );
-
-        if ($isPrivate) {
-            $this->activityPubLog('warning', 'Private IP blocked', ['url' => $url, 'ip' => $ip]);
-
-            return true;
-        }
-
-        return false;
+        return true;
     }
 
     /**
@@ -250,7 +324,7 @@ final class RemoteActorResolver
 
         if ($user instanceof ActorContract) {
             $actor = Actor::query()
-                ->where(column: 'username', operator: '=', value: $user->getPreferredUsername())
+                ->where('username', '=', $user->getPreferredUsername())
                 ->first();
 
             if ($actor !== null && $actor->private_key_pem !== null) {

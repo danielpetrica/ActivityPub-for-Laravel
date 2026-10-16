@@ -136,6 +136,7 @@ beforeEach(function (): void {
     });
 
     config()->set(key: 'activitypub.federation.enabled', value: true);
+    config()->set(key: 'activitypub.security.allowed_hosts', value: ['remote.example.com']);
 });
 
 afterEach(function (): void {

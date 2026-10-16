@@ -3,28 +3,57 @@
 namespace DanielPetrica\LaravelActivityPub\Services;
 
 use DanielPetrica\LaravelActivityPub\Contracts\ActorContract;
-use DanielPetrica\LaravelActivityPub\Models\Actor;
 
 final class HttpSignatureService
 {
     public function sign(string $method, string $url, array $headers, ActorContract $actor): array
     {
-        $parsedUrl = parse_url(url: $url);
+        $parsedUrl = parse_url($url);
+
+        if ($parsedUrl === false) {
+            throw new \RuntimeException(message: 'Cannot sign request: invalid URL.');
+        }
+
         $path = $parsedUrl['path'] ?? '/';
-        $host = $parsedUrl['host'] ?? '';
+        $query = $parsedUrl['query'] ?? null;
+        $scheme = strtolower((string) ($parsedUrl['scheme'] ?? 'https'));
+
+        // Draft-cavage (request-target) must include the query string.
+        $requestTarget = $path.($query !== null && $query !== '' ? '?'.$query : '');
+
+        $host = $this->buildHost(
+            host: (string) ($parsedUrl['host'] ?? ''),
+            port: $parsedUrl['port'] ?? null,
+            scheme: $scheme,
+        );
+
         $date = $headers['Date'] ?? now()->toRfc7231String();
 
         $signingParts = [
-            '(request-target): '.strtolower(string: $method).' '.$path,
+            '(request-target): '.strtolower($method).' '.$requestTarget,
             'host: '.$host,
             'date: '.$date,
         ];
 
+        $signedHeaders = ['(request-target)', 'host', 'date'];
+
         if (isset($headers['Digest'])) {
             $signingParts[] = 'digest: '.$headers['Digest'];
+            $signedHeaders[] = 'digest';
+        } elseif (isset($headers['digest'])) {
+            $signingParts[] = 'digest: '.$headers['digest'];
+            $signedHeaders[] = 'digest';
         }
 
-        $signingString = implode(separator: "\n", array: $signingParts);
+        // Sign the content-type when present so it is tamper-proof.
+        $contentType = $headers['Content-Type'] ?? $headers['content-type'] ?? null;
+
+        if (is_string($contentType) && $contentType !== '') {
+            $signingParts[] = 'content-type: '.$contentType;
+            $signedHeaders[] = 'content-type';
+        }
+
+        $signingString = implode("\n", $signingParts);
 
         $privateKey = $this->getPrivateKey(actor: $actor);
 
@@ -35,60 +64,57 @@ final class HttpSignatureService
         $signature = '';
 
         $result = openssl_sign(
-            data: $signingString,
-            signature: $signature,
-            private_key: $privateKey,
-            algorithm: OPENSSL_ALGO_SHA256,
+            $signingString,
+            $signature,
+            $privateKey,
+            OPENSSL_ALGO_SHA256,
         );
 
         if (! $result) {
             throw new \RuntimeException(message: 'Failed to sign request with actor private key.');
         }
 
-        $signatureBase64 = base64_encode(string: $signature);
-
-        $signedHeaders = ['(request-target)', 'host', 'date'];
-
-        if (isset($headers['Digest'])) {
-            $signedHeaders[] = 'digest';
-        }
+        $signatureBase64 = base64_encode($signature);
 
         $signatureHeader = 'keyId="'.$actor->getKeyId().'",'
             .'algorithm="rsa-sha256",'
-            .'headers="'.implode(separator: ' ', array: $signedHeaders).'",'
+            .'headers="'.implode(' ', $signedHeaders).'",'
             .'signature="'.$signatureBase64.'"';
 
         $headers['Signature'] = $signatureHeader;
         $headers['Date'] = $date;
+        // Keep the transmitted Host header consistent with the signed host,
+        // including non-default ports.
+        $headers['Host'] = $host;
 
         return $headers;
     }
 
+    /**
+     * Resolve the actor's private key through the contract instead of
+     * type-checking against the concrete Actor model, so custom actor
+     * implementations keep working.
+     */
     protected function getPrivateKey(ActorContract $actor): ?string
     {
-        if ($actor instanceof Actor) {
-            return $actor->private_key_pem;
-        }
-
-        return null;
+        return $actor->getPrivateKeyPem();
     }
 
-    protected function parseSignatureHeader(string $header): ?array
+    /**
+     * Build the host header value, including non-default ports.
+     */
+    protected function buildHost(string $host, ?int $port, string $scheme): string
     {
-        $parts = [];
-
-        foreach (explode(separator: ',', string: $header) as $param) {
-            $param = trim(string: $param);
-
-            if (preg_match(pattern: '/^(\w+)="(.*)"$/', subject: $param, matches: $matches)) {
-                $parts[$matches[1]] = $matches[2];
-            }
+        if ($host === '' || $port === null) {
+            return $host;
         }
 
-        if (! isset($parts['keyId'], $parts['signature'], $parts['headers'])) {
-            return null;
+        $defaultPort = $scheme === 'http' ? 80 : 443;
+
+        if ($port === $defaultPort) {
+            return $host;
         }
 
-        return $parts;
+        return $host.':'.$port;
     }
 }

@@ -41,8 +41,8 @@ Route::get(uri: '/users/{actor:username}/featured', action: FeaturedController::
 Route::post(uri: '/inbox', action: [InboxController::class, 'sharedInbox'])
     ->name(name: 'activitypub.shared-inbox')
     ->middleware(middleware: [
-        'activitypub.verify-signature',
         'throttle:activitypub-inbox',
+        'activitypub.verify-signature',
     ]);
 
 Route::match(
@@ -54,6 +54,6 @@ Route::match(
 Route::post(uri: '/users/{actor:username}/inbox', action: InboxController::class)
     ->name(name: 'activitypub.actor.inbox.store')
     ->middleware(middleware: [
-        'activitypub.verify-signature',
         'throttle:activitypub-inbox',
+        'activitypub.verify-signature',
     ]);
