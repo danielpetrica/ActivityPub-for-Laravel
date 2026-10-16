@@ -14,6 +14,10 @@ beforeEach(function (): void {
         'public_key_pem' => $keys['public'],
         'private_key_pem' => $keys['private'],
     ]);
+
+    // Incoming Follows trigger a synchronous Accept delivery; keep it off the
+    // real network.
+    fakeFederationHttp();
 });
 
 it('returns 401 when no signature header is present', function (): void {

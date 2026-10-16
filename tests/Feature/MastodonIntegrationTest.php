@@ -21,6 +21,10 @@ beforeEach(function (): void {
     ]);
 
     config()->set('activitypub.http_signatures.enabled', false);
+
+    // Incoming Follows trigger a synchronous Accept delivery; keep it off the
+    // real network.
+    fakeFederationHttp();
 });
 
 it('builds Accept activity with to field for Mastodon', function (): void {

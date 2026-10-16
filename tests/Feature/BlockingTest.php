@@ -127,6 +127,10 @@ beforeEach(function (): void {
     // Instance-wide mutation routes now require the admin ability (see
     // FediverseAuthorizationTest for the denial cases).
     Gate::define('activitypub.fediverse.admin', static fn (): bool => true);
+
+    // Incoming Follows trigger a synchronous Accept delivery; keep it off the
+    // real network.
+    fakeFederationHttp();
 });
 
 it('blocks a domain', function (): void {

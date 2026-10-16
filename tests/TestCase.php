@@ -3,6 +3,7 @@
 namespace DanielPetrica\LaravelActivityPub\Tests;
 
 use DanielPetrica\LaravelActivityPub\ActivityPubServiceProvider;
+use Illuminate\Support\Facades\Http;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 
 abstract class TestCase extends OrchestraTestCase
@@ -10,6 +11,11 @@ abstract class TestCase extends OrchestraTestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Make the suite hermetic: any outbound HTTP request that has not been
+        // explicitly faked throws instead of hitting the real network. Tests
+        // that need outbound calls must register an Http::fake().
+        Http::preventStrayRequests();
 
         $this->artisan('migrate');
     }

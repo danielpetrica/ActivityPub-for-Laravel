@@ -6,6 +6,12 @@ use DanielPetrica\LaravelActivityPub\Models\Actor;
 use DanielPetrica\LaravelActivityPub\Models\Follower;
 use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
 
+beforeEach(function (): void {
+    // Incoming Follows trigger a synchronous Accept delivery; keep it off the
+    // real network.
+    fakeFederationHttp();
+});
+
 /**
  * The first block of tests below targets the InboxController::resolveTargetActor
  * helper directly (via reflection). That helper only *reports* which local
