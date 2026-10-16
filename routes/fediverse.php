@@ -24,12 +24,14 @@ Route::get(uri: '/following', action: FollowingController::class)->name(name: 'f
 Route::post(uri: '/following/correct-status', action: [FollowingController::class, 'correctStatus'])->name(name: 'following.correct-status')->middleware('throttle:fediverse-interact');
 
 Route::get(uri: '/followers', action: FollowersController::class)->name(name: 'followers');
+Route::post(uri: '/followers/{follower}/approve', action: [FollowersController::class, 'approve'])->name(name: 'followers.approve')->middleware('throttle:fediverse-interact');
+Route::post(uri: '/followers/{follower}/reject', action: [FollowersController::class, 'reject'])->name(name: 'followers.reject')->middleware('throttle:fediverse-interact');
 
 Route::get(uri: '/servers', action: FederatedServersController::class)->name(name: 'servers');
-Route::post(uri: '/servers/block-domain', action: [FederatedServersController::class, 'blockDomain'])->name(name: 'servers.block-domain');
-Route::delete(uri: '/servers/unblock-domain', action: [FederatedServersController::class, 'unblockDomain'])->name(name: 'servers.unblock-domain');
-Route::post(uri: '/servers/block-actor', action: [FederatedServersController::class, 'blockActor'])->name(name: 'servers.block-actor');
-Route::delete(uri: '/servers/unblock-actor', action: [FederatedServersController::class, 'unblockActor'])->name(name: 'servers.unblock-actor');
+Route::post(uri: '/servers/block-domain', action: [FederatedServersController::class, 'blockDomain'])->name(name: 'servers.block-domain')->middleware('activitypub.authorize-fediverse:admin');
+Route::delete(uri: '/servers/unblock-domain', action: [FederatedServersController::class, 'unblockDomain'])->name(name: 'servers.unblock-domain')->middleware('activitypub.authorize-fediverse:admin');
+Route::post(uri: '/servers/block-actor', action: [FederatedServersController::class, 'blockActor'])->name(name: 'servers.block-actor')->middleware('activitypub.authorize-fediverse:admin');
+Route::delete(uri: '/servers/unblock-actor', action: [FederatedServersController::class, 'unblockActor'])->name(name: 'servers.unblock-actor')->middleware('activitypub.authorize-fediverse:admin');
 
 Route::get(uri: '/discover', action: [DiscoverController::class, 'index'])->name(name: 'discover');
 Route::post(uri: '/discover/resolve', action: [DiscoverController::class, 'resolve'])->name(name: 'discover.resolve')->middleware('throttle:30,1');
@@ -47,9 +49,9 @@ Route::post(uri: '/profile', action: [ProfileController::class, 'update'])->name
 
 Route::get(uri: '/status', action: StatusController::class)->name(name: 'status');
 
-Route::post(uri: '/status/reschedule', action: [StatusController::class, 'reschedulePending'])->name(name: 'status.reschedule')->middleware('throttle:fediverse-interact');
-Route::post(uri: '/status/refresh-accounts', action: [StatusController::class, 'refreshFollowedAccounts'])->name(name: 'status.refresh-accounts')->middleware('throttle:fediverse-interact');
-Route::post(uri: '/status/prune', action: [StatusController::class, 'pruneOldActivities'])->name(name: 'status.prune')->middleware('throttle:fediverse-interact');
-Route::post(uri: '/status/forward-posts', action: [StatusController::class, 'forwardPosts'])->name(name: 'status.forward-posts')->middleware('throttle:fediverse-interact');
+Route::post(uri: '/status/reschedule', action: [StatusController::class, 'reschedulePending'])->name(name: 'status.reschedule')->middleware(['throttle:fediverse-interact', 'activitypub.authorize-fediverse:admin']);
+Route::post(uri: '/status/refresh-accounts', action: [StatusController::class, 'refreshFollowedAccounts'])->name(name: 'status.refresh-accounts')->middleware(['throttle:fediverse-interact', 'activitypub.authorize-fediverse:admin']);
+Route::post(uri: '/status/prune', action: [StatusController::class, 'pruneOldActivities'])->name(name: 'status.prune')->middleware(['throttle:fediverse-interact', 'activitypub.authorize-fediverse:admin']);
+Route::post(uri: '/status/forward-posts', action: [StatusController::class, 'forwardPosts'])->name(name: 'status.forward-posts')->middleware(['throttle:fediverse-interact', 'activitypub.authorize-fediverse:admin']);
 
 Route::get(uri: '/favorites', action: FavoritesController::class)->name(name: 'favorites');

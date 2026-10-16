@@ -84,8 +84,8 @@
             <div class="card">
                 <div class="card-body">
                     <h4 class="text-sm" style="font-weight:600;">Reschedule Pending</h4>
-                    <p class="text-xs text-muted mt-1">Re-dispatch all pending outgoing activities to the queue for delivery.</p>
-                    <form action="{{ route('fediverse.status.reschedule') }}" method="POST" class="mt-3" onsubmit="return confirm('Reschedule all pending activities?')">
+                    <p class="text-xs text-muted mt-1">Re-dispatch failed per-inbox deliveries and untracked pending activities to the queue.</p>
+                    <form action="{{ route('fediverse.status.reschedule') }}" method="POST" class="mt-3" onsubmit="return confirm('Reschedule failed and pending deliveries?')">
                         @csrf
                         <button type="submit" class="btn btn-primary">
                             Reschedule
@@ -133,5 +133,83 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <div class="mt-6">
+        <h3 class="h3 mb-4">Failed Deliveries ({{ count($deadLetters) }})</h3>
+        @if (empty($deadLetters))
+            <div class="card">
+                <div class="card-body">
+                    <p class="text-sm text-muted">No permanently failed per-inbox deliveries. Use "Reschedule Pending" to retry failed inboxes.</p>
+                </div>
+            </div>
+        @else
+            <div class="card overflow-auto">
+                <table class="table">
+                    <thead>
+                        <tr class="table-row">
+                            <th>Activity</th>
+                            <th>Inbox</th>
+                            <th>Attempts</th>
+                            <th>Code</th>
+                            <th>Error</th>
+                            <th>Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($deadLetters as $delivery)
+                            <tr class="table-row">
+                                <td>#{{ $delivery['activity_id'] }}</td>
+                                <td style="max-width:18rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $delivery['inbox_url'] }}</td>
+                                <td>{{ $delivery['attempts'] }}</td>
+                                <td>{{ $delivery['response_code'] ?? '-' }}</td>
+                                <td style="max-width:20rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ \Illuminate\Support\Str::limit($delivery['last_error'] ?? '', 120) }}</td>
+                                <td>{{ $delivery['updated_at'] ?? '-' }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </div>
+    <div class="mt-6">
+        <h3 class="h3 mb-4">Reports ({{ count($reports) }})</h3>
+        @if (empty($reports))
+            <div class="card">
+                <div class="card-body">
+                    <p class="text-sm text-muted">No open inbound reports. Remote servers can send a <code>Flag</code> activity to report content, which appears here.</p>
+                </div>
+            </div>
+        @else
+            <div class="card overflow-auto">
+                <table class="table">
+                    <thead>
+                        <tr class="table-row">
+                            <th>#</th>
+                            <th>Target</th>
+                            <th>Reason</th>
+                            <th>Reporter</th>
+                            <th>Received</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($reports as $report)
+                            <tr class="table-row">
+                                <td>{{ $report['id'] }}</td>
+                                <td style="max-width:20rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                    {{ $report['object_id'] ?? '-' }}
+                                    @if ($report['object_type'])
+                                        <span class="text-xs text-muted">({{ $report['object_type'] }})</span>
+                                    @endif
+                                </td>
+                                <td style="max-width:20rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ \Illuminate\Support\Str::limit($report['reason'] ?? '', 120) ?: '-' }}</td>
+                                <td style="max-width:18rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $report['reporter'] ?? 'unknown' }}</td>
+                                <td>{{ $report['created_at'] }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
     </div>
 @endsection

@@ -440,6 +440,7 @@ it('handles missing remote actor gracefully', function (): void {
 
 it('dispatches ForwardPostsToNewServerJob on first follower from domain', function (): void {
     Bus::fake();
+    config()->set('activitypub.queue.process_inbox', false);
 
     $remoteActor = RemoteActor::query()->create([
         'actor_url' => 'https://mastodon.social/users/frank',
@@ -472,6 +473,7 @@ it('dispatches ForwardPostsToNewServerJob on first follower from domain', functi
 
 it('does not dispatch ForwardPostsToNewServerJob on subsequent followers from same domain', function (): void {
     Bus::fake();
+    config()->set('activitypub.queue.process_inbox', false);
 
     $remoteActor1 = RemoteActor::query()->create([
         'actor_url' => 'https://mastodon.social/users/grace',

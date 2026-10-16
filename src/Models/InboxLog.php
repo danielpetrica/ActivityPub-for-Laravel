@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * @property int $id
- * @property int $actor_id
+ * @property int|null $actor_id
  * @property string|null $actor_url
  * @property string|null $key_id
  * @property string|null $ip
@@ -45,6 +45,6 @@ final class InboxLog extends Model
 
     public function actor(): BelongsTo
     {
-        return $this->belongsTo(related: Actor::class);
+        return $this->belongsTo(Actor::class);
     }
 }

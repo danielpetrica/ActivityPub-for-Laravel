@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 
 class BlockingTestUser extends Authenticatable implements \DanielPetrica\LaravelActivityPub\Contracts\ActorContract
@@ -42,6 +43,11 @@ class BlockingTestUser extends Authenticatable implements \DanielPetrica\Laravel
     public function getHeaderImageUrl(): ?string
     {
         return null;
+    }
+
+    public function getProfileUrl(): string
+    {
+        return url('/users/'.$this->getPreferredUsername());
     }
 
     public function getActorId(): string
@@ -116,6 +122,10 @@ beforeEach(function (): void {
 
     config()->set('activitypub.http_signatures.enabled', false);
     config()->set('activitypub.federation.enabled', false);
+
+    // Instance-wide mutation routes now require the admin ability (see
+    // FediverseAuthorizationTest for the denial cases).
+    Gate::define('activitypub.fediverse.admin', static fn (): bool => true);
 });
 
 it('blocks a domain', function (): void {
@@ -260,6 +270,7 @@ it('removes follower when actor is blocked', function (): void {
 
 it('auto-rejects follow from blocked domain', function (): void {
     Bus::fake();
+    config()->set('activitypub.queue.process_inbox', false);
 
     RemoteActor::query()->create([
         'actor_url' => 'https://blocked.example.com/users/alice',
@@ -306,6 +317,7 @@ it('auto-rejects follow from blocked domain', function (): void {
 
 it('auto-rejects follow from blocked actor', function (): void {
     Bus::fake();
+    config()->set('activitypub.queue.process_inbox', false);
 
     $remoteActor = RemoteActor::query()->create([
         'actor_url' => 'https://mastodon.social/users/badactor',

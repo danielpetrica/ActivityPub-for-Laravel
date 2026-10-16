@@ -3,7 +3,7 @@
 @section('content')
     <h2 class="h2 mb-6">Inbox</h2>
 
-    @if ($activities->isEmpty() && ($rejectedLogs === null || $rejectedLogs->isEmpty()))
+    @if ($activities->isEmpty() && $rejectedLogs->isEmpty())
         <div class="card p-8 text-center">
             <p class="text-muted">No incoming activities yet. When someone follows you or interacts with your content, it will appear here.</p>
         </div>
@@ -65,9 +65,10 @@
         </div>
     @endif
 
-    {{-- Rejected requests (debug mode only) --}}
-    @if (config('activitypub.debug_display') && $rejectedLogs !== null && ! $rejectedLogs->isEmpty())
+    {{-- Rejected requests audit log --}}
+    @if (! $rejectedLogs->isEmpty())
         <h2 class="h2 mt-8 mb-4">Rejected Requests</h2>
+        <p class="text-xs text-muted mb-4">Requests rejected before processing (signature, validation). Retained for {{ config('activitypub.retention.inbox_logs_days', 30) }} days.</p>
         <div class="card">
             @foreach ($rejectedLogs as $log)
                 <div class="p-4 flex items-start gap-4 border-bottom">

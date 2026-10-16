@@ -6,9 +6,11 @@ use DanielPetrica\LaravelActivityPub\Jobs\DeliverActivity;
 use DanielPetrica\LaravelActivityPub\Jobs\FetchRemoteActor;
 use DanielPetrica\LaravelActivityPub\Jobs\ForwardPostsToNewServerJob;
 use DanielPetrica\LaravelActivityPub\Models\Activity;
+use DanielPetrica\LaravelActivityPub\Models\ActivityDelivery;
 use DanielPetrica\LaravelActivityPub\Models\Actor;
 use DanielPetrica\LaravelActivityPub\Models\Follower;
 use DanielPetrica\LaravelActivityPub\Models\Following;
+use DanielPetrica\LaravelActivityPub\Models\Report;
 use DanielPetrica\LaravelActivityPub\Traits\ResolvesLocalActor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,10 +29,12 @@ final class StatusController extends Controller
         $user = auth()->user();
         $localActor = $this->resolveLocalActor();
 
-        return view(view: 'activitypub::fediverse.status', data: [
+        return view('activitypub::fediverse.status', [
             'actor' => $user,
             'localActor' => $localActor,
             'checks' => $this->runChecks(),
+            'deadLetters' => $this->failedDeliveries(),
+            'reports' => $this->recentReports(),
         ]);
     }
 
@@ -56,8 +60,14 @@ final class StatusController extends Controller
         // Activity counts
         $checks['activities'] = $this->checkActivities();
 
+        // Per-inbox delivery counts
+        $checks['deliveries'] = $this->checkDeliveries();
+
         // Relationships
         $checks['relationships'] = $this->checkRelationships();
+
+        // Inbound moderation reports (Flag)
+        $checks['reports'] = $this->checkReports();
 
         return $checks;
     }
@@ -163,6 +173,58 @@ final class StatusController extends Controller
         }
     }
 
+    /**
+     * @return array{label: string, status: string, detail: string}
+     */
+    private function checkDeliveries(): array
+    {
+        try {
+            $pending = ActivityDelivery::query()->where('status', '=', ActivityDelivery::STATUS_PENDING)->count();
+            $delivered = ActivityDelivery::query()->where('status', '=', ActivityDelivery::STATUS_DELIVERED)->count();
+            $failed = ActivityDelivery::query()->where('status', '=', ActivityDelivery::STATUS_FAILED)->count();
+
+            return [
+                'label' => 'Deliveries',
+                'status' => $failed > 0 ? 'warning' : 'ok',
+                'detail' => "{$delivered} delivered, {$pending} pending, {$failed} failed (per-inbox)",
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'label' => 'Deliveries',
+                'status' => 'error',
+                'detail' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Up to 25 permanently failed per-inbox deliveries for the dead-letter view.
+     *
+     * @return array<int, array{id: int, activity_id: int, inbox_url: string, attempts: int, response_code: int|null, last_error: string|null, updated_at: string|null}>
+     */
+    private function failedDeliveries(): array
+    {
+        try {
+            return ActivityDelivery::query()
+                ->where('status', '=', ActivityDelivery::STATUS_FAILED)
+                ->latest('updated_at')
+                ->limit(25)
+                ->get()
+                ->map(static fn (ActivityDelivery $delivery): array => [
+                    'id' => $delivery->id,
+                    'activity_id' => $delivery->activity_id,
+                    'inbox_url' => $delivery->inbox_url,
+                    'attempts' => $delivery->attempts,
+                    'response_code' => $delivery->response_code,
+                    'last_error' => $delivery->last_error,
+                    'updated_at' => $delivery->updated_at->toDateTimeString(),
+                ])
+                ->all();
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
     private function checkRelationships(): array
     {
         try {
@@ -183,14 +245,90 @@ final class StatusController extends Controller
         }
     }
 
+    /**
+     * @return array{label: string, status: string, detail: string}
+     */
+    private function checkReports(): array
+    {
+        try {
+            $open = Report::query()->where('status', '=', Report::STATUS_OPEN)->count();
+            $total = Report::count();
+
+            return [
+                'label' => 'Reports',
+                'status' => $open > 0 ? 'warning' : 'ok',
+                'detail' => "{$open} open, {$total} total inbound reports",
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'label' => 'Reports',
+                'status' => 'error',
+                'detail' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Up to 25 most recent open moderation reports (inbound Flag activities).
+     *
+     * @return array<int, array{id: int, object_type: string|null, object_id: string|null, reason: string|null, reporter: string|null, created_at: string}>
+     */
+    private function recentReports(): array
+    {
+        try {
+            return Report::query()
+                ->with('remoteActor')
+                ->where('status', '=', Report::STATUS_OPEN)
+                ->latest('created_at')
+                ->limit(25)
+                ->get()
+                ->map(static fn (Report $report): array => [
+                    'id' => $report->id,
+                    'object_type' => $report->object_type,
+                    'object_id' => $report->object_id,
+                    'reason' => $report->reason,
+                    'reporter' => $report->remoteActor?->actor_url,
+                    'created_at' => $report->created_at->toDateTimeString(),
+                ])
+                ->all();
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
     public function reschedulePending(Request $request): RedirectResponse
     {
-        $pendingActivities = Activity::query()
-            ->where('status', 'pending')
-            ->where('is_incoming', false)
+        $count = 0;
+
+        // Retry every inbox whose previous delivery permanently failed.
+        $failedDeliveries = ActivityDelivery::query()
+            ->where('status', '=', ActivityDelivery::STATUS_FAILED)
             ->get();
 
-        $count = 0;
+        foreach ($failedDeliveries as $delivery) {
+            $activity = Activity::query()->find($delivery->activity_id);
+
+            if ($activity === null) {
+                continue;
+            }
+
+            Bus::dispatch(new DeliverActivity(
+                inboxUrl: $delivery->inbox_url,
+                activityModelId: $activity->id,
+                actorId: $activity->actor_id,
+            ));
+
+            $count++;
+        }
+
+        // Recover legacy / never-tracked pending activities that have no
+        // per-inbox delivery rows yet.
+        $pendingActivities = Activity::query()
+            ->where('status', '=', 'pending')
+            ->where('is_incoming', false)
+            ->whereDoesntHave('deliveries')
+            ->with('remoteActor')
+            ->get();
 
         foreach ($pendingActivities as $activity) {
             $remoteActor = $activity->remoteActor;
@@ -207,7 +345,7 @@ final class StatusController extends Controller
         }
 
         return redirect()->route('fediverse.status')
-            ->with('success', "Rescheduled {$count} pending activities for delivery.");
+            ->with('success', "Rescheduled {$count} deliveries.");
     }
 
     public function refreshFollowedAccounts(Request $request): RedirectResponse
@@ -239,14 +377,16 @@ final class StatusController extends Controller
 
     public function pruneOldActivities(Request $request): RedirectResponse
     {
+        $days = (int) config('activitypub.retention.delivered_activities_days', 30);
+
         $pruned = Activity::query()
             ->where('status', 'delivered')
             ->where('is_incoming', false)
-            ->where('delivered_at', '<', now()->subDays(30))
+            ->where('delivered_at', '<', now()->subDays($days))
             ->delete();
 
         return redirect()->route('fediverse.status')
-            ->with('success', "Pruned {$pruned} delivered activities older than 30 days.");
+            ->with('success', "Pruned {$pruned} delivered activities older than {$days} days.");
     }
 
     public function forwardPosts(Request $request): RedirectResponse

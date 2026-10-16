@@ -78,6 +78,32 @@ return [
     'http_signatures' => [
         'enabled' => true,
         'max_clock_skew' => 120,
+
+        // When a signed request arrives from an actor that is not yet cached,
+        // queue a background FetchRemoteActor job instead of performing a
+        // synchronous outbound fetch on the verification request path. The
+        // request is rejected with 401 and retried once the actor is stored.
+        'queue_unknown_actors' => true,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Remote Fetch Security (SSRF)
+    |--------------------------------------------------------------------------
+    |
+    | Hardening for every outbound federation fetch and inbox delivery. Remote
+    | URLs must be HTTPS and must resolve exclusively to public IP addresses.
+    | Private, loopback, link-local, carrier-grade NAT and other reserved
+    | ranges are always rejected.
+    |
+    */
+    'security' => [
+        // Hosts exempt from DNS resolution checks (private IP literals are
+        // still rejected). Intended for trusted internal test targets only.
+        'allowed_hosts' => [],
+
+        // Maximum accepted response body size (bytes) for remote fetches.
+        'max_response_bytes' => env('ACTIVITYPUB_MAX_RESPONSE_BYTES', 2_000_000),
     ],
 
     /*
@@ -98,6 +124,46 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Inbox Admission Control
+    |--------------------------------------------------------------------------
+    |
+    | Optional, normalized controls enforced centrally by InboxProcessor for
+    | every inbound activity type (before handlers run).
+    |
+    | `allowlist`: when `enabled` is true, an inbound activity whose sender
+    | domain is not listed in `domains` is dropped (logged, HTTP 202 already
+    | returned). Domains are matched through DomainNormalizer, so casing,
+    | trailing dots, ports and `www.` are all normalized. Off by default. When
+    | enabled with an empty list the check is treated as "not configured" and
+    | allows traffic, so an accidental enable does not black-hole the instance.
+    |
+    | `quotas`: windowed per-actor/per-domain caps that bound how much a single
+    | hostile instance can accumulate. `per_actor_per_minute` and
+    | `per_domain_per_minute` are inbox caps; `per_actor_per_day` is a longer
+    | inbox cap; `interactions_per_actor_per_day` additionally caps Like and
+    | Announce interactions. Counters live in the cache and the check fails
+    | open (a broken cache never blocks federation); the HTTP-level inbox rate
+    | limiter still bounds raw request volume. Set `enabled` to false to
+    | disable entirely, or set a limit to 0 to disable that single window.
+    |
+    */
+    'inbox' => [
+        'allowlist' => [
+            'enabled' => env('ACTIVITYPUB_INBOX_ALLOWLIST_ENABLED', false),
+            'domains' => [],
+        ],
+
+        'quotas' => [
+            'enabled' => env('ACTIVITYPUB_INBOX_QUOTAS_ENABLED', true),
+            'per_actor_per_minute' => env('ACTIVITYPUB_INBOX_PER_ACTOR_PER_MINUTE', 120),
+            'per_domain_per_minute' => env('ACTIVITYPUB_INBOX_PER_DOMAIN_PER_MINUTE', 600),
+            'per_actor_per_day' => env('ACTIVITYPUB_INBOX_PER_ACTOR_PER_DAY', 5000),
+            'interactions_per_actor_per_day' => env('ACTIVITYPUB_INBOX_INTERACTIONS_PER_ACTOR_PER_DAY', 1000),
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Queue
     |--------------------------------------------------------------------------
     |
@@ -105,10 +171,18 @@ return [
     | activities. Leave connection null to use the application default.
     | Set the queue name to route deliveries to a specific queue.
     |
+    | `process_inbox` controls whether received inbox activities are handled
+    | on the queue (ProcessInboxActivity) instead of synchronously inside the
+    | HTTP request. Queued handling is strongly recommended in production: the
+    | request returns 202 immediately and remote resolution runs on a worker.
+    | Set to false only for local development or when you explicitly need the
+    | handler outcome inline.
+    |
     */
     'queue' => [
         'connection' => env('ACTIVITYPUB_QUEUE_CONNECTION'),
         'queue' => env('ACTIVITYPUB_QUEUE_NAME', 'default'),
+        'process_inbox' => env('ACTIVITYPUB_QUEUE_PROCESS_INBOX', true),
     ],
 
     /*
@@ -140,12 +214,70 @@ return [
     | under the configured prefix are registered with 'web' and 'auth'
     | middleware. The authenticated user must implement ActorContract.
     |
+    | `gate` optionally restricts access to the whole dashboard. When set, the
+    | named gate must pass for every Fediverse route.
+    |
+    | Mutating routes that change instance-wide state (blocking domains and
+    | actors, pruning, rescheduling deliveries, refreshing followed accounts
+    | and forwarding posts) additionally require an admin authorization. By
+    | default the package checks the `activitypub.fediverse.admin` gate:
+    |
+    |   Gate::define('activitypub.fediverse.admin', fn ($user) => $user->isAdmin());
+    |
+    | Set `admin_gate` to any other gate name to customise the check. When the
+    | configured ability is not defined the mutating routes deny by default
+    | (403), so a fresh install must define the ability before it can use them.
+    |
     */
     'fediverse' => [
         'enabled' => env('ACTIVITYPUB_FEDIVERSE_ENABLED', true),
         'prefix' => 'fediverse',
         'middleware' => ['web', 'auth'],
         'gate' => env('ACTIVITYPUB_FEDIVERSE_GATE'),
+        'admin_gate' => env('ACTIVITYPUB_FEDIVERSE_ADMIN_GATE', 'activitypub.fediverse.admin'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Inbox Audit Log
+    |--------------------------------------------------------------------------
+    |
+    | Rejected inbox requests (missing/invalid signatures, validation
+    | failures) are recorded in the `inbox_logs` table so operators have an
+    | audit trail. This is independent of `debug_display` and is on by
+    | default; disable it if the table write is too costly for your traffic
+    | profile. Logging failures never affect the HTTP response.
+    |
+    */
+    'inbox_log' => [
+        'enabled' => env('ACTIVITYPUB_INBOX_LOG_ENABLED', true),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Retention
+    |--------------------------------------------------------------------------
+    |
+    | How long federation data is kept before `activitypub:prune-activities`
+    | removes it. Every window defaults to 30 days and can be overridden with
+    | the matching environment variable, in the config file, or per run with
+    | the matching command option (see
+    | `php artisan activitypub:prune-activities --help`).
+    |
+    | `activitypub:prune-activities` is registered on Laravel's scheduler to
+    | run daily automatically (without overlapping); no cron wiring beyond
+    | `php artisan schedule:run` is required.
+    |
+    | Note: incoming activities are used to deduplicate redelivered
+    | activities, so a shorter window means an old activity that is
+    | redelivered after pruning may be processed again.
+    |
+    */
+    'retention' => [
+        'delivered_activities_days' => env('ACTIVITYPUB_RETENTION_DELIVERED_DAYS', 30),
+        'received_activities_days' => env('ACTIVITYPUB_RETENTION_RECEIVED_DAYS', 30),
+        'inbox_logs_days' => env('ACTIVITYPUB_RETENTION_INBOX_LOGS_DAYS', 30),
+        'interactions_days' => env('ACTIVITYPUB_RETENTION_INTERACTIONS_DAYS', 30),
     ],
 
     /*

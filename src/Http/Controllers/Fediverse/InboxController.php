@@ -19,20 +19,20 @@ final class InboxController extends Controller
 
         $activities = Activity::query()
             ->with(['remoteActor', 'actor'])
-            ->where(column: 'actor_id', operator: '=', value: $localActor->id)
-            ->where(column: 'is_incoming', operator: '=', value: true)
+            ->where('actor_id', '=', $localActor->id)
+            ->where('is_incoming', '=', true)
             ->latest()
-            ->paginate(perPage: 20);
+            ->paginate(20);
 
-        $rejectedLogs = null;
-        if (config('activitypub.debug_display')) {
-            $rejectedLogs = InboxLog::query()
-                ->where('actor_id', $localActor->id)
-                ->latest()
-                ->paginate(perPage: 20);
-        }
+        // The audit trail is always available to operators, independent of
+        // debug mode. A distinct page name keeps it from clashing with the
+        // activity paginator's `page` parameter.
+        $rejectedLogs = InboxLog::query()
+            ->with('actor')
+            ->latest()
+            ->paginate(20, ['*'], 'log_page');
 
-        return view(view: 'activitypub::fediverse.inbox', data: [
+        return view('activitypub::fediverse.inbox', [
             'activities' => $activities,
             'rejectedLogs' => $rejectedLogs,
             'actor' => $user,
