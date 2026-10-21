@@ -1,0 +1,43 @@
+# Crow CI for danielpetrica/activitypub-for-laravel (a Laravel package: no
+# Docker image, no deploy — just tests, static analysis and code style).
+labels:
+  agent: nec-server
+  dc: tokyo
+
+when:
+  - event: push
+    ref: refs/heads/main
+  - event: pull_request
+  - event: manual
+
+steps:
+  - name: composer-install
+    image: serversideup/php:8.5-cli-alpine
+    commands:
+      - composer install --prefer-dist --no-interaction --no-progress
+
+  - name: tests
+    image: serversideup/php:8.5-cli-alpine
+    commands:
+      - vendor/bin/pest
+    depends_on:
+      - composer-install
+
+  - name: phpstan
+    image: serversideup/php:8.5-cli-alpine
+    commands:
+      - vendor/bin/phpstan analyse --no-progress --memory-limit=1G
+    depends_on:
+      - composer-install
+
+  - name: pint
+    image: serversideup/php:8.5-cli-alpine
+    commands:
+      - |
+        if [ -f vendor/bin/pint ]; then
+          vendor/bin/pint --test
+        else
+          echo "laravel/pint is not installed; skipping formatter check."
+        fi
+    depends_on:
+      - composer-install
