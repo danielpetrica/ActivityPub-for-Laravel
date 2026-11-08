@@ -24,6 +24,16 @@ cache:
     paths: [vendor, .cache/composer]
 
 steps:
+  # The cache plugin restores files as root. serversideup/php runs steps as
+  # www-data (uid 82 in the alpine variant), so composer install would fail
+  # with "Permission denied" writing vendor/pest-plugins.json. Hand the
+  # restored trees to the step user first. A cold run has nothing to chown,
+  # hence the `|| true`.
+  - name: fix-cache-ownership
+    image: alpine:3.22
+    commands:
+      - chown -R 82:82 vendor .cache 2>/dev/null || true
+
   - name: composer-install
     image: serversideup/php:8.5-cli-alpine
     environment:
@@ -32,6 +42,8 @@ steps:
       COMPOSER_CACHE_DIR: ${CI_WORKSPACE}/.cache/composer
     commands:
       - composer install --prefer-dist --no-interaction --no-progress
+    depends_on:
+      - fix-cache-ownership
 
   - name: tests
     image: serversideup/php:8.5-cli-alpine
