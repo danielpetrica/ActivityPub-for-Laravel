@@ -10,9 +10,26 @@ when:
   - event: pull_request
   - event: manual
 
+# Build cache — https://docs.crowci.com/v6-12/usage/caching/
+#
+# This workflow only needs Composer: vendor/ plus the Composer download cache,
+# keyed on composer.lock. restore_keys falls back to the newest cache of the
+# same kind, so a changed lockfile still reuses the download cache.
+#
+# Cold start: the first run after the server enables caching misses and only
+# saves; the speedup starts with the second run.
+cache:
+  - key: composer-{{ checksum "composer.lock" }}
+    restore_keys: [composer-]
+    paths: [vendor, .cache/composer]
+
 steps:
   - name: composer-install
     image: serversideup/php:8.5-cli-alpine
+    environment:
+      # Keep the Composer download cache inside the workspace so the `cache`
+      # section above can restore it.
+      COMPOSER_CACHE_DIR: ${CI_WORKSPACE}/.cache/composer
     commands:
       - composer install --prefer-dist --no-interaction --no-progress
 
