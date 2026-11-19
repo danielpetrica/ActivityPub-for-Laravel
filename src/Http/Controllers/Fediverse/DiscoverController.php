@@ -2,8 +2,7 @@
 
 namespace DanielPetrica\LaravelActivityPub\Http\Controllers\Fediverse;
 
-use DanielPetrica\LaravelActivityPub\Enums\ActivityType;
-use DanielPetrica\LaravelActivityPub\Models\Activity;
+use DanielPetrica\LaravelActivityPub\Models\Following;
 use DanielPetrica\LaravelActivityPub\Models\RemoteActor;
 use DanielPetrica\LaravelActivityPub\Services\RemoteActorResolver;
 use DanielPetrica\LaravelActivityPub\Services\WebFingerService;
@@ -57,11 +56,12 @@ final class DiscoverController extends Controller
                 $handle = self::DEFAULT_HANDLE;
 
                 if ($localActor && $remoteActorModel) {
-                    $isFollowing = Activity::query()
+                    // The follow state must survive activity pruning, so it is
+                    // derived from the following table rather than the
+                    // (prunable) outgoing Follow activities.
+                    $isFollowing = Following::query()
                         ->where('actor_id', '=', $localActor->id)
-                        ->where('type', '=', ActivityType::Follow)
                         ->where('remote_actor_id', '=', $remoteActorModel->id)
-                        ->where('is_incoming', '=', false)
                         ->exists();
                 }
             }
@@ -138,11 +138,9 @@ final class DiscoverController extends Controller
             data: $data,
         );
 
-        $isFollowing = Activity::query()
+        $isFollowing = Following::query()
             ->where('actor_id', '=', $localActor->id)
-            ->where('type', '=', ActivityType::Follow)
             ->where('remote_actor_id', '=', $remoteActorModel->id)
-            ->where('is_incoming', '=', false)
             ->exists();
 
         return view('activitypub::fediverse.discover', [
