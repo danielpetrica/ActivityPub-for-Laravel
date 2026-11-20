@@ -56,6 +56,38 @@ final class InteractController extends Controller
                 ->withErrors(['remote_actor_url' => 'Could not resolve the remote actor']);
         }
 
+        // Check if remote actor manually approves followers
+        $actorData = $this->remoteActorResolver->fetchActorData(actorUri: $remoteActorUrl);
+        $manuallyApproves = $actorData['manuallyApprovesFollowers'] ?? true;
+
+        // The (actor_id, remote_actor_id) pair is unique. Create the follow
+        // state first and return early for a repeated submission, so a
+        // duplicate neither hits the unique index nor records and delivers a
+        // second Follow activity.
+        $following = Following::query()->createOrFirst(
+            attributes: [
+                'actor_id' => $localActor->id,
+                'remote_actor_id' => $remoteActor->id,
+            ],
+            values: [
+                'status' => $manuallyApproves ? FollowerStatus::Pending : FollowerStatus::Accepted,
+            ],
+        );
+
+        if (! $following->wasRecentlyCreated) {
+            $this->activityPubLog('info', 'Duplicate follow request ignored', [
+                'localActor' => $localActor->username,
+                'remoteActorUrl' => $remoteActorUrl,
+                'status' => $following->status->value,
+            ]);
+
+            return redirect()
+                ->route('fediverse.following')
+                ->with('success', $following->status === FollowerStatus::Pending
+                    ? 'A follow request to this account is already pending.'
+                    : 'You are already following this account.');
+        }
+
         $this->activityPubLog('info', 'Remote actor resolved, dispatching follow activity', [
             'localActor' => $localActor->username,
             'remoteActorUrl' => $remoteActorUrl,
@@ -79,16 +111,6 @@ final class InteractController extends Controller
                 actorId: $localActor->id,
             );
         }
-
-        // Check if remote actor manually approves followers
-        $actorData = $this->remoteActorResolver->fetchActorData(actorUri: $remoteActorUrl);
-        $manuallyApproves = $actorData['manuallyApprovesFollowers'] ?? true;
-
-        Following::query()->create([
-            'actor_id' => $localActor->id,
-            'remote_actor_id' => $remoteActor->id,
-            'status' => $manuallyApproves ? FollowerStatus::Pending : FollowerStatus::Accepted,
-        ]);
 
         $this->activityPubLog('info', 'Follow activity dispatched', [
             'localActor' => $localActor->username,
