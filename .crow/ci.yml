@@ -7,6 +7,8 @@ labels:
 when:
   - event: push
     ref: refs/heads/main
+  - event: tag
+    ref: refs/tags/v*
   - event: pull_request
   - event: manual
 
